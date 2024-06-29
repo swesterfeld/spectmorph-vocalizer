@@ -5,6 +5,7 @@ import sys
 import re
 from enum import Enum
 
+''' original (for mbrola)
 RND_V_p_matrix = [ ("a:", (190, 50, 5, 40, 2)),
                    ("E:", (160, 10, 30, 30, 5)),
                    ("i:", (160, 50, 35, 13, 30)),
@@ -12,6 +13,14 @@ RND_V_p_matrix = [ ("a:", (190, 50, 5, 40, 2)),
                    ("u:", (180, 20, 50, 40, 40)) ]
 RND_C = [ "n", "b", "d", "g", "m", "l", "s" ]
 RND_V = [ "a:", "E:", "i:", "o:", "u:"]
+'''
+
+# for sven.flac
+RND_V_p_matrix = [ ("a:", (190, 50, 5 )),
+                   ("i:", (160, 50, 35 )),
+                   ("o:", (180, 20, 50 )) ]
+RND_C = [ "n", "b", "d", "g", "m", "l", "s" ]
+RND_V = [ "a:", "i:", "o:" ]
 
 
 V = [ "i:", "i", "I", "y:", "Y", "u:", "U",
