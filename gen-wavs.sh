@@ -4,6 +4,7 @@ set -e
 
 mkdir -p testxml pho script wav voice
 
+#---------------- voice downloader ----------------------
 VOICE_EXPECT=fc8dec99f2d3d117fe35cdf457fe8e7efdf5973d
 
 check_voice()
@@ -22,12 +23,11 @@ check_voice || {
   wget space.twc.de/~stefan/download2/voice/${VOICE_EXPECT}.flac -O voice/sven.flac
 }
 check_voice
+#--------------------------------------------------------
 
+make -C src
 src/mkplan template.smplan voice/sven.flac voice/sven.smplan
 
-pushd src
-make
-popd
 
 for xml in $(cd testxml; ls)
 do
