@@ -27,6 +27,16 @@ with open (sys.argv[1], "r") as file:
         pho.append (x)
     line_number += 1
 
+out = []
+last = None
+for i in range (len (pho) - 1):
+  if last and last[0] == '_' and pho[i][0] == '_':
+    out[-1][1] = str (float (out[-1][1]) + float (pho[i][1]))
+  else:
+    out.append (pho[i])
+  last = pho[i]
+pho = out
+
 class Diphone:
   def __repr__ (self):
     s = '<Diphone'
