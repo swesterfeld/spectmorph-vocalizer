@@ -4,13 +4,12 @@ set -e
 
 mkdir -p testxml pho script wav voice
 
-VOICE_EXPECT=a3e33d7ca1d2fd4fea175228ea614abbd75eada2
+VOICE_EXPECT=fc8dec99f2d3d117fe35cdf457fe8e7efdf5973d
 
 check_voice()
 {
-  if test -f voice/sven.smplan; then
-    echo "checking voice hash..."
-    VOICE_HASH=$(sha1sum voice/sven.smplan | awk '{print $1;}')
+  if test -f voice/sven.flac; then
+    VOICE_HASH=$(sha1sum voice/sven.flac | awk '{print $1;}')
     if [ "x$VOICE_HASH" = "x$VOICE_EXPECT" ]; then
       return 0
     fi
@@ -20,9 +19,11 @@ check_voice()
 
 check_voice || {
   echo "downloading voice file..."
-  wget space.twc.de/~stefan/download2/voice/${VOICE_EXPECT}.smplan -O voice/sven.smplan
+  wget space.twc.de/~stefan/download2/voice/${VOICE_EXPECT}.flac -O voice/sven.flac
 }
 check_voice
+
+src/mkplan template.smplan voice/sven.flac voice/sven.smplan
 
 pushd src
 make
