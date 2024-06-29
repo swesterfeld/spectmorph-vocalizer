@@ -15,5 +15,5 @@ do
   wav=$(echo $xml|sed s/.xml$/.wav/g)
   ./xml-to-pho.py xml testxml/$xml > pho/$pho || echo "$xml -> $pho" failed
   phomorphdi.py pho/$pho > script/$script || echo "$pho -> $script" failed
-  ~/src/spectmorph/tests/testmidisynth script ~/smtest/diphone-sven-test.smplan script/$script | ascii2wav -r 48000 wav/$wav
+  src/smscript script ~/smtest/diphone-sven-test.smplan script/$script | ascii2wav -r 48000 wav/$wav
 done
