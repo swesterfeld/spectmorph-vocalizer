@@ -1,6 +1,12 @@
 #!/bin/bash
 
+set -e
+
 mkdir -p testxml pho script wav
+
+pushd src
+make
+popd
 
 for xml in $(cd testxml; ls)
 do
