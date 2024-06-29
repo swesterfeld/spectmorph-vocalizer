@@ -37,7 +37,13 @@ do
   rm -f $pho $script $wav
 
   ./xml-to-pho.py xml testxml/$xml > pho/$pho || echo "$xml -> $pho" failed
-  phomorphdi.py pho/$pho > script/$script || echo "$pho -> $script" failed
-  src/smscript voice/sven.smplan script/$script wav/$wav
+  if [ "x$1" = "xmbrola" ]; then
+    voice=$(grep ';;; VOICE' pho/$pho | cut -d " " -f 3)
+    test -f /usr/share/mbrola/$voice/$voice || voice=de2
+    mbrola /usr/share/mbrola/$voice/$voice pho/$pho wav/$wav
+  else
+    phomorphdi.py pho/$pho > script/$script || echo "$pho -> $script" failed
+    src/smscript voice/sven.smplan script/$script wav/$wav
+  fi
   ./apply-accent.py pho/$pho wav/$wav wav/$wav
 done
