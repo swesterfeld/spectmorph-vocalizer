@@ -94,7 +94,7 @@ for i in range (len (pho)):
           possible_matches.append (x)
       if len (possible_matches) == 0:
         #print ("line %d: missing diphone %s" % (pho[i][-1], P1 + P2))
-        raise RuntimeError ("missing diphone %s" % (P1 + P2))
+        raise RuntimeError ("%s: missing diphone %s" % (sys.argv[1], P1 + P2))
       m = random.choice (possible_matches)
       d = Diphone()
       d.lyric = P1 + P2

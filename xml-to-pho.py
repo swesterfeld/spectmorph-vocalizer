@@ -109,7 +109,7 @@ def c_length (Cs):
   for c in Cs:
     c_pair = search_c (c)
     if c_pair is None:
-      raise RuntimeError ("consonant missing: %s" % c)
+      raise RuntimeError ("%s: consonant missing: %s" % (sys.argv[2], c))
     length += c_pair[1]
   return length
 
