@@ -37,5 +37,5 @@ do
 
   ./xml-to-pho.py xml testxml/$xml > pho/$pho || echo "$xml -> $pho" failed
   phomorphdi.py pho/$pho > script/$script || echo "$pho -> $script" failed
-  src/smscript voice/sven.smplan script/$script | ascii2wav -r 48000 wav/$wav
+  src/smscript voice/sven.smplan script/$script wav/$wav
 done

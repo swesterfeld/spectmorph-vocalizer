@@ -17,9 +17,9 @@ int
 main (int argc, char **argv)
 {
   Main main (&argc, &argv);
-  if (argc != 3)
+  if (argc != 4)
     {
-      fprintf (stderr, "usage: smscript <plan> <script>\n");
+      fprintf (stderr, "usage: smscript <plan> <script> <out_wav>\n");
       return 1;
     }
 
@@ -49,6 +49,7 @@ main (int argc, char **argv)
       exit (1);
     }
   script_parser.set_number_format (MicroConf::NO_I18N);
+  vector<float> output;
   while (script_parser.next())
     {
       int i, j, ch;
@@ -66,10 +67,9 @@ main (int argc, char **argv)
         }
       else if (script_parser.command ("process", i))
         {
-          vector<float> output (i);
-          midi_synth.process (output.data(), i);
-          for (auto f: output)
-            sm_printf ("%.17g\n", f);
+          size_t offset = output.size();
+          output.resize (output.size() + i);
+          midi_synth.process (output.data() + offset, i);
         }
       else if (script_parser.command ("control", i, d))
         {
@@ -83,5 +83,11 @@ main (int argc, char **argv)
         {
           script_parser.die_if_unknown();
         }
+    }
+  WavData wav_data (output, 1, 48000, 24);
+  if (!wav_data.save (argv[3]))
+    {
+      fprintf (stderr,"export to file %s failed: %s\n", argv[3], wav_data.error_blurb());
+      return 1;
     }
 }
