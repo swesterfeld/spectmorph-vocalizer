@@ -14,7 +14,7 @@ for p in pho.stdout:
       if p == "A":
         p = "a"
       if p == "a" or p == "o" or p == "U":
-        print ("%s 250 0 %f 100 %f" % (p, freq, freq))
+        print ("%s 350 0 %f 350 %f" % (p, freq, freq))
       else:
         print (p, "50")
 print (";;; VOLUME 0.85")

@@ -18,7 +18,7 @@ lines = []
 with open ("diphone-sven.label", "r") as file:
   for line in file:
     line = line.split()
-    lines.append ((float (line[0]), line[2]))
+    lines.append ((float (line[0]), line[2].rstrip(":")))
 
 pho = []
 line_number = 1
