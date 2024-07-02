@@ -2,14 +2,15 @@
 import subprocess
 import sys
 
-freq = 120
+freq = 100
 print ("_ 50")
 pho = subprocess.run (["espeak-ng", "-v", "de", sys.argv[1], "-x", "-q" ], capture_output=True, text=True)
+print (pho.stdout, file=sys.stderr)
 print (";;; VOLUME 0.85")
 for p in pho.stdout:
-  if p != ":" and p != "'" and p != "," and p != "|":
+  if p != ":" and p != "'" and p != "," and p != "|" and p != "!":
     if p == " " or p == "\n":
-      print ("_ 2000")
+      print ("_ 1000")
     else:
       if p == "A":
         p = "a"
