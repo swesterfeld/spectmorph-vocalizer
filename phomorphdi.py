@@ -10,6 +10,10 @@ import sys
 import random
 from math import log2
 
+assert (len (sys.argv) == 3)
+
+voice_length = float (sys.argv[2])
+
 lines = []
 with open ("diphone-sven.label", "r") as file:
   for line in file:
@@ -316,8 +320,8 @@ def P (ws, dp):
 #  print ("%.0f" % bend[i], L (d1[i]), L (d2[i]), morph[i], P (ws1[i], d1[i]), P (ws2[i], d2[i]), "#D")
 
 for i in range (len (ws1)):
-  print ("control 0", ws1[i] / 120.559 * 2 - 1)
-  print ("control 1", ws2[i] / 120.559 * 2 - 1)
+  print ("control 0", ws1[i] / voice_length * 2 - 1)
+  print ("control 1", ws2[i] / voice_length * 2 - 1)
   print ("control 2", morph[i] * 2 - 1)
   print ("pitch_expression 0 52 %f" % bend[i])
   #print (ws1[i], ws2[i], morph[i], "#X")

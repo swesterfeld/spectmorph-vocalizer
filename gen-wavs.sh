@@ -5,7 +5,7 @@ set -e
 mkdir -p testxml pho script wav voice
 
 #---------------- voice downloader ----------------------
-VOICE_EXPECT=fc8dec99f2d3d117fe35cdf457fe8e7efdf5973d
+VOICE_EXPECT=d8b13571dd52b7bf91411b48a6c2879627942026
 
 check_voice()
 {
@@ -42,7 +42,7 @@ do
     test -f /usr/share/mbrola/$voice/$voice || voice=de2
     mbrola /usr/share/mbrola/$voice/$voice pho/$pho wav/$wav
   else
-    phomorphdi.py pho/$pho > script/$script || echo "$pho -> $script" failed
+    phomorphdi.py pho/$pho $(soxi -D voice/sven.flac) > script/$script || echo "$pho -> $script" failed
     src/smscript voice/sven.smplan script/$script wav/$wav
   fi
   ./apply-accent.py pho/$pho wav/$wav wav/$wav
