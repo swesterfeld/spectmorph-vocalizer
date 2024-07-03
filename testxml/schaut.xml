@@ -263,16 +263,22 @@
           <step>C</step>
           <octave>3</octave>
         </pitch>
-        <duration>12</duration>
+        <duration>8</duration>
         <voice>1</voice>
         <type>half</type>
-        <dot/>
         <stem>up</stem>
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
           <syllabic>middle</syllabic>
           <text>frOInt</text>
         </lyric>
+      </note>
+      <note>
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
       </note>
     </measure>
     <measure number="7">
