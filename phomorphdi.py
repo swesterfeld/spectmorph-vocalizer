@@ -122,7 +122,7 @@ for i in range (len (pho)):
         last_f = float (pho[i][3])
       if len (pho[i + 1]) >= 3:
         last_f = float (pho[i + 1][3])
-      if is_v (pho[i][0]):
+      if is_v (pho[i][0]) and P1 != '_':
         d.bend = log2 (last_f / 164.81) * 12
         d.pos1 = m[1][0] - 0.2
         d.pos2 = (m[1][0] + m[2][0]) / 2
