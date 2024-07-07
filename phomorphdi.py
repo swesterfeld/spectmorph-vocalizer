@@ -41,6 +41,9 @@ for i in range (len (pho) - 1):
   last = pho[i]
 pho = out
 
+# ensure last diphone ends in a break
+pho.append (["_", 50])
+
 class Diphone:
   def __repr__ (self):
     s = '<Diphone'
@@ -50,6 +53,7 @@ class Diphone:
     s += ' p2_ms=%f' % self.p2_ms
     s += ' pos1=%f' % self.pos1
     s += ' pos2=%f' % self.pos2
+    s += ' silent=%s' % self.silent
     s += ' startv=%s' % self.startv
     s += ' endv=%s' % self.endv
     s += ' lyric=%s' % self.lyric
@@ -75,6 +79,17 @@ for i in range (len (pho)):
       P1 = P1[0][0]
     if is_v (P2):
       P2 = P2[0][0]
+    if P1 == '_':
+      d = Diphone()
+      d.start_ms = start_ms
+      d.p1_ms = float (pho[i][1])
+      d.p2_ms = 0
+      d.startv = d.endv = False
+      d.pos1 = d.pos2 = 0
+      d.lyric = '__'
+      d.bend = log2 (last_f / 164.81) * 12 # FIXME
+      d.silent = True
+      diphones.append (d)
     if is_v (P1) and is_v (P2) and P2 != '_' and P1 != '_':
       possible_matches = []
       for j in range (len (lines) - 1):
@@ -99,6 +114,7 @@ for i in range (len (pho)):
         d.startv = True
         d.endv = True
         d.bend = log2 (last_f / 164.81) * 12 # FIXME
+        d.silent = False
         diphones.append (d)
     else:
       possible_matches = []
@@ -116,6 +132,11 @@ for i in range (len (pho)):
       #print ("%f\t%f\t%s" % (d.start_ms / 1000, d.start_ms / 1000, P1))
       d.p1_ms = float (pho[i][1]) / 2
       d.p2_ms = float (pho[i + 1][1]) / 2
+      d.silent = False
+      if P1 == '_':
+        d.p1_ms = 0
+      elif P2 == '_':
+        d.p2_ms = 0
       start_ms += last_p2_ms + d.p1_ms # FIXME: doesn't seem to be the right value
       last_p2_ms = d.p2_ms
       if len (pho[i]) >= 3:
@@ -125,12 +146,18 @@ for i in range (len (pho)):
       if is_v (pho[i][0]) and P1 != '_':
         d.bend = log2 (last_f / 164.81) * 12
         d.pos1 = m[1][0] - 0.2
-        d.pos2 = (m[1][0] + m[2][0]) / 2
+        if P2 == '_':
+          d.pos2 = m[1][0]
+        else:
+          d.pos2 = (m[1][0] + m[2][0]) / 2
         d.startv = True
         d.endv = False
         diphones.append (d)
       elif is_v (pho[i + 1][0]):
-        d.pos1 = (m[0][0] + m[1][0]) / 2
+        if P1 == '_':
+          d.pos1 = m[1][0]
+        else:
+          d.pos1 = (m[0][0] + m[1][0]) / 2
         d.pos2 = m[1][0] + 0.2
         d.startv = False
         d.endv = True
