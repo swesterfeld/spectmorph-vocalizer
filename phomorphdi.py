@@ -42,7 +42,8 @@ for i in range (len (pho) - 1):
 pho = out
 
 # ensure last diphone ends in a break
-pho.append (["_", 50])
+if (pho[-1][0] != "_"):
+  pho.append (["_", 50])
 
 class Diphone:
   def __repr__ (self):
@@ -135,7 +136,9 @@ for i in range (len (pho)):
       d.silent = False
       if P1 == '_':
         d.p1_ms = 0
+        d.p2_ms *= 2 # FIXME: not sure if this is what we want
       elif P2 == '_':
+        d.p1_ms *= 2 # FIXME: not sure if this is what we want
         d.p2_ms = 0
       start_ms += last_p2_ms + d.p1_ms # FIXME: doesn't seem to be the right value
       last_p2_ms = d.p2_ms
@@ -165,6 +168,13 @@ for i in range (len (pho)):
         diphones.append (d)
       elif not is_v (pho[i][0]) and not is_v (pho[i + 1][0]):
         d.pos1 = (m[0][0] + m[1][0]) / 2
+        d.pos2 = (m[1][0] + m[2][0]) / 2
+        d.startv = False
+        d.endv = False
+        d.bend = log2 (last_f / 164.81) * 12
+        diphones.append (d)
+      elif P1 == '_' and not is_v (pho[i + 1][0]):
+        d.pos1 = m[1][0]
         d.pos2 = (m[1][0] + m[2][0]) / 2
         d.startv = False
         d.endv = False
