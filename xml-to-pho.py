@@ -245,6 +245,9 @@ for part in score.parts:
       note_duration_ms = element.duration.quarterLength * ms_per_beat
       quarter_offset += element.duration.quarterLength
       freq = element.pitch.frequency
+      # melisma: extend last vowel over new note without lyric
+      if (element.lyric is None) and last_note and not last_note.c_out:
+        element.lyric = last_note.v
       if element.lyric is None:
         if last_note:
           assert (last_note.freq == freq)
