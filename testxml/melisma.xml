@@ -381,7 +381,7 @@
         <beam number="1">begin</beam>
         <lyric number="1" placement="below" default-y="-92.5" name="verse">
           <syllabic>single</syllabic>
-          <text>In</text>
+          <text>?In</text>
         </lyric>
       </note>
       <note>
@@ -397,7 +397,7 @@
         <beam number="1">continue</beam>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>aks</text>
+          <text>?aks</text>
         </lyric>
       </note>
       <note>
@@ -747,7 +747,7 @@
         <beam number="1">begin</beam>
         <lyric number="1" placement="below" default-y="-92.5" name="verse">
           <syllabic>single</syllabic>
-          <text>In</text>
+          <text>?In</text>
         </lyric>
       </note>
       <note>
@@ -763,7 +763,7 @@
         <beam number="1">continue</beam>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>aks</text>
+          <text>?aks</text>
         </lyric>
       </note>
       <note>

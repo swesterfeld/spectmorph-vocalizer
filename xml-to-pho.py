@@ -26,7 +26,7 @@ RND_V = [ "a:", "i:", "o:" ]
 V = [ "i:", "i", "I", "y:", "Y", "u:", "U",
       "e:", "E:", "E", "2:", "9", "o:", "o", "O",
       "a:", "a", "@", "6"]
-C = [ ("p", 50), ("b", 50), ("t", 50), ("d", 50), ("k", 50), ("g", 50),
+C = [ ("p", 50), ("b", 50), ("t", 50), ("d", 50), ("k", 50), ("g", 50), ("?", 50),
       ("m", 50), ("n", 50), ("N", 50),
       ("f", 50), ("v", 50), ("s", 50), ("z", 50), ("S", 100), ("Z", 50), ("C", 50), ("j", 50), ("x", 50), ("R", 50), ("h", 50),
       ("l", 50),
@@ -57,7 +57,7 @@ def check_lyric (lyric):
   for l in lyric:
     if l == '\n' or l == '\t':
       raise RuntimeError ("failed to process lyric: lyric contains newline: lyric = '%s'" % lyric)
-    if not re.match (r'^[a-zA-Z@0-9:]+$', l):
+    if not re.match (r'^[a-zA-Z@0-9:?]+$', l):
       raise RuntimeError ("failed to process lyric: lyric contains invalid char: lyric = '%s', char = '%s'" % (lyric, l))
 
 def cvc_split (s):
