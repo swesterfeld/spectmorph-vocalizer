@@ -69,6 +69,7 @@ def is_v (v):
       return True
   return v == '_'
 
+errors = []
 start_ms = 0
 last_p2_ms = 0
 print ("note_on 0 52 100")
@@ -101,7 +102,7 @@ for i in range (len (pho)):
           possible_matches.append (x)
       if len (possible_matches) == 0:
         # print ("missing diphone %s" % (P1 + P2))
-        raise RuntimeError ("%s: missing diphone %s" % (sys.argv[1], P1 + P2))
+        errors += [ "%s: missing diphone %s" % (sys.argv[1], P1 + P2) ]
       else:
         assert (len (pho[i + 1]) >= 3)
         last_f = float (pho[i + 1][3])
@@ -129,62 +130,67 @@ for i in range (len (pho)):
           possible_matches.append (x)
       if len (possible_matches) == 0:
         #print ("line %d: missing diphone %s" % (pho[i][-1], P1 + P2))
-        raise RuntimeError ("%s: missing diphone %s" % (sys.argv[1], P1 + P2))
-      m = random.choice (possible_matches)
-      d = Diphone()
-      d.lyric = P1 + P2
-      d.start_ms = start_ms
-      #print ("%f\t%f\t%s" % (d.start_ms / 1000, d.start_ms / 1000, P1))
-      d.p1_ms = float (pho[i][1]) / 2
-      d.p2_ms = float (pho[i + 1][1]) / 2
-      d.silent = False
-      if P1 == '_':
-        d.p1_ms = 0
-        d.p2_ms *= 2 # FIXME: not sure if this is what we want
-      elif P2 == '_':
-        d.p1_ms *= 2 # FIXME: not sure if this is what we want
-        d.p2_ms = 0
-      start_ms += last_p2_ms + d.p1_ms # FIXME: doesn't seem to be the right value
-      last_p2_ms = d.p2_ms
-      if len (pho[i]) >= 3:
-        last_f = float (pho[i][3])
-      if len (pho[i + 1]) >= 3:
-        last_f = float (pho[i + 1][3])
-      if is_v (pho[i][0]) and P1 != '_':
-        d.bend = log2 (last_f / 164.81) * 12
-        d.pos1 = m[1][0] - 0.2
-        if P2 == '_':
-          d.pos2 = m[1][0]
-        else:
-          d.pos2 = (m[1][0] + m[2][0]) / 2
-        d.startv = True
-        d.endv = False
-        diphones.append (d)
-      elif is_v (pho[i + 1][0]):
+        errors += [ "%s: missing diphone %s" % (sys.argv[1], P1 + P2) ]
+      else:
+        m = random.choice (possible_matches)
+        d = Diphone()
+        d.lyric = P1 + P2
+        d.start_ms = start_ms
+        #print ("%f\t%f\t%s" % (d.start_ms / 1000, d.start_ms / 1000, P1))
+        d.p1_ms = float (pho[i][1]) / 2
+        d.p2_ms = float (pho[i + 1][1]) / 2
+        d.silent = False
         if P1 == '_':
-          d.pos1 = m[1][0]
-        else:
+          d.p1_ms = 0
+          d.p2_ms *= 2 # FIXME: not sure if this is what we want
+        elif P2 == '_':
+          d.p1_ms *= 2 # FIXME: not sure if this is what we want
+          d.p2_ms = 0
+        start_ms += last_p2_ms + d.p1_ms # FIXME: doesn't seem to be the right value
+        last_p2_ms = d.p2_ms
+        if len (pho[i]) >= 3:
+          last_f = float (pho[i][3])
+        if len (pho[i + 1]) >= 3:
+          last_f = float (pho[i + 1][3])
+        if is_v (pho[i][0]) and P1 != '_':
+          d.bend = log2 (last_f / 164.81) * 12
+          d.pos1 = m[1][0] - 0.2
+          if P2 == '_':
+            d.pos2 = m[1][0]
+          else:
+            d.pos2 = (m[1][0] + m[2][0]) / 2
+          d.startv = True
+          d.endv = False
+          diphones.append (d)
+        elif is_v (pho[i + 1][0]):
+          if P1 == '_':
+            d.pos1 = m[1][0]
+          else:
+            d.pos1 = (m[0][0] + m[1][0]) / 2
+          d.pos2 = m[1][0] + 0.2
+          d.startv = False
+          d.endv = True
+          d.bend = log2 (last_f / 164.81) * 12
+          diphones.append (d)
+        elif not is_v (pho[i][0]) and not is_v (pho[i + 1][0]):
           d.pos1 = (m[0][0] + m[1][0]) / 2
-        d.pos2 = m[1][0] + 0.2
-        d.startv = False
-        d.endv = True
-        d.bend = log2 (last_f / 164.81) * 12
-        diphones.append (d)
-      elif not is_v (pho[i][0]) and not is_v (pho[i + 1][0]):
-        d.pos1 = (m[0][0] + m[1][0]) / 2
-        d.pos2 = (m[1][0] + m[2][0]) / 2
-        d.startv = False
-        d.endv = False
-        d.bend = log2 (last_f / 164.81) * 12
-        diphones.append (d)
-      elif P1 == '_' and not is_v (pho[i + 1][0]):
-        d.pos1 = m[1][0]
-        d.pos2 = (m[1][0] + m[2][0]) / 2
-        d.startv = False
-        d.endv = False
-        d.bend = log2 (last_f / 164.81) * 12
-        diphones.append (d)
+          d.pos2 = (m[1][0] + m[2][0]) / 2
+          d.startv = False
+          d.endv = False
+          d.bend = log2 (last_f / 164.81) * 12
+          diphones.append (d)
+        elif P1 == '_' and not is_v (pho[i + 1][0]):
+          d.pos1 = m[1][0]
+          d.pos2 = (m[1][0] + m[2][0]) / 2
+          d.startv = False
+          d.endv = False
+          d.bend = log2 (last_f / 164.81) * 12
+          diphones.append (d)
 
+if errors:
+  for e in sorted (set (errors)):
+    print (e, file=sys.stderr)
+  sys.exit (1)
 '''
   if (pho[i][0] == 'a:' or pho[i][0] == 'i:' or pho[i][0] == 'o:') and i + 2 < len (pho):
     v1 = pho[i][0][0]
