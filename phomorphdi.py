@@ -31,9 +31,11 @@ with open (sys.argv[1], "r") as file:
         pho.append (x)
     line_number += 1
 
+# collapse multiple pause (_) lines into one - this is necessary because
+# mbrola does not support long pauses
 out = []
 last = None
-for i in range (len (pho) - 1):
+for i in range (len (pho)):
   if last and last[0] == '_' and pho[i][0] == '_':
     out[-1][1] = str (float (out[-1][1]) + float (pho[i][1]))
   else:
