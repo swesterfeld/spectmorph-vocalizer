@@ -103,6 +103,8 @@ for i in range (len (pho)):
         # print ("missing diphone %s" % (P1 + P2))
         raise RuntimeError ("%s: missing diphone %s" % (sys.argv[1], P1 + P2))
       else:
+        assert (len (pho[i + 1]) >= 3)
+        last_f = float (pho[i + 1][3])
         m = random.choice (possible_matches)
         d = Diphone()
         d.lyric = P1 + P2
