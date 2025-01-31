@@ -344,7 +344,7 @@
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
           <syllabic>middle</syllabic>
-          <text>ri:</text>
+          <text>mi:</text>
         </lyric>
       </note>
     </measure>
@@ -365,7 +365,7 @@
         <staff>1</staff>
         <lyric number="1" placement="below" default-y="-92.5" name="verse">
           <syllabic>end</syllabic>
-          <text>a:</text>
+          <text>na:</text>
         </lyric>
       </note>
       <note>
@@ -397,7 +397,7 @@
         <beam number="1">continue</beam>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>Eks</text>
+          <text>aks</text>
         </lyric>
       </note>
       <note>
@@ -413,7 +413,7 @@
         <beam number="1">continue</beam>
         <lyric number="1" placement="below" name="verse">
           <syllabic>middle</syllabic>
-          <text>tsEl</text>
+          <text>ti</text>
         </lyric>
       </note>
       <note>
@@ -430,7 +430,7 @@
         <beam number="1">end</beam>
         <lyric number="1" placement="below" default-y="-92.5" name="verse">
           <syllabic>end</syllabic>
-          <text>zIs</text>
+          <text>mi</text>
         </lyric>
       </note>
     </measure>
@@ -459,7 +459,7 @@
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>de:</text>
+          <text>la:</text>
         </lyric>
       </note>
       <note>
@@ -474,7 +474,7 @@
         <staff>1</staff>
         <lyric number="1" placement="below" default-y="-92.5" name="verse">
           <syllabic>end</syllabic>
-          <text>o:</text>
+          <text>mo:</text>
         </lyric>
       </note>
     </measure>
@@ -710,20 +710,12 @@
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
           <syllabic>middle</syllabic>
-          <text>ri:</text>
+          <text>mi:</text>
         </lyric>
       </note>
     </measure>
     <measure number="8">
-      <print new-system="yes" new-page="no">
-        <system-layout>
-          <system-margins>
-            <left-margin>47.5</left-margin>
-            <right-margin>0</right-margin>
-          </system-margins>
-          <system-distance>100</system-distance>
-        </system-layout>
-      </print>
+      <print new-system="no" new-page="no"/>
       <attributes>
         <divisions>4</divisions>
       </attributes>
@@ -739,7 +731,7 @@
         <staff>1</staff>
         <lyric number="1" placement="below" default-y="-92.5" name="verse">
           <syllabic>end</syllabic>
-          <text>a:</text>
+          <text>na:</text>
         </lyric>
       </note>
       <note>
@@ -771,7 +763,7 @@
         <beam number="1">continue</beam>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>Eks</text>
+          <text>aks</text>
         </lyric>
       </note>
       <note>
@@ -787,7 +779,7 @@
         <beam number="1">continue</beam>
         <lyric number="1" placement="below" name="verse">
           <syllabic>middle</syllabic>
-          <text>tsEl</text>
+          <text>ti</text>
         </lyric>
       </note>
       <note>
@@ -804,12 +796,20 @@
         <beam number="1">end</beam>
         <lyric number="1" placement="below" default-y="-92.5" name="verse">
           <syllabic>end</syllabic>
-          <text>zIs</text>
+          <text>mi</text>
         </lyric>
       </note>
     </measure>
     <measure number="9">
-      <print new-system="no" new-page="no"/>
+      <print new-system="yes" new-page="no">
+        <system-layout>
+          <system-margins>
+            <left-margin>47.5</left-margin>
+            <right-margin>0</right-margin>
+          </system-margins>
+          <system-distance>100</system-distance>
+        </system-layout>
+      </print>
       <attributes>
         <divisions>4</divisions>
       </attributes>
@@ -825,7 +825,7 @@
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>de:</text>
+          <text>la</text>
         </lyric>
       </note>
       <note>
@@ -838,6 +838,10 @@
         <type>half</type>
         <stem>up</stem>
         <staff>1</staff>
+        <lyric number="1" placement="below" name="verse">
+          <syllabic>middle</syllabic>
+          <text>mo:</text>
+        </lyric>
       </note>
     </measure>
     <measure number="10">
@@ -854,9 +858,9 @@
         <voice>1</voice>
         <type>whole</type>
         <staff>1</staff>
-        <lyric number="1" placement="below" default-y="-92.5" name="verse">
+        <lyric number="1" placement="below" default-y="-77.5" name="verse">
           <syllabic>end</syllabic>
-          <text>o:</text>
+          <text>mo:</text>
         </lyric>
       </note>
     </measure>
