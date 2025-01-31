@@ -104,8 +104,10 @@ for i in range (len (pho)):
         # print ("missing diphone %s" % (P1 + P2))
         errors += [ "%s: missing diphone %s" % (sys.argv[1], P1 + P2) ]
       else:
-        assert (len (pho[i + 1]) >= 3)
-        last_f = float (pho[i + 1][3])
+        # since we have a vowel at start, last_f is already the frequency of the vowel
+        if len (pho[i + 1]) >= 3:
+          # true: vowel -> vowel case (melisma)
+          last_f = float (pho[i + 1][3])
         m = random.choice (possible_matches)
         d = Diphone()
         d.lyric = P1 + P2
