@@ -100,8 +100,8 @@ for i in range (len (pho)):
         if x[0][1] == P1 + '_' + P2:
           possible_matches.append (x)
       if len (possible_matches) == 0:
-        print ("missing diphone %s" % (P1 + P2))
-        pass
+        # print ("missing diphone %s" % (P1 + P2))
+        raise RuntimeError ("%s: missing diphone %s" % (sys.argv[1], P1 + P2))
       else:
         m = random.choice (possible_matches)
         d = Diphone()
