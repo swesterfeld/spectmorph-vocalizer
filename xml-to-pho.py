@@ -160,6 +160,14 @@ class VolumeState (Enum):
 class Note:
   pass
 
+class Rest:
+  pass
+
+# Note -> Note:
+#   skip = c_length (note.c_out + next_note.c_in)
+# Note -> Rest:
+#   skip = 0
+#   rest_ms -= note.c_out
 def print_note (note, skip):
   print (";;; ACCENT", note.has_accent)
   for c in note.c_in:
@@ -187,6 +195,8 @@ volume_state = VolumeState.CONST
 dynamic_list = []
 cresc_list = []
 dim_list = []
+
+notes = []
 
 for part in score.parts:
   for element in part.flatten():
@@ -257,9 +267,13 @@ for part in score.parts:
           sys.exit (1)
       else:
         has_accent = False
+        has_staccato = False
         for art in element.articulations:
           if art.name == "accent":
             has_accent = True
+          if art.name == "staccato":
+            has_staccato = True
+          print (";;;", art.name)
         lyric = element.lyric
         if lyric == "$":
           for i in range (cv_16_skip):
@@ -268,6 +282,19 @@ for part in score.parts:
           lyric = random_cv()
         lyric = cvc_split (lyric)
         c_in, v, c_out = lyric
+        new_note = Note()
+        new_note.c_in = c_in
+        new_note.v = v
+        new_note.c_out = c_out
+        new_note.ms = note_duration_ms
+        new_note.freq = freq
+        new_note.has_accent = has_accent
+        new_note.has_staccato = has_staccato
+        new_note.volume = volume
+        new_note.volume_state = volume_state
+        notes.append (new_note)
+        last_note = new_note
+        '''
         if last_note:
           skip = c_length (last_note.c_out + c_in)
           print_note (last_note, skip)
@@ -284,23 +311,67 @@ for part in score.parts:
         last_note.ms = note_duration_ms
         last_note.freq = freq
         last_note.has_accent = has_accent
+        last_note.has_staccato = has_staccato
         last_note.volume = volume
         last_note.volume_state = volume_state
         if volume_state == VolumeState.START:
           volume_state = VolumeState.NONE
         if volume_state == VolumeState.END:
           volume_state = VolumeState.CONST
+        '''
         last_rest = None
     if isinstance (element, note.Rest):
       length = element.duration.quarterLength * ms_per_beat
+      if not last_rest:
+        new_rest = Rest()
+        new_rest.length = length
+        notes.append (new_rest)
+        last_rest = new_rest
+      else:
+        last_rest.length += length
       quarter_offset += element.duration.quarterLength
       cv_16_skip += round (element.duration.quarterLength * 4)
+      last_note = None
+      '''
       if last_note:
         skip = 0
-        print_note (last_note, skip)
+        print_note (last_note, skip) FIXME: comment more
         last_rest = length - c_length (last_note.c_out)
         last_note = None
       elif last_rest:
         last_rest += length
       else:
         last_rest = length
+      '''
+
+# staccato: replace notes with note-rest (duration 50% each)
+notes_with_staccato = []
+for note in notes:
+  if isinstance (note, Note):
+    if note.has_staccato:
+      length = note.ms / 2
+      note.ms = length
+      notes_with_staccato.append (note)
+      rest = Rest()
+      rest.length = length
+      notes_with_staccato.append (rest)
+    else:
+      notes_with_staccato.append (note)
+
+notes = notes_with_staccato
+
+last_note = None
+for this_note in notes:
+  if isinstance (this_note, Note):
+    # print ("note: %f %f %s" % (this_note.freq, this_note.ms, this_note.c_in + [ this_note.v ] + this_note.c_out))
+    # print ("note: %f %f %s" % (note.freq, note.ms, note.c_in + [ note.v ] + note.c_out))
+    if last_note:
+      skip = c_length (last_note.c_out + this_note.c_in)
+      print_note (last_note, skip)
+    last_note = this_note
+  else:
+    if last_note:
+      skip = 0
+      print_note (last_note, skip)
+      last_note = None
+    print ("_ %.2f" % this_note.length)
