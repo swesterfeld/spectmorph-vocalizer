@@ -347,18 +347,19 @@ for part in score.parts:
 # staccato: replace notes with note-rest (duration 50% each)
 notes_with_staccato = []
 for note in notes:
-  if isinstance (note, Note):
-    if note.has_staccato:
-      length = note.ms / 2
-      note.ms = length
-      notes_with_staccato.append (note)
-      rest = Rest()
-      rest.length = length
-      notes_with_staccato.append (rest)
-    else:
-      notes_with_staccato.append (note)
+  if isinstance (note, Note) and note.has_staccato:
+    length = note.ms / 2
+    note.ms = length
+    notes_with_staccato.append (note)
+    rest = Rest()
+    rest.length = length
+    notes_with_staccato.append (rest)
+  else:
+    notes_with_staccato.append (note)
 
 notes = notes_with_staccato
+
+# staccato: FIXME: may want to collapse multiple rests into one at this point
 
 last_note = None
 for this_note in notes:

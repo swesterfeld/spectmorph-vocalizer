@@ -83,6 +83,7 @@ for i in range (len (pho)):
       P1 = P1[0][0]
     if is_v (P2):
       P2 = P2[0][0]
+    ''' staccato: FIXME: do we need this at all?
     if P1 == '_':
       d = Diphone()
       d.start_ms = start_ms
@@ -94,6 +95,7 @@ for i in range (len (pho)):
       d.bend = log2 (last_f / 164.81) * 12 # FIXME
       d.silent = True
       diphones.append (d)
+    '''
     if is_v (P1) and is_v (P2) and P2 != '_' and P1 != '_':
       possible_matches = []
       for j in range (len (lines) - 1):
@@ -142,12 +144,14 @@ for i in range (len (pho)):
         d.p1_ms = float (pho[i][1]) / 2
         d.p2_ms = float (pho[i + 1][1]) / 2
         d.silent = False
+        ''' staccato: FIXME: commenting this out now works for melisma.xml but breaks schaut-lang-kurz.xml
         if P1 == '_':
           d.p1_ms = 0
           d.p2_ms *= 2 # FIXME: not sure if this is what we want
         elif P2 == '_':
           d.p1_ms *= 2 # FIXME: not sure if this is what we want
           d.p2_ms = 0
+        '''
         start_ms += last_p2_ms + d.p1_ms # FIXME: doesn't seem to be the right value
         last_p2_ms = d.p2_ms
         if len (pho[i]) >= 3:
