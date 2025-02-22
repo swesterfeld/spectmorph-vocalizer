@@ -362,6 +362,7 @@ notes = notes_with_staccato
 # staccato: FIXME: may want to collapse multiple rests into one at this point
 
 last_note = None
+last_rest = None
 for this_note in notes:
   if isinstance (this_note, Note):
     # print ("note: %f %f %s" % (this_note.freq, this_note.ms, this_note.c_in + [ this_note.v ] + this_note.c_out))
@@ -369,10 +370,18 @@ for this_note in notes:
     if last_note:
       skip = c_length (last_note.c_out + this_note.c_in)
       print_note (last_note, skip)
+    if last_rest:
+      last_rest -= c_length (this_note.c_in)
+      print ("_ %.2f" % last_rest)
+      last_rest = None
     last_note = this_note
   else:
     if last_note:
       skip = 0
       print_note (last_note, skip)
+      last_rest = this_note.length - c_length (last_note.c_out) #?
       last_note = None
-    print ("_ %.2f" % this_note.length)
+    elif last_rest:
+      last_rest += this_note.length
+    else:
+      last_rest = this_note.length
