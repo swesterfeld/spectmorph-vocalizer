@@ -87,6 +87,7 @@ for i in range (len (pho)):
     if P1 == '_' and (float (pho[i][1]) > pause_fade_ms):
       d = Diphone()
       d.start_ms = start_ms
+      # FIXME: this is not right if the first note is a rest (as it doesn't get shortened by both sides of the rest)
       d.p1_ms = max (float (pho[i][1]) - pause_fade_ms, 0)
       d.p2_ms = 0
       d.startv = d.endv = False
