@@ -282,18 +282,18 @@ for part in score.parts:
           lyric = random_cv()
         lyric = cvc_split (lyric)
         c_in, v, c_out = lyric
-        new_note = Note()
-        new_note.c_in = c_in
-        new_note.v = v
-        new_note.c_out = c_out
-        new_note.ms = note_duration_ms
-        new_note.freq = freq
-        new_note.has_accent = has_accent
-        new_note.has_staccato = has_staccato
-        new_note.volume = volume
-        new_note.volume_state = volume_state
-        notes.append (new_note)
-        last_note = new_note
+        note = Note()
+        note.c_in = c_in
+        note.v = v
+        note.c_out = c_out
+        note.ms = note_duration_ms
+        note.freq = freq
+        note.has_accent = has_accent
+        note.has_staccato = has_staccato
+        note.volume = volume
+        note.volume_state = volume_state
+        notes.append (note)
+        last_note = note
         '''
         if last_note:
           skip = c_length (last_note.c_out + c_in)
@@ -363,25 +363,24 @@ notes = notes_with_staccato
 
 last_note = None
 last_rest = None
-for this_note in notes:
-  if isinstance (this_note, Note):
-    # print ("note: %f %f %s" % (this_note.freq, this_note.ms, this_note.c_in + [ this_note.v ] + this_note.c_out))
+for note in notes:
+  if isinstance (note, Note):
     # print ("note: %f %f %s" % (note.freq, note.ms, note.c_in + [ note.v ] + note.c_out))
     if last_note:
-      skip = c_length (last_note.c_out + this_note.c_in)
+      skip = c_length (last_note.c_out + note.c_in)
       print_note (last_note, skip)
     if last_rest:
-      last_rest -= c_length (this_note.c_in)
+      last_rest -= c_length (note.c_in)
       print ("_ %.2f" % last_rest)
       last_rest = None
-    last_note = this_note
+    last_note = note
   else:
     if last_note:
       skip = 0
       print_note (last_note, skip)
-      last_rest = this_note.length - c_length (last_note.c_out) #?
+      last_rest = note.length - c_length (last_note.c_out) #?
       last_note = None
     elif last_rest:
-      last_rest += this_note.length
+      last_rest += note.length
     else:
-      last_rest = this_note.length
+      last_rest = note.length
