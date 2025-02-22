@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from music21 import converter, note, stream, tempo, articulations, dynamics
+import music21
 import random
 import sys
 import re
@@ -137,7 +137,7 @@ if sys.argv[1] != "xml":
   sys.exit (1)
 
 # Load the MusicXML file
-score = converter.parse (sys.argv[2], format='musicxml')
+score = music21.converter.parse (sys.argv[2], format='musicxml')
 
 def set_tempo (quarter_length, tempo):
   global ms_per_beat
@@ -200,11 +200,11 @@ notes = []
 
 for part in score.parts:
   for element in part.flatten():
-    if isinstance (element, dynamics.Dynamic):
+    if isinstance (element, music21.dynamics.Dynamic):
       dynamic_list.append (element)
-    if isinstance (element, dynamics.Crescendo):
+    if isinstance (element, music21.dynamics.Crescendo):
       cresc_list.append (element)
-    if isinstance (element, dynamics.Diminuendo):
+    if isinstance (element, music21.dynamics.Diminuendo):
       dim_list.append (element)
 
 # Extract information from the score
@@ -213,9 +213,9 @@ for part in score.parts:
   print (";;; VOICE", part_name)
   for element in part.flatten():
     print (";;;", element)
-    if isinstance (element, dynamics.Dynamic):
+    if isinstance (element, music21.dynamics.Dynamic):
       volume = element.volumeScalar
-    if isinstance (element, note.Rest) or isinstance (element, note.Note):
+    if isinstance (element, music21.note.Rest) or isinstance (element, music21.note.Note):
       cresc_found = False
       if not in_cresc:
         for cresc_candidate in cresc_list:
@@ -240,7 +240,7 @@ for part in score.parts:
         print (";;; END DIM")
         volume_state = VolumeState.END
         in_dim = False
-    if isinstance (element, tempo.MetronomeMark):
+    if isinstance (element, music21.tempo.MetronomeMark):
       if element.numberSounding:
         tempo_change_sounding += [ element ]
       if (element.number):
@@ -251,7 +251,7 @@ for part in score.parts:
       set_tempo (telement.referent.quarterLength, telement.numberSounding)
       tempo_change_sounding = tempo_change_sounding[1:]
     print (";;; quarter_offset: ", quarter_offset)
-    if isinstance (element, note.Note):
+    if isinstance (element, music21.note.Note):
       note_duration_ms = element.duration.quarterLength * ms_per_beat
       quarter_offset += element.duration.quarterLength
       freq = element.pitch.frequency
@@ -320,7 +320,7 @@ for part in score.parts:
           volume_state = VolumeState.CONST
         '''
         last_rest = None
-    if isinstance (element, note.Rest):
+    if isinstance (element, music21.note.Rest):
       length = element.duration.quarterLength * ms_per_beat
       if not last_rest:
         new_rest = Rest()
