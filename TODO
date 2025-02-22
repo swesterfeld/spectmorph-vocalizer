@@ -1,0 +1,13 @@
+ - add extra labels for "bad" diphones, avoid using these in synthesis (i.e. "!")
+ - for short notes, both vowel and consonants need to be shortened
+ - diphthongs 80/20 rule (or something?)
+ - detect long vowels and use a_a (or similar) for those
+ - record "_haha" diphones, maybe use "_h", use "ha", "ah"
+ - record humming m_m, ...
+ - glottal stop ("?") labeling
+ - melisma frequency bend: should we use a slide instead of a frequency jump
+
+test cases:
+ - extra test case for extremely short notes
+ - extra test case for "h" consonant
+ - staccato at end + rest test case
