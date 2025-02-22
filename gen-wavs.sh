@@ -28,8 +28,12 @@ check_voice
 make -C src
 src/mkplan template.smplan voice/sven.flac voice/sven.smplan
 
+XMLS="$@"
+if test -z "$XMLS"; then
+  XMLS="$(cd testxml; ls)"
+fi
 
-for xml in $(cd testxml; ls)
+for xml in $XMLS
 do
   pho=$(echo $xml|sed s/.xml$/.pho/g)
   script=$(echo $xml|sed s/.xml$/.script/g)

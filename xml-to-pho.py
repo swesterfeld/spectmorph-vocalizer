@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from music21 import converter, note, stream, tempo, articulations, dynamics
+import music21
 import random
 import sys
 import re
@@ -137,7 +137,7 @@ if sys.argv[1] != "xml":
   sys.exit (1)
 
 # Load the MusicXML file
-score = converter.parse (sys.argv[2], format='musicxml')
+score = music21.converter.parse (sys.argv[2], format='musicxml')
 
 def set_tempo (quarter_length, tempo):
   global ms_per_beat
@@ -160,6 +160,14 @@ class VolumeState (Enum):
 class Note:
   pass
 
+class Rest:
+  pass
+
+# Note -> Note:
+#   skip = c_length (note.c_out + next_note.c_in)
+# Note -> Rest:
+#   skip = 0
+#   rest_ms -= note.c_out
 def print_note (note, skip):
   print (";;; ACCENT", note.has_accent)
   for c in note.c_in:
@@ -188,13 +196,15 @@ dynamic_list = []
 cresc_list = []
 dim_list = []
 
+notes = []
+
 for part in score.parts:
   for element in part.flatten():
-    if isinstance (element, dynamics.Dynamic):
+    if isinstance (element, music21.dynamics.Dynamic):
       dynamic_list.append (element)
-    if isinstance (element, dynamics.Crescendo):
+    if isinstance (element, music21.dynamics.Crescendo):
       cresc_list.append (element)
-    if isinstance (element, dynamics.Diminuendo):
+    if isinstance (element, music21.dynamics.Diminuendo):
       dim_list.append (element)
 
 # Extract information from the score
@@ -203,9 +213,9 @@ for part in score.parts:
   print (";;; VOICE", part_name)
   for element in part.flatten():
     print (";;;", element)
-    if isinstance (element, dynamics.Dynamic):
+    if isinstance (element, music21.dynamics.Dynamic):
       volume = element.volumeScalar
-    if isinstance (element, note.Rest) or isinstance (element, note.Note):
+    if isinstance (element, music21.note.Rest) or isinstance (element, music21.note.Note):
       cresc_found = False
       if not in_cresc:
         for cresc_candidate in cresc_list:
@@ -230,7 +240,7 @@ for part in score.parts:
         print (";;; END DIM")
         volume_state = VolumeState.END
         in_dim = False
-    if isinstance (element, tempo.MetronomeMark):
+    if isinstance (element, music21.tempo.MetronomeMark):
       if element.numberSounding:
         tempo_change_sounding += [ element ]
       if (element.number):
@@ -241,7 +251,7 @@ for part in score.parts:
       set_tempo (telement.referent.quarterLength, telement.numberSounding)
       tempo_change_sounding = tempo_change_sounding[1:]
     print (";;; quarter_offset: ", quarter_offset)
-    if isinstance (element, note.Note):
+    if isinstance (element, music21.note.Note):
       note_duration_ms = element.duration.quarterLength * ms_per_beat
       quarter_offset += element.duration.quarterLength
       freq = element.pitch.frequency
@@ -257,9 +267,13 @@ for part in score.parts:
           sys.exit (1)
       else:
         has_accent = False
+        has_staccato = False
         for art in element.articulations:
           if art.name == "accent":
             has_accent = True
+          if art.name == "staccato":
+            has_staccato = True
+          print (";;;", art.name)
         lyric = element.lyric
         if lyric == "$":
           for i in range (cv_16_skip):
@@ -268,6 +282,19 @@ for part in score.parts:
           lyric = random_cv()
         lyric = cvc_split (lyric)
         c_in, v, c_out = lyric
+        note = Note()
+        note.c_in = c_in
+        note.v = v
+        note.c_out = c_out
+        note.ms = note_duration_ms
+        note.freq = freq
+        note.has_accent = has_accent
+        note.has_staccato = has_staccato
+        note.volume = volume
+        note.volume_state = volume_state
+        notes.append (note)
+        last_note = note
+        '''
         if last_note:
           skip = c_length (last_note.c_out + c_in)
           print_note (last_note, skip)
@@ -284,23 +311,76 @@ for part in score.parts:
         last_note.ms = note_duration_ms
         last_note.freq = freq
         last_note.has_accent = has_accent
+        last_note.has_staccato = has_staccato
         last_note.volume = volume
         last_note.volume_state = volume_state
         if volume_state == VolumeState.START:
           volume_state = VolumeState.NONE
         if volume_state == VolumeState.END:
           volume_state = VolumeState.CONST
+        '''
         last_rest = None
-    if isinstance (element, note.Rest):
+    if isinstance (element, music21.note.Rest):
       length = element.duration.quarterLength * ms_per_beat
+      if not last_rest:
+        new_rest = Rest()
+        new_rest.length = length
+        notes.append (new_rest)
+        last_rest = new_rest
+      else:
+        last_rest.length += length
       quarter_offset += element.duration.quarterLength
       cv_16_skip += round (element.duration.quarterLength * 4)
+      last_note = None
+      '''
       if last_note:
         skip = 0
-        print_note (last_note, skip)
+        print_note (last_note, skip) FIXME: comment more
         last_rest = length - c_length (last_note.c_out)
         last_note = None
       elif last_rest:
         last_rest += length
       else:
         last_rest = length
+      '''
+
+# staccato: replace notes with note-rest (duration 50% each)
+notes_with_staccato = []
+for note in notes:
+  if isinstance (note, Note) and note.has_staccato:
+    length = note.ms / 2
+    note.ms = length
+    notes_with_staccato.append (note)
+    rest = Rest()
+    rest.length = length
+    notes_with_staccato.append (rest)
+  else:
+    notes_with_staccato.append (note)
+
+notes = notes_with_staccato
+
+# staccato: FIXME: may want to collapse multiple rests into one at this point
+
+last_note = None
+last_rest = None
+for note in notes:
+  if isinstance (note, Note):
+    # print ("note: %f %f %s" % (note.freq, note.ms, note.c_in + [ note.v ] + note.c_out))
+    if last_note:
+      skip = c_length (last_note.c_out + note.c_in)
+      print_note (last_note, skip)
+    if last_rest:
+      last_rest -= c_length (note.c_in)
+      print ("_ %.2f" % last_rest)
+      last_rest = None
+    last_note = note
+  else:
+    if last_note:
+      skip = 0
+      print_note (last_note, skip)
+      last_rest = note.length - c_length (last_note.c_out) #?
+      last_note = None
+    elif last_rest:
+      last_rest += note.length
+    else:
+      last_rest = note.length

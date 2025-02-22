@@ -75,6 +75,7 @@ last_p2_ms = 0
 print ("note_on 0 52 100")
 diphones = []
 last_f = 130.81
+pause_fade_ms = 50
 for i in range (len (pho)):
   if i + 1 < len (pho):
     P1 = pho[i][0]
@@ -83,10 +84,11 @@ for i in range (len (pho)):
       P1 = P1[0][0]
     if is_v (P2):
       P2 = P2[0][0]
-    if P1 == '_':
+    if P1 == '_' and (float (pho[i][1]) > pause_fade_ms):
       d = Diphone()
       d.start_ms = start_ms
-      d.p1_ms = float (pho[i][1])
+      # FIXME: this is not right if the first note is a rest (as it doesn't get shortened by both sides of the rest)
+      d.p1_ms = max (float (pho[i][1]) - pause_fade_ms, 0)
       d.p2_ms = 0
       d.startv = d.endv = False
       d.pos1 = d.pos2 = 0
@@ -143,11 +145,9 @@ for i in range (len (pho)):
         d.p2_ms = float (pho[i + 1][1]) / 2
         d.silent = False
         if P1 == '_':
-          d.p1_ms = 0
-          d.p2_ms *= 2 # FIXME: not sure if this is what we want
+          d.p1_ms = min (d.p1_ms, pause_fade_ms / 2)
         elif P2 == '_':
-          d.p1_ms *= 2 # FIXME: not sure if this is what we want
-          d.p2_ms = 0
+          d.p2_ms = min (d.p2_ms, pause_fade_ms / 2)
         start_ms += last_p2_ms + d.p1_ms # FIXME: doesn't seem to be the right value
         last_p2_ms = d.p2_ms
         if len (pho[i]) >= 3:
@@ -222,9 +222,23 @@ if errors:
     start_ms += t.start_v_ms + t.c_ms + t.end_v_ms
 '''
 
+# for removing zero length diphones from synthesis list; however
+# FIXME: the followings steps need to be reimplemented in a way that is sample accurate
+# (i.e. support sub-millisecond timing information)
+def diphone_ms_not_zero (d):
+  ms = int (d.p1_ms + d.p2_ms)
+  return ms > 0
+
 for d in diphones:
-  print (d, file=sys.stderr)
+  if diphone_ms_not_zero (d):
+    x = ""
+  else:
+    x = "*"
+
+  print (d, x, file=sys.stderr)
   #print (t.start_v_ms + t.c_ms + t.end_v_ms, (t.pos2 - t.pos1) * 1000, file=sys.stderr)
+
+diphones = list (filter (diphone_ms_not_zero, diphones))
 
 def gen_wav_source (start):
   pos = []
