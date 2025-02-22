@@ -319,7 +319,7 @@ def gen_wav_source (start):
 def fade_time (x):
   if x in [ 'g', 'b', 'd', 't', 'p', 'k', '?' ]:
     return 0
-  if x in [ 'n', 'm', 'l', 's', 'Z', 'S', 'f', 'r', 'h', 'N', 'z' ]:
+  if x in [ 'n', 'm', 'l', 's', 'Z', 'S', 'f', 'r', 'h', 'N', 'z', 'j' ]:
     return 25
   if is_v (x):
     return 100
