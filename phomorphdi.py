@@ -256,17 +256,22 @@ def gen_wav_source (start):
     ms = int (d.p1_ms + d.p2_ms)
     if d.startv == False and d.endv == False:
       stretch_cc = (d.pos2 - d.pos1) * 1000 / ms
-    if d.startv == True and d.endv == True:
+    elif d.startv == True and d.endv == True:
       stretch_vv = (d.pos2 - d.pos1) * 1000 / ms
       #print ((d.pos2 - d.pos1) * 1000, ms, stretch_cc, "#P")
+    else:
+      # if the whole c->v or v->c transition can be played at normal speed, use stretch=1
+      # otherwise we want to speed up the transition in order to maintain tempo
+      stretch = max ((d.pos2 - d.pos1) * 1000 / ms, 1)
+      print (stretch, file=sys.stderr)
     for j in range (-120, ms + 120):
       if idx % 2 == start:
         if d.startv == False and d.endv == True:
-          x = d.pos1 + j * 0.001
+          x = d.pos1 + j * 0.001 * stretch
           if x > d.pos2:
             x = d.pos2
         elif d.startv == True and d.endv == False:
-          x = d.pos2 - (ms - j) * 0.001
+          x = d.pos2 - (ms - j) * 0.001 * stretch
           if x < d.pos1:
             x = d.pos1
         elif d.startv == False and d.endv == False:

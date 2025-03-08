@@ -5,7 +5,7 @@ set -e
 mkdir -p testxml pho script wav voice
 
 #---------------- voice downloader ----------------------
-VOICE_EXPECT=292aa38c052c12b4ddff6ba30ed7ba097299a898
+VOICE_EXPECT=c9439564c65a33e971ba6b970a81533a06e21f90
 
 check_voice()
 {
