@@ -64,7 +64,7 @@ class Diphone:
     return s
 
 def is_v (v):
-  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'U', '6', '@', 'E' ]:
+  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'U', '6', '2', '@', 'E' ]:
     if v == vv or v == vv + ':':
       return True
   return v == '_'
@@ -324,7 +324,7 @@ def gen_wav_source (start):
 def fade_time (x):
   if x in [ 'g', 'b', 'd', 't', 'p', 'k', '?' ]:
     return 0
-  if x in [ 'n', 'm', 'l', 's', 'Z', 'S', 'f', 'r', 'h', 'N', 'z', 'j' ]:
+  if x in [ 'n', 'm', 'l', 's', 'Z', 'S', 'f', 'v', 'r', 'h', 'N', 'z', 'j' ]:
     return 25
   if is_v (x):
     return 100
