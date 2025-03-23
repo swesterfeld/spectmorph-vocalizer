@@ -15,10 +15,17 @@ assert (len (sys.argv) == 3)
 voice_length = float (sys.argv[2])
 
 lines = []
+ignore_labels = []
 with open ("diphone-sven.label", "r") as file:
   for line in file:
     line = line.split()
-    lines.append ((float (line[0]), line[2].rstrip(":")))
+    if line[2] in ["dh", "bh", "th"]:
+      ignore_labels.append (line[2])
+    else:
+      lines.append ((float (line[0]), line[2].rstrip(":")))
+
+if ignore_labels:
+  print ("ignore labels", set (ignore_labels), file=sys.stderr)
 
 pho = []
 line_number = 1
@@ -64,7 +71,7 @@ class Diphone:
     return s
 
 def is_v (v):
-  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'U', '6', '2', '@', 'E' ]:
+  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', '6', '2', '@', 'E' ]:
     if v == vv or v == vv + ':':
       return True
   return v == '_'
