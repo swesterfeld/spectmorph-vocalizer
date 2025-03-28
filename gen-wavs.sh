@@ -6,6 +6,7 @@ mkdir -p testxml pho script wav voice
 
 #---------------- voice downloader ----------------------
 VOICE_EXPECT=a9e86922919527544c9ac1903151e4340a6219c3
+VOICE_URL="https://space.twc.de/~stefan/download2/voice/${VOICE_EXPECT}.flac"
 
 check_voice()
 {
@@ -20,9 +21,10 @@ check_voice()
 
 check_voice || {
   echo "downloading voice file..."
-  wget space.twc.de/~stefan/download2/voice/${VOICE_EXPECT}.flac -O voice/sven.flac
+  wget ${VOICE_URL} -O voice/sven.flac
 }
 check_voice
+echo "Using Voice from $VOICE_URL"
 #--------------------------------------------------------
 
 make -C src
