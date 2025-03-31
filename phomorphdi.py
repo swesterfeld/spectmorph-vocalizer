@@ -19,7 +19,7 @@ ignore_labels = []
 with open ("diphone-sven.label", "r") as file:
   for line in file:
     line = line.split()
-    if line[2] in ["dh", "bh", "th"]:
+    if line[2] in ["dh", "bh", "th", "gh", "kh", "ph", "?h" ]:
       ignore_labels.append (line[2])
     else:
       lines.append ((float (line[0]), line[2].rstrip(":")))
