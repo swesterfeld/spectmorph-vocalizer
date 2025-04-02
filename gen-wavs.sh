@@ -5,7 +5,7 @@ set -e
 mkdir -p testxml pho script wav voice
 
 #---------------- voice downloader ----------------------
-VOICE_EXPECT=e6d2b1c04f353f8bb422e7130756bb0e96736f0b
+VOICE_EXPECT=9809e3665a276c56fb515f69d2eb3ac38b9b6f70
 VOICE_URL="https://space.twc.de/~stefan/download2/voice/${VOICE_EXPECT}.flac"
 
 check_voice()
