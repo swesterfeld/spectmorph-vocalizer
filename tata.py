@@ -40,9 +40,14 @@ synlist = []
 nlen = 1000
 acc = 0
 
+sl_trace_file = open ('tata.txt', 'w')
+sl_trace_set = set()
+
 def sl_trace (label):
-  pass
-  #print ("%f\t%f\t%s" % (synlist[-1][0], synlist[-1][1], label))
+  out = "%f\t%f\t%s" % (synlist[-1][0], synlist[-1][1], label)
+  if out not in sl_trace_set:
+    print (out, file=sl_trace_file)
+    sl_trace_set.add (out)
 
 for rep in range (40):
   # S short part
@@ -63,10 +68,10 @@ for rep in range (40):
         if tri[0][1] == "a" and tri[1][1] == text[0] and tri[2][1] == text[0] + "h":
           ct = (tri[0][0] + tri[1][0]) / 2
           synlist.append ((ct, tri[1][0], L, 1))
-          sl_trace ("at1")
+          sl_trace (d + "1")
           end = (tri[1][0] + tri[2][0]) / 2
           synlist.append ((tri[1][0], end, S, 1))
-          sl_trace ("at2")
+          sl_trace (d + "2")
         diphone_missing = False
     elif d == text[0] + "a":
       for x in range (len (lines)):
@@ -74,10 +79,10 @@ for rep in range (40):
         if tri[0][1] == text[0] and tri[1][1] == text[0] + "h" and tri[2][1] == "a":
           #nextt = (tri[0][0] + tri[1][0]) / 2
           synlist.append ((tri[1][0] - 0.02, tri[2][0], S, 2))
-          sl_trace ("ta1")
+          sl_trace (d + "1")
           nextend = tri[2][0] + 0.3
           synlist.append ((tri[2][0], nextend, L, 1))
-          sl_trace ("ta2")
+          sl_trace (d + "2")
         diphone_missing = False
     elif d == "ak" or d == "ap":
       for x in range (len (lines)):
@@ -85,10 +90,10 @@ for rep in range (40):
         if tri[0][1] == "a" and tri[1][1] == d[1] and tri[2][1] == d[1] + "h":
           ct = (tri[0][0] + tri[1][0]) / 2
           synlist.append ((ct, tri[1][0], L, 1))
-          sl_trace ("ak1")
+          sl_trace (d + "1")
           end = (tri[1][0] + tri[2][0]) / 2
           synlist.append ((tri[1][0], end, S, 1))
-          sl_trace ("ak2")
+          sl_trace (d + "2")
         diphone_missing = False
     elif d == "kt" or d == "pd":
       for x in range (len (lines)):
@@ -96,9 +101,9 @@ for rep in range (40):
         if quad[0][1] == d[0] and quad[2][1] == d[1]:
           #synlist.append ((quad[1][0] - 0.02, quad[2][0], S))
           synlist.append ((quad[1][0], quad[2][0], S, 0.001))
-          sl_trace ("kt1")
+          sl_trace (d + "1")
           synlist.append (((quad[2][0] + quad[3][0]) / 2 + 0.05, (quad[2][0] + quad[3][0]) / 2 + 0.1, S, 1))
-          sl_trace ("kt2")
+          sl_trace (d + "2")
         diphone_missing = False
     if diphone_missing:
       print ("missing diphone %s" % d, file=sys.stderr)
