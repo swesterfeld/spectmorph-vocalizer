@@ -2,9 +2,49 @@
 
 #include <cstdio>
 
+#include <sys/resource.h>
+
 #include "spectmorph.hh"
 
 using namespace SpectMorph;
+
+void
+print_memory_usage (const std::string& where)
+{
+  printf ("=== memory usage (%s): ===\n", where.c_str());
+
+  // Get Peak RSS from getrusage
+  struct rusage usage;
+  if (getrusage (RUSAGE_SELF, &usage) == 0)
+    {
+      printf (" - Peak RSS: %.2f MB\n", usage.ru_maxrss / 1024.0);
+    }
+  else
+    {
+      perror ("getrusage failed");
+    }
+
+  // Get Virtual Memory and Current RSS from /proc/self/statm
+  FILE *fp = fopen ("/proc/self/statm", "r");
+  if (!fp)
+    {
+      perror ("Failed to open /proc/self/statm");
+      return;
+    }
+
+  long page_size = sysconf (_SC_PAGESIZE); // Get page size in bytes
+  long vm_size, rss;
+  if (fscanf (fp, "%ld %ld", &vm_size, &rss) != 2)
+    {
+      perror("Failed to read memory usage");
+      fclose (fp);
+      return;
+    }
+  fclose (fp);
+
+  printf (" - Current RSS: %.2f MB\n", (rss * page_size) / (1024.0 * 1024.0));
+  printf (" - Virtual Memory: %.2f MB\n", (vm_size * page_size) / (1024.0 * 1024.0));
+}
 
 int
 main (int argc, char **argv)
@@ -57,4 +97,5 @@ main (int argc, char **argv)
     }
 
   project.save (argv[3]);
+  print_memory_usage ("mkplan memory final");
 }
