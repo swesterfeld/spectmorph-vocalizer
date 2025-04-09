@@ -47,8 +47,23 @@ def sl_trace (label):
   out = "%f\t%f\t%s" % (synlist[-1][0], synlist[-1][1], label)
   if out not in sl_trace_set:
     print (out, file=sl_trace_file)
+    print ("%s\t%f\t%f" % (out, synlist[-1][2], (synlist[-1][1] - synlist[-1][0]) / (synlist[-1][2] / 1000)), file=sys.stderr)
     sl_trace_set.add (out)
 
+def phone_class (p):
+  if p == "a":
+    return "v"
+  if p in  [ "t", "p", "k", "d", "b", "g" ]:
+    return "p"
+  if p in [ "m", "l", "S" ]:
+    return "c"
+  raise RuntimeError ("unknown phone class: %s" % p)
+
+def diphone_class (d):
+  assert (len (d) == 2)
+  return phone_class (d[0]) + phone_class (d[1])
+
+print ("\n[", file=sys.stderr)
 for rep in range (40):
   # S short part
   # L long part
@@ -62,31 +77,11 @@ for rep in range (40):
   #print ("plosiv", "a" + "|" + text[0] + "|" + text[0] + "h")
   for d in tsplit:
     diphone_missing = True
-    if d == "a" + text[0]:
+    dclass = diphone_class (d)
+    if dclass == "vp":
       for x in range (len (lines)):
         tri = lines[x:x+3]
-        if tri[0][1] == "a" and tri[1][1] == text[0] and tri[2][1] == text[0] + "h":
-          ct = (tri[0][0] + tri[1][0]) / 2
-          synlist.append ((ct, tri[1][0], L, 1))
-          sl_trace (d + "1")
-          end = (tri[1][0] + tri[2][0]) / 2
-          synlist.append ((tri[1][0], end, S, 1))
-          sl_trace (d + "2")
-        diphone_missing = False
-    elif d == text[0] + "a":
-      for x in range (len (lines)):
-        tri = lines[x:x+3]
-        if tri[0][1] == text[0] and tri[1][1] == text[0] + "h" and tri[2][1] == "a":
-          #nextt = (tri[0][0] + tri[1][0]) / 2
-          synlist.append ((tri[1][0] - 0.02, tri[2][0], S, 2))
-          sl_trace (d + "1")
-          nextend = tri[2][0] + 0.3
-          synlist.append ((tri[2][0], nextend, L, 1))
-          sl_trace (d + "2")
-        diphone_missing = False
-    elif d == "ak" or d == "ap":
-      for x in range (len (lines)):
-        tri = lines[x:x+3]
+        # example: a | t | th
         if tri[0][1] == "a" and tri[1][1] == d[1] and tri[2][1] == d[1] + "h":
           ct = (tri[0][0] + tri[1][0]) / 2
           synlist.append ((ct, tri[1][0], L, 1))
@@ -94,23 +89,84 @@ for rep in range (40):
           end = (tri[1][0] + tri[2][0]) / 2
           synlist.append ((tri[1][0], end, S, 1))
           sl_trace (d + "2")
-        diphone_missing = False
-    elif d == "kt" or d == "pd":
+          diphone_missing = False
+    elif dclass == "pv":
+      for x in range (len (lines)):
+        tri = lines[x:x+3]
+        # example: t | th | a
+        if tri[0][1] == d[0] and tri[1][1] == d[0] + "h" and tri[2][1] == "a":
+          #nextt = (tri[0][0] + tri[1][0]) / 2
+          synlist.append ((tri[1][0] - 0.02, tri[2][0], S, 2))
+          sl_trace (d + "1")
+          nextend = tri[2][0] + 0.3
+          synlist.append ((tri[2][0], nextend, L, 1))
+          sl_trace (d + "2")
+          diphone_missing = False
+    elif dclass == "pp":
       for x in range (len (lines)):
         quad = lines[x:x+4]
+        # example: k | kh | t | th
         if quad[0][1] == d[0] and quad[2][1] == d[1]:
           #synlist.append ((quad[1][0] - 0.02, quad[2][0], S))
           synlist.append ((quad[1][0], quad[2][0], S, 0.001))
           sl_trace (d + "1")
           synlist.append (((quad[2][0] + quad[3][0]) / 2 + 0.05, (quad[2][0] + quad[3][0]) / 2 + 0.1, S, 1))
           sl_trace (d + "2")
-        diphone_missing = False
+          diphone_missing = False
+    elif dclass == "vc":
+      for x in range (len (lines)):
+        tri = lines[x:x+3]
+        # example a S
+        if tri[0][1] == d[0] and tri[1][1] == d[1]:
+          ct = (tri[0][0] + tri[1][0]) / 2
+          synlist.append ((ct, tri[1][0], L, 1))
+          sl_trace (d + "1")
+          synlist.append ((tri[1][0], (tri[1][0] + tri[2][0]) / 2, S, 1))
+          sl_trace (d + "2")
+          diphone_missing = False
+    elif dclass == "cp":
+      for x in range (len (lines)):
+        tri = lines[x:x+3]
+        if tri[0][1] == d[0] and tri[1][1] == d[1] and tri[2][1] == d[1] + "h":
+          ct = (tri[0][0] + tri[1][0]) / 2
+          synlist.append ((ct, tri[1][0], S, 1))
+          sl_trace (d + "1")
+          end = (tri[1][0] + tri[2][0]) / 2
+          synlist.append ((tri[1][0], end, S, 1))
+          sl_trace (d + "2")
+          diphone_missing = False
+    elif dclass == "cv":
+      for x in range (len (lines)):
+        tri = lines[x:x+3]
+        # example: S a
+        if tri[0][1] == d[0] and tri[1][1] == d[1]:
+          ct = (tri[0][0] + tri[1][0]) / 2
+          synlist.append ((ct, tri[1][0], S, 1))
+          sl_trace (d + "1")
+          end = (tri[1][0] + tri[2][0]) / 2
+          synlist.append ((tri[1][0], end, L, 1))
+          sl_trace (d + "2")
+          diphone_missing = False
+    elif dclass == "pc":
+      for x in range (len (lines)):
+        tri = lines[x:x+3]
+        # example: t | th | S
+        if tri[0][1] == d[0] and tri[1][1] == d[0] + "h" and tri[2][1] == d[1]:
+          #nextt = (tri[0][0] + tri[1][0]) / 2
+          synlist.append ((tri[1][0] - 0.02, tri[2][0], S, 2))
+          sl_trace (d + "1")
+          nextend = tri[2][0] + 0.1
+          synlist.append ((tri[2][0], nextend, S, 1))
+          sl_trace (d + "2")
+          diphone_missing = False
+
     if diphone_missing:
       print ("missing diphone %s" % d, file=sys.stderr)
   acc += nlen
   if acc > 500:
     nlen *= 0.85
     acc = 0
+print ("]\n", file=sys.stderr)
 #for s in synlist:
 #  print (s)
 phase = 0
