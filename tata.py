@@ -63,16 +63,23 @@ def diphone_class (d):
   assert (len (d) == 2)
   return phone_class (d[0]) + phone_class (d[1])
 
+def cons_count (text):
+  cc = 0
+  for t in text[:-1]: # last char is the same as first char
+    if (phone_class (t) != "v"):
+      cc += 1
+  return cc
+
 print ("\n[", file=sys.stderr)
 for rep in range (40):
   # S short part
   # L long part
   # L * 2 + S * 2 == nlen
-  if nlen < 200:
-    L = nlen / 4
-    S = nlen / 4
+  if nlen < 50 * 2 * (cons_count (text) + 1): # hardcode: one vowel
+    L = nlen / (2 * (cons_count (text) + 1))
+    S = L
   else:
-    L = nlen / 2 - 50
+    L = nlen / 2 - cons_count (text) * 50
     S = 50
   #print ("plosiv", "a" + "|" + text[0] + "|" + text[0] + "h")
   for d in tsplit:
