@@ -122,7 +122,7 @@ for rep in range (40):
       for x in range (len (lines)):
         quad = lines[x:x+4]
         # example: k | kh | t | th
-        if quad[0][1] == d[0] and quad[2][1] == d[1]:
+        if quad[0][1] == d[0] and quad[1][1] == d[0] + "h" and quad[2][1] == d[1] and quad[3][1] == d[1] + "h":
           #synlist.append ((quad[1][0] - 0.02, quad[2][0], S))
           synlist.append ((quad[1][0], quad[2][0], S, 0.001))
           sl_trace (d + "1")
