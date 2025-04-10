@@ -107,14 +107,13 @@ for rep in range (40):
           break
     elif dclass == "pv":
       for x in range (len (lines)):
-        tri = lines[x:x+3]
+        quad = lines[x:x+4]
         # example: t | th | a
-        if tri[0][1] == d[0] and tri[1][1] == d[0] + "h" and tri[2][1] == d[1]:
+        if quad[0][1] == d[0] and quad[1][1] == d[0] + "h" and quad[2][1] == d[1]:
           #nextt = (tri[0][0] + tri[1][0]) / 2
-          synlist.append ((tri[1][0] - 0.02, tri[2][0], S, 2))
+          synlist.append ((quad[1][0] - 0.02, quad[2][0], S, 2))
           sl_trace (d + "1")
-          nextend = tri[2][0] + 0.3
-          synlist.append ((tri[2][0], nextend, L, 1))
+          synlist.append ((quad[2][0], (quad[2][0] + quad[3][0]) / 2, L, 1))
           sl_trace (d + "2")
           diphone_missing = False
           break
@@ -169,14 +168,13 @@ for rep in range (40):
           break
     elif dclass == "pc":
       for x in range (len (lines)):
-        tri = lines[x:x+3]
+        quad = lines[x:x+4]
         # example: t | th | S
-        if tri[0][1] == d[0] and tri[1][1] == d[0] + "h" and tri[2][1] == d[1]:
+        if quad[0][1] == d[0] and quad[1][1] == d[0] + "h" and quad[2][1] == d[1]:
           #nextt = (tri[0][0] + tri[1][0]) / 2
-          synlist.append ((tri[1][0] - 0.02, tri[2][0], S, 2))
+          synlist.append ((quad[1][0] - 0.02, quad[2][0], S, 2))
           sl_trace (d + "1")
-          nextend = tri[2][0] + 0.1
-          synlist.append ((tri[2][0], nextend, S, 1))
+          synlist.append ((quad[2][0], (quad[2][0] + quad[3][0]) / 2, S, 1))
           sl_trace (d + "2")
           diphone_missing = False
           break
