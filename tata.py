@@ -26,6 +26,11 @@ with open ("plosive.label", "r") as file:
     line = line.split()
     lines.append ((float (line[0]), line[2].rstrip(":")))
 
+with open ("diphone-sven.label", "r") as file:
+  for line in file:
+    line = line.split()
+    lines.append ((float (line[0]), line[2].rstrip(":")))
+
 print ("note_on 0 52 100")
 #ct = 243.503731
 
@@ -43,6 +48,8 @@ acc = 0
 sl_trace_file = open ('tata.txt', 'w')
 sl_trace_set = set()
 
+diphone_missing_set = set()
+
 def sl_trace (label):
   out = "%f\t%f\t%s" % (synlist[-1][0], synlist[-1][1], label)
   if out not in sl_trace_set:
@@ -51,11 +58,11 @@ def sl_trace (label):
     sl_trace_set.add (out)
 
 def phone_class (p):
-  if p == "a":
+  if p in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '@', 'E' ]:
     return "v"
   if p in  [ "t", "p", "k", "d", "b", "g" ]:
     return "p"
-  if p in [ "m", "l", "S" ]:
+  if p in [ 'n', 'm', 'l', 's', 'Z', 'S', 'f', 'v', 'r', 'h', 'N', 'z', 'j', 'C', 'x' ]:
     return "c"
   raise RuntimeError ("unknown phone class: %s" % p)
 
@@ -89,7 +96,7 @@ for rep in range (40):
       for x in range (len (lines)):
         tri = lines[x:x+3]
         # example: a | t | th
-        if tri[0][1] == "a" and tri[1][1] == d[1] and tri[2][1] == d[1] + "h":
+        if tri[0][1] == d[0] and tri[1][1] == d[1] and tri[2][1] == d[1] + "h":
           ct = (tri[0][0] + tri[1][0]) / 2
           synlist.append ((ct, tri[1][0], L, 1))
           sl_trace (d + "1")
@@ -97,11 +104,12 @@ for rep in range (40):
           synlist.append ((tri[1][0], end, S, 1))
           sl_trace (d + "2")
           diphone_missing = False
+          break
     elif dclass == "pv":
       for x in range (len (lines)):
         tri = lines[x:x+3]
         # example: t | th | a
-        if tri[0][1] == d[0] and tri[1][1] == d[0] + "h" and tri[2][1] == "a":
+        if tri[0][1] == d[0] and tri[1][1] == d[0] + "h" and tri[2][1] == d[1]:
           #nextt = (tri[0][0] + tri[1][0]) / 2
           synlist.append ((tri[1][0] - 0.02, tri[2][0], S, 2))
           sl_trace (d + "1")
@@ -109,6 +117,7 @@ for rep in range (40):
           synlist.append ((tri[2][0], nextend, L, 1))
           sl_trace (d + "2")
           diphone_missing = False
+          break
     elif dclass == "pp":
       for x in range (len (lines)):
         quad = lines[x:x+4]
@@ -120,6 +129,7 @@ for rep in range (40):
           synlist.append (((quad[2][0] + quad[3][0]) / 2 + 0.05, (quad[2][0] + quad[3][0]) / 2 + 0.1, S, 1))
           sl_trace (d + "2")
           diphone_missing = False
+          break
     elif dclass == "vc":
       for x in range (len (lines)):
         tri = lines[x:x+3]
@@ -131,6 +141,7 @@ for rep in range (40):
           synlist.append ((tri[1][0], (tri[1][0] + tri[2][0]) / 2, S, 1))
           sl_trace (d + "2")
           diphone_missing = False
+          break
     elif dclass == "cp":
       for x in range (len (lines)):
         tri = lines[x:x+3]
@@ -142,6 +153,7 @@ for rep in range (40):
           synlist.append ((tri[1][0], end, S, 1))
           sl_trace (d + "2")
           diphone_missing = False
+          break
     elif dclass == "cv":
       for x in range (len (lines)):
         tri = lines[x:x+3]
@@ -154,6 +166,7 @@ for rep in range (40):
           synlist.append ((tri[1][0], end, L, 1))
           sl_trace (d + "2")
           diphone_missing = False
+          break
     elif dclass == "pc":
       for x in range (len (lines)):
         tri = lines[x:x+3]
@@ -166,9 +179,10 @@ for rep in range (40):
           synlist.append ((tri[2][0], nextend, S, 1))
           sl_trace (d + "2")
           diphone_missing = False
+          break
 
     if diphone_missing:
-      print ("missing diphone %s" % d, file=sys.stderr)
+      diphone_missing_set.add (d)
   acc += nlen
   if acc > 500:
     nlen *= 0.85
@@ -176,6 +190,10 @@ for rep in range (40):
 print ("]\n", file=sys.stderr)
 #for s in synlist:
 #  print (s)
+if diphone_missing_set:
+  for d in diphone_missing_set:
+    print ("missing diphone %s" % d, file=sys.stderr)
+  sys.exit (1)
 phase = 0
 ms = 0
 ct = synlist[0][0]
