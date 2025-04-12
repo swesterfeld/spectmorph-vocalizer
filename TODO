@@ -1,11 +1,13 @@
  - for short notes, both vowel and consonants need to be shortened
  - diphthongs 80/20 rule (or something?)
  - detect long vowels and use a_a (or similar) for those
- - record "_haha" diphones, maybe use "_h", use "ha", "ah"
  - record humming m_m, ...
- - glottal stop ("?") labeling
  - melisma frequency bend: should we use a slide instead of a frequency jump
  - whispering voice
+
+possible improvements for quality:
+- use harmonic resynthesis only for voiced consonants and vowels
+- enable noise synthesis for voiceless fricatives only
 
 test cases:
  - extra test case for extremely short notes
