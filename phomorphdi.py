@@ -163,7 +163,7 @@ for i in range (len (pho)):
           last_f = float (pho[i + 1][3])
         if is_v (pho[i][0]) and P1 != '_':
           d.bend = log2 (last_f / 164.81) * 12
-          d.pos1 = m[1][0] - 0.2
+          d.pos1 = max (m[1][0] - 0.2, (m[0][0] + m[1][0]) / 2)
           if P2 == '_':
             d.pos2 = m[1][0]
           else:
@@ -176,7 +176,7 @@ for i in range (len (pho)):
             d.pos1 = m[1][0]
           else:
             d.pos1 = (m[0][0] + m[1][0]) / 2
-          d.pos2 = m[1][0] + 0.2
+          d.pos2 = min (m[1][0] + 0.2, (m[1][0] + m[2][0]) / 2)
           d.startv = False
           d.endv = True
           d.bend = log2 (last_f / 164.81) * 12
@@ -243,6 +243,9 @@ for d in diphones:
     x = "*"
 
   print (d, x, file=sys.stderr)
+  # diphone tracing example for audacity
+  #if d.lyric in [ "St", "tI", "Il", "Ss", "l_" ]:
+  #  print ("%f\t%f\t%s" % (d.pos1, d.pos2, "trace_" + d.lyric), file=sys.stderr)
   #print (t.start_v_ms + t.c_ms + t.end_v_ms, (t.pos2 - t.pos1) * 1000, file=sys.stderr)
 
 diphones = list (filter (diphone_ms_not_zero, diphones))
