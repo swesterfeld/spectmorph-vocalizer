@@ -51,5 +51,5 @@ do
     phomorphdi.py pho/$pho $(soxi -D voice/sven.flac) > script/$script || echo "$pho -> $script" failed
     src/smscript voice/sven.smplan script/$script wav/$wav
   fi
-  ./apply-accent.py pho/$pho wav/$wav wav/$wav
+#  ./apply-accent.py pho/$pho wav/$wav wav/$wav
 done
