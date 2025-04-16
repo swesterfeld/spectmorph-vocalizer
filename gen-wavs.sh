@@ -28,7 +28,7 @@ echo "Using Voice from $VOICE_URL"
 #--------------------------------------------------------
 
 make -C src
-src/mkplan template.smplan voice/sven.flac voice/sven.smplan
+src/mkplan template.smplan voice/sven.flac voice/sven.smplan voice/sven.volume
 
 XMLS="$@"
 if test -z "$XMLS"; then
