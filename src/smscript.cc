@@ -29,6 +29,8 @@ main (int argc, char **argv)
   Error error = project.load (argv[1]);
   assert (!error);
 
+  vector<MorphWavSource *> wav_sources;
+  vector<double>           volume_factor;
   for (MorphOperator *op : project.morph_plan()->operators())
     {
       if (op->type_name() == "WavSource")
@@ -36,6 +38,8 @@ main (int argc, char **argv)
           auto wav_source = dynamic_cast<MorphWavSource *> (op);
           while (project.rebuild_active (wav_source->object_id()))
              usleep (10 * 1000);
+          wav_sources.push_back (wav_source);
+          volume_factor.push_back (1);
         }
     }
   project.try_update_synth();
@@ -78,6 +82,16 @@ main (int argc, char **argv)
       else if (script_parser.command ("pitch_expression", ch, i, d))
         {
           midi_synth.add_pitch_expression_event (0, d, ch, i);
+        }
+      else if (script_parser.command ("volume", i, d))
+        {
+          assert (i >= 0 && i < int (wav_sources.size()));
+          if (volume_factor[i] != d)
+            {
+              wav_sources[i]->set_volume_factor (d);
+              volume_factor[i] = d;
+              project.try_update_synth();
+            }
         }
       else
         {
