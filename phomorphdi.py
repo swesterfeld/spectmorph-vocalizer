@@ -100,10 +100,9 @@ def vowel_insertion (pho):
   # 100 a ...
   #
   # FIXME: should loop in the synthesis / diphone part, not stretch
-  # FIXME: currently missing O_O
   vi_pho = []
   for p in pho:
-    if is_v (p[0]) and p[0] != "_" and float (p[1]) > 300 and p[0] != "O": # FIXME: need O_O
+    if is_v (p[0]) and p[0] != "_" and float (p[1]) > 300:
       vi_pho.append ([p[0], str (100)] + p[2:])
       vi_pho.append ([p[0], str (float (p[1]) - 200)] + p[2:])
       vi_pho.append ([p[0], str (100)] + p[2:])
