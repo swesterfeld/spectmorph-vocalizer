@@ -8,6 +8,8 @@
 
 using namespace SpectMorph;
 
+using std::vector;
+
 void
 print_memory_usage (const std::string& where)
 {
@@ -50,9 +52,9 @@ int
 main (int argc, char **argv)
 {
   Main main (&argc, &argv);
-  if (argc != 4)
+  if (argc != 5)
     {
-      fprintf (stderr, "usage: smscript <template> <flac> <plan>\n");
+      fprintf (stderr, "usage: mkplan <template> <flac> <plan> <volumes>\n");
       return 1;
     }
   Project project;
@@ -87,14 +89,49 @@ main (int argc, char **argv)
   tune.partials = 3;
   instrument.set_auto_tune (tune);
 
+  bool first = true;
+  FILE *vol_file = fopen (argv[4], "w");
+  if (!vol_file)
+    {
+      fprintf (stderr, "%s: can't open input file: %s\n", argv[0], argv[4]);
+      return 1;
+    }
   for (MorphOperator *op : project.morph_plan()->operators())
     {
       if (op->type_name() == "WavSource")
         {
           auto wav_source = dynamic_cast<MorphWavSource *> (op);
           wav_source->on_instrument_updated (wav_source->bank(), wav_source->instrument(), &instrument);
+          while (project.rebuild_active (wav_source->object_id()))
+             usleep (10 * 1000);
+          project.try_update_synth();
+          if (first)
+            {
+              int object_id = wav_source->object_id();
+              auto wav_set = project.get_wav_set (object_id);
+              for (vector<WavSetWave>::iterator wi = wav_set->waves.begin(); wi != wav_set->waves.end(); wi++)
+                {
+                  Audio *audio = wi->audio;
+                  AudioTool::Block2Energy b2e (48000);
+
+                  if (audio)
+                    {
+                      for (size_t i = 0; i < audio->contents.size(); i++)
+                        {
+                          const double energy = b2e.energy (audio->contents[i]);
+                          const double target_energy = 0.05;
+                          const double relative_volume = sqrt (energy / target_energy);
+
+                          auto str = string_printf ("%f", relative_volume); // avoid i18n
+                          fprintf (vol_file, "%s\n", str.c_str());
+                        }
+                    }
+                }
+              first = false;
+            }
         }
     }
+  fclose (vol_file);
 
   project.save (argv[3]);
   print_memory_usage ("mkplan memory final");
