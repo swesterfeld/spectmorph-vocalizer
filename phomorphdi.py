@@ -27,6 +27,16 @@ with open ("diphone-sven.label", "r") as file:
 if ignore_labels:
   print ("ignore labels", set (ignore_labels), file=sys.stderr)
 
+volumes = []
+with open ("voice/sven.volume", "r") as file:
+  for line in file:
+    line = line.split()
+    volumes.append (float (line[0]))
+
+def volume_lookup (time_stamp):
+  index = min (int (time_stamp / voice_length * len (volumes)), len (volumes) - 1)
+  return volumes[index]
+
 pho = []
 line_number = 1
 with open (sys.argv[1], "r") as file:
@@ -64,11 +74,15 @@ class Diphone:
     s += ' pos1=%f' % self.pos1
     s += ' pos2=%f' % self.pos2
     s += ' silent=%s' % self.silent
+    s += ' vfact=%.3f' % self.volume_factor
     s += ' startv=%s' % self.startv
     s += ' endv=%s' % self.endv
     s += ' lyric=%s' % self.lyric
     s += '>'
     return s
+
+  def __init__ (self):
+    self.volume_factor = 1
 
 def is_v (v):
   for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '@', 'E' ]:
@@ -155,6 +169,8 @@ for i in range (len (pho)):
         d.endv = True
         d.bend = log2 (last_f / 164.81) * 12 # FIXME
         d.silent = False
+        if P1 == P2:
+          d.volume_factor = 0.5 / volume_lookup (m[1][0])
         diphones.append (d)
     else:
       possible_matches = []
@@ -275,6 +291,7 @@ diphones = list (filter (diphone_ms_not_zero, diphones))
 
 def gen_wav_source (start):
   pos = []
+  vol = []
   dist = []
   dd = []
   idx = 0
@@ -282,6 +299,7 @@ def gen_wav_source (start):
     ms = int (d.p1_ms + d.p2_ms)
     for j in range (ms):
       pos.append (0)
+      vol.append (1)
       dist.append (10000)
       dd.append (None)
   p = 0
@@ -322,6 +340,7 @@ def gen_wav_source (start):
         dp_dist = min (abs (j), abs (j - ms))
         if p + j >= 0 and p + j < len (pos) and dist[p + j] > dp_dist:
           pos[p + j] = x
+          vol[p + j] = d.volume_factor
           dist[p + j] = dp_dist
           dd[p + j] = d
     p += ms
@@ -352,7 +371,7 @@ def gen_wav_source (start):
       d += 1
     '''
     idx += 1
-  return pos, dd
+  return pos, dd, vol
 
 def fade_time (x):
   if x in [ 'g', 'b', 'd', 't', 'p', 'k', '?' ]:
@@ -400,8 +419,8 @@ def gen_bend ():
       bend.append (b)
   return bend
 
-ws1, d1 = gen_wav_source (0)
-ws2, d2 = gen_wav_source (1)
+ws1, d1, vol1 = gen_wav_source (0)
+ws2, d2, vol2 = gen_wav_source (1)
 morph = gen_morph()
 bend = gen_bend()
 
@@ -424,6 +443,8 @@ for i in range (len (ws1)):
   print ("control 0", ws1[i] / voice_length * 2 - 1)
   print ("control 1", ws2[i] / voice_length * 2 - 1)
   print ("control 2", morph[i] * 2 - 1)
+  print ("volume 0", vol1[i])
+  print ("volume 1", vol2[i])
   print ("pitch_expression 0 52 %f" % bend[i])
   #print (ws1[i], ws2[i], morph[i], "#X")
   print ("process 48")
