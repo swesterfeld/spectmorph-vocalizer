@@ -362,12 +362,12 @@ notes = notes_with_staccato
 # staccato: FIXME: may want to collapse multiple rests into one at this point
 
 # append a rest at end of score - this ensures that last note gets printed to pho output
-def append_final_rest (notes):
+def append_final_rest (notes, length):
   final_rest = Rest()
   final_rest.length = length
   notes.append (final_rest)
 
-append_final_rest (notes)
+append_final_rest (notes, 500)
 
 last_note = None
 last_rest = None
