@@ -47,11 +47,13 @@ fi
 
 for xml in $XMLS
 do
+  xml=$(basename "$xml")
   pho=$(echo $xml|sed s/.xml$/.pho/g)
   script=$(echo $xml|sed s/.xml$/.script/g)
   wav=$(echo $xml|sed s/.xml$/.wav/g)
   rm -f $pho $script $wav
 
+  echo "$xml..."
   ./xml-to-pho.py xml testxml/$xml > pho/$pho || echo "$xml -> $pho" failed
   if [ "x$1" = "xmbrola" ]; then
     voice=$(grep ';;; VOICE' pho/$pho | cut -d " " -f 3)
