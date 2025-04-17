@@ -28,7 +28,17 @@ echo "Using Voice from $VOICE_URL"
 #--------------------------------------------------------
 
 make -C src
-src/mkplan template.smplan voice/sven.flac voice/sven.smplan voice/sven.volume
+
+#--------- update sven.smplan if necessary --------------
+PLAN_INPUT_HASH=$(cat template.smplan voice/sven.flac | sha1sum - | awk '{print $1;}')
+if test -f voice/sven.hash; then
+  PLAN_INPUT_HASH_OLD=$(cat voice/sven.hash)
+fi
+if [ "x$PLAN_INPUT_HASH" != "x$PLAN_INPUT_HASH_OLD" ]; then
+  echo "mkplan... (input_hash $PLAN_INPUT_HASH, old input_hash $PLAN_INPUT_HASH_OLD)"
+  src/mkplan template.smplan voice/sven.flac voice/sven.smplan voice/sven.volume && ( echo $PLAN_INPUT_HASH > voice/sven.hash )
+fi
+#--------------------------------------------------------
 
 XMLS="$@"
 if test -z "$XMLS"; then
