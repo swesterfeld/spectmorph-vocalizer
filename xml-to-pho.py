@@ -28,7 +28,7 @@ V = [ "i:", "i", "I", "y:", "Y", "u:", "U",
       "a:", "a", "@", "6"]
 C = [ ("p", 50), ("b", 50), ("t", 50), ("d", 50), ("k", 50), ("g", 50), ("?", 50),
       ("m", 50), ("n", 50), ("N", 50),
-      ("f", 50), ("v", 50), ("s", 50), ("z", 50), ("S", 100), ("Z", 50), ("C", 50), ("j", 50), ("x", 50), ("R", 50), ("h", 50),
+      ("f", 50), ("v", 50), ("s", 50), ("z", 50), ("S", 50), ("Z", 50), ("C", 50), ("j", 50), ("x", 50), ("R", 50), ("h", 50),
       ("l", 50),
       ("r", 50),
       ("w", 50), ("T", 50), ("D", 50) ]
@@ -107,7 +107,7 @@ def search_c (c):
   # constify vocals with 50ms
   for v_candidate in V:
     if v_candidate == c:
-      return  (c, 50)
+      return  (c, 50 * 2)
   for c_candidate in C:
     if c_candidate[0] == c:
       return c_candidate
@@ -119,7 +119,7 @@ def c_length (Cs):
     c_pair = search_c (c)
     if c_pair is None:
       raise RuntimeError ("%s: consonant missing: %s" % (sys.argv[2], c))
-    length += c_pair[1]
+    length += c_pair[1] * 2
   return length
 
 if sys.argv[1] == "txt":
