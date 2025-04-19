@@ -33,9 +33,15 @@ with open ("voice/sven.volume", "r") as file:
     line = line.split()
     volumes.append (float (line[0]))
 
-def volume_factor (time_stamp):
+def volume_factor (time_stamp, text):
+  assert (is_v (text) and len (text) == 1)
+  if text in [ "@", "6" ]:
+    target_volume = 0.35
+  else:
+    target_volume = 0.5
+
   index = min (int (time_stamp / voice_length * len (volumes)), len (volumes) - 1)
-  return 0.5 / volumes[index]
+  return target_volume / volumes[index]
 
 pho = []
 line_number = 1
@@ -168,7 +174,7 @@ for i in range (len (pho)):
         d.endv = True
         d.bend = log2 (last_f / 164.81) * 12 # FIXME
         d.silent = False
-        d.volume_factor = volume_factor (m[1][0])
+        d.volume_factor = volume_factor (m[1][0], P1)
         diphones.append (d)
     else:
       possible_matches = []
@@ -204,9 +210,9 @@ for i in range (len (pho)):
         #  - this does not volume normalize diphones without vowels (such as St),
         #    so it is still important to have a consistent overall volume
         if is_v (pho[i][0]) and P1 != '_':
-          d.volume_factor = volume_factor ((m[0][0] + m[1][0]) / 2)
+          d.volume_factor = volume_factor ((m[0][0] + m[1][0]) / 2, P1)
         if is_v (pho[i + 1][0]) and P2 != '_':
-          d.volume_factor = volume_factor ((m[1][0] + m[2][0]) / 2)
+          d.volume_factor = volume_factor ((m[1][0] + m[2][0]) / 2, P2)
 
         if is_v (pho[i][0]) and P1 != '_':
           d.bend = log2 (last_f / 164.81) * 12
