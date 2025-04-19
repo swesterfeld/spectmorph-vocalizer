@@ -5,6 +5,8 @@
  - melisma frequency bend: should we use a slide instead of a frequency jump
  - whispering voice
  - normalization of input material
+ - diphthong a + U should be one entry in .pho file: a_U
+ - ramp for volume normalization @, 6
 
 possible improvements for quality:
 - use harmonic resynthesis only for voiced consonants and vowels
