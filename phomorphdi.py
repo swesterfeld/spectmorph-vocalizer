@@ -152,7 +152,7 @@ for i in range (len (pho)):
         # since we have a vowel at start, last_f is already the frequency of the vowel
         if len (pho[i + 1]) >= 3:
           # true: vowel -> vowel case (melisma)
-          last_f = float (pho[i + 1][3])
+          last_f = float (pho[i + 1][2])
         m = random.choice (possible_matches)
         d = Diphone()
         d.lyric = P1 + P2
@@ -195,9 +195,9 @@ for i in range (len (pho)):
         start_ms += last_p2_ms + d.p1_ms # FIXME: doesn't seem to be the right value
         last_p2_ms = d.p2_ms
         if len (pho[i]) >= 3:
-          last_f = float (pho[i][3])
+          last_f = float (pho[i][2])
         if len (pho[i + 1]) >= 3:
-          last_f = float (pho[i + 1][3])
+          last_f = float (pho[i + 1][2])
 
         # volume normalization:
         #  - if we have a vowel in our diphone, we use it for volume normalization

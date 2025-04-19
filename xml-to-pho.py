@@ -171,16 +171,16 @@ class Rest:
 def print_note (note, skip):
   print (";;; ACCENT", note.has_accent)
   for c in note.c_in:
-    print ("%s %.2f" % (c, c_length ([c])))
+    print ("%s %.2f %.2f" % (c, c_length ([c]), note.freq))
   if note.volume_state == VolumeState.CONST:
     print (";;; VOLUME", note.volume)
   if note.volume_state == VolumeState.START:
     print (";;; START_VOLUME", note.volume)
   #if note.volume_state == VolumeState.END:
   #  print (";;; END_VOLUME", note.volume)
-  print ("%s %.2f 0 %.2f 100 %.2f" % (note.v, note.ms - skip, note.freq, note.freq))
+  print ("%s %.2f %.2f" % (note.v, note.ms - skip, note.freq))
   for c in note.c_out:
-    print ("%s %.2f" % (c, c_length ([c])))
+    print ("%s %.2f %.2f" % (c, c_length ([c]), note.freq))
   print (";;; ACCENT", False)
   print()
 
