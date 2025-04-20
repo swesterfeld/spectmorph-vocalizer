@@ -74,8 +74,6 @@ main (int argc, char **argv)
       return 1;
     }
 
-  const double sample_len_ms = wav_data.samples().size() / wav_data.mix_freq() * 1000.0;
-
   Instrument instrument;
   auto sample = instrument.add_sample (wav_data, argv[2]);
   sample->set_midi_note (50); /* FIXME */
