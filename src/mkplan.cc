@@ -74,13 +74,8 @@ main (int argc, char **argv)
       return 1;
     }
 
-  const double sample_len_ms = wav_data.samples().size() / wav_data.mix_freq() * 1000.0;
-
   Instrument instrument;
   auto sample = instrument.add_sample (wav_data, argv[2]);
-  sample->set_loop (Sample::Loop::FORWARD);
-  sample->set_marker (MARKER_LOOP_START, 0);
-  sample->set_marker (MARKER_LOOP_END, sample_len_ms);
   sample->set_midi_note (50); /* FIXME */
 
   auto tune = instrument.auto_tune();
@@ -116,13 +111,15 @@ main (int argc, char **argv)
 
                   if (audio)
                     {
+                      const double zero_values_at_start_ms = audio->zero_values_at_start / audio->mix_freq * 1000;
+
                       for (size_t i = 0; i < audio->contents.size(); i++)
                         {
                           const double energy = b2e.energy (audio->contents[i]);
                           const double target_energy = 0.05;
                           const double relative_volume = sqrt (energy / target_energy);
 
-                          auto str = string_printf ("%f", relative_volume); // avoid i18n
+                          auto str = string_printf ("%f %f", audio->frame_step_ms * i - zero_values_at_start_ms + audio->frame_size_ms / 2, relative_volume); // avoid i18n
                           fprintf (vol_file, "%s\n", str.c_str());
                         }
                     }

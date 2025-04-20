@@ -30,7 +30,7 @@ echo "Using Voice from $VOICE_URL"
 make -C src
 
 #--------- update sven.smplan if necessary --------------
-PLAN_INPUT_HASH=$(cat template.smplan voice/sven.flac | sha1sum - | awk '{print $1;}')
+PLAN_INPUT_HASH=$(cat template.smplan voice/sven.flac src/mkplan | sha1sum - | awk '{print $1;}')
 if test -f voice/sven.hash; then
   PLAN_INPUT_HASH_OLD=$(cat voice/sven.hash)
 fi

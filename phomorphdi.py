@@ -9,6 +9,7 @@
 import sys
 import random
 from math import log2
+from utils import time_to_volume, time_to_control
 
 assert (len (sys.argv) == 3)
 
@@ -27,12 +28,6 @@ with open ("diphone-sven.label", "r") as file:
 if ignore_labels:
   print ("ignore labels", set (ignore_labels), file=sys.stderr)
 
-volumes = []
-with open ("voice/sven.volume", "r") as file:
-  for line in file:
-    line = line.split()
-    volumes.append (float (line[0]))
-
 def volume_factor (time_stamp, text):
   assert (is_v (text) and len (text) == 1)
   if text in [ "@", "6" ]:
@@ -40,8 +35,7 @@ def volume_factor (time_stamp, text):
   else:
     target_volume = 0.5
 
-  index = min (int (time_stamp / voice_length * len (volumes)), len (volumes) - 1)
-  return target_volume / volumes[index]
+  return target_volume / time_to_volume (time_stamp)
 
 pho = []
 line_number = 1
@@ -454,8 +448,8 @@ def P (ws, dp):
 #  print ("%.0f" % bend[i], L (d1[i]), L (d2[i]), morph[i], P (ws1[i], d1[i]), P (ws2[i], d2[i]), "#D")
 
 for i in range (len (ws1)):
-  print ("control 0", ws1[i] / voice_length * 2 - 1)
-  print ("control 1", ws2[i] / voice_length * 2 - 1)
+  print ("control 0", time_to_control (ws1[i]))
+  print ("control 1", time_to_control (ws2[i]))
   print ("control 2", morph[i] * 2 - 1)
   print ("volume 0", vol1[i])
   print ("volume 1", vol2[i])

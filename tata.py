@@ -16,6 +16,7 @@
 # 6t
 
 import sys
+from utils import time_to_control
 
 sp = float (sys.argv[2])
 voice_length = float (sys.argv[1])
@@ -205,7 +206,7 @@ for i in range (1000 * 1000):
       sys.exit (0)
     ct = synlist[phase][0]
 
-  print ("control 0", ct / voice_length * 2 - 1)
+  print ("control 0", time_to_control (ct))
   print ("control 1", 0)
   print ("control 2", -1)
   #print (ws1[i], ws2[i], morph[i], "#X")
