@@ -112,6 +112,15 @@ def vowel_insertion (pho):
 
 pho = vowel_insertion (pho)
 
+def validate_durations (pho):
+  l = 1
+  for p in pho:
+    if float (p[1]) <= 0:
+      raise RuntimeError ("pho file contains negative duration %s, line %d" % (p, l))
+    l += 1
+
+validate_durations (pho)
+
 errors = []
 start_ms = 0
 last_p2_ms = 0

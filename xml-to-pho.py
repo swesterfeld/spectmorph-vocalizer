@@ -107,7 +107,7 @@ def search_c (c):
   # constify vocals with 50ms
   for v_candidate in V:
     if v_candidate == c:
-      return  (c, 50 * 2)
+      return  (c, 50)
   for c_candidate in C:
     if c_candidate[0] == c:
       return c_candidate
@@ -162,27 +162,6 @@ class Note:
 
 class Rest:
   pass
-
-# Note -> Note:
-#   skip = c_length (note.c_out + next_note.c_in)
-# Note -> Rest:
-#   skip = 0
-#   rest_ms -= note.c_out
-def print_note (note, skip):
-  print (";;; ACCENT", note.has_accent)
-  for c in note.c_in:
-    print ("%s %.2f %.2f" % (c, c_length ([c]), note.freq))
-  if note.volume_state == VolumeState.CONST:
-    print (";;; VOLUME", note.volume)
-  if note.volume_state == VolumeState.START:
-    print (";;; START_VOLUME", note.volume)
-  #if note.volume_state == VolumeState.END:
-  #  print (";;; END_VOLUME", note.volume)
-  print ("%s %.2f %.2f" % (note.v, note.ms - skip, note.freq))
-  for c in note.c_out:
-    print ("%s %.2f %.2f" % (c, c_length ([c]), note.freq))
-  print (";;; ACCENT", False)
-  print()
 
 tempo_change_sounding = []
 quarter_offset = 0
@@ -369,26 +348,92 @@ def append_final_rest (notes, length):
 
 append_final_rest (notes, 500)
 
+class Segment:
+  pass
+
+def short_length (l, L):
+  if L is not None:
+    return L
+  else:
+    return l
+
+# Note -> Note:
+#   skip = c_length (note.c_out + next_note.c_in)
+# Note -> Rest:
+#   skip = 0
+#   rest_ms -= note.c_out
+def print_note (note, next_note):
+  print (";;; [")
+
+  Cs = note.c_out + (next_note.c_in if next_note else [])
+  total_c_ms = c_length (Cs)
+  if c_length (Cs + [ note.v ]) > note.ms:
+    L = note.ms / (len (Cs) + 1)
+  else:
+    L = None
+
+  print ("%s %.2f %.2f" % (note.v, short_length (note.ms - total_c_ms, L), note.freq))
+  for c in note.c_out:
+    print ("%s %.2f %.2f" % (c, short_length (c_length ([c]), L), note.freq))
+  if next_note:
+    for c in next_note.c_in:
+      print ("%s %.2f %.2f" % (c, short_length (c_length ([c]), L), next_note.freq))
+
+  print (";;; ]")
+  print()
+
+def print_note_v (note):
+  print (";;; [")
+  print ("%s %.2f %.2f" % (note.v, note.ms, note.freq))
+  print (";;; ]")
+
+def print_rest (rest, next_note):
+  print (";[[")
+  Cs = rest.c_start + (next_note.c_in if next_note else [])
+  total_c_ms = c_length (Cs)
+  if c_length (Cs + [ "a" ]) > rest.length: # use "a" vowel length for "_" length
+    L = rest.length / (len (Cs) + 1)
+  else:
+    L = None
+  for c in rest.c_start:
+    print ("%s %.2f %.2f" % (c, short_length (c_length ([c]), L), rest.start_freq))
+  if rest:
+    print ("_ %.2f" % short_length ((rest.length - total_c_ms), L))
+  if next_note:
+    for c in next_note.c_in:
+      print ("%s %.2f %.2f" % (c, short_length (c_length ([c]), L), note.freq))
+  print (";]]")
+
 last_note = None
 last_rest = None
 for note in notes:
   if isinstance (note, Note):
-    # print ("note: %f %f %s" % (note.freq, note.ms, note.c_in + [ note.v ] + note.c_out))
+    print (";;note: %f %f %s" % (note.freq, note.ms, note.c_in + [ note.v ] + note.c_out))
     if last_note:
-      skip = c_length (last_note.c_out + note.c_in)
-      print_note (last_note, skip)
+      print_note (last_note, note)
     if last_rest:
-      last_rest -= c_length (note.c_in)
-      print ("_ %.2f" % last_rest)
+      print_rest (last_rest, note)
       last_rest = None
     last_note = note
   else:
+    print (";;rest: %f" % (note.length))
     if last_note:
-      skip = 0
-      print_note (last_note, skip)
-      last_rest = note.length - c_length (last_note.c_out) #?
+      print_note_v (last_note)
+      last_rest = Segment()
+      last_rest.c_start = last_note.c_out
+      last_rest.length = note.length
+      last_rest.start_freq = last_note.freq
       last_note = None
     elif last_rest:
-      last_rest += note.length
+      last_rest.length += note.length
     else:
-      last_rest = note.length
+      last_rest = Segment()
+      last_rest.c_start = []
+      last_rest.start_freq = 0
+      last_rest.length = note.length
+if last_note:
+  print_note (last_note, None)
+if last_rest:
+  print_rest (last_rest, None)
+  #for c in last_rest.c_start:
+  #  print ("%s %.2f %.2f" % (c, c_length ([c]), last_rest.start_freq))
