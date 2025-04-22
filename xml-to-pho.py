@@ -348,67 +348,60 @@ def append_final_rest (notes, length):
 
 append_final_rest (notes, 500)
 
-class Segment:
+class RestSegment:
   pass
 
-def short_length (l, L):
-  if L is not None:
-    return L
+# rules to compute durations for one note/rest segment
+#  - if length of all consonants (Cs) and vowel (v) does not exceed length of segment:
+#      shorten vowel, keep consonants at original speed
+#  - if length of consonants and vowel exceeds segment length
+#      shorten both vowels and consonants to (segment length) to the same length
+# returns "vowel length" and "function to compute consonant length from consonant"
+def compute_cv_times (Cs, v, ms):
+  # use the same minimum length for rests and vowel "a"
+  if v == "_":
+    v = "a"
+  if c_length (Cs + [ v ]) > ms:
+    VL = ms / (len (Cs) + 1)
+    CL = lambda x : VL
   else:
-    return l
+    VL = ms - c_length (Cs)
+    CL = lambda x : c_length ([x])
+  return VL, CL
 
-# Note -> Note:
-#   skip = c_length (note.c_out + next_note.c_in)
-# Note -> Rest:
-#   skip = 0
-#   rest_ms -= note.c_out
 def print_note (note, next_note):
-  print (";;; [")
-
   Cs = note.c_out + (next_note.c_in if next_note else [])
-  total_c_ms = c_length (Cs)
-  if c_length (Cs + [ note.v ]) > note.ms:
-    L = note.ms / (len (Cs) + 1)
-  else:
-    L = None
+  VL, CL = compute_cv_times (Cs, note.v, note.ms)
 
-  print ("%s %.2f %.2f" % (note.v, short_length (note.ms - total_c_ms, L), note.freq))
+  print()
+  print ("%s %.2f %.2f" % (note.v, VL, note.freq))
   for c in note.c_out:
-    print ("%s %.2f %.2f" % (c, short_length (c_length ([c]), L), note.freq))
+    print ("%s %.2f %.2f" % (c, CL (c), note.freq))
   if next_note:
     for c in next_note.c_in:
-      print ("%s %.2f %.2f" % (c, short_length (c_length ([c]), L), next_note.freq))
-
-  print (";;; ]")
-  print()
+      print ("%s %.2f %.2f" % (c, CL (c), next_note.freq))
 
 def print_note_v (note):
-  print (";;; [")
+  print()
   print ("%s %.2f %.2f" % (note.v, note.ms, note.freq))
-  print (";;; ]")
 
 def print_rest (rest, next_note):
-  print (";[[")
   Cs = rest.c_start + (next_note.c_in if next_note else [])
-  total_c_ms = c_length (Cs)
-  if c_length (Cs + [ "a" ]) > rest.length: # use "a" vowel length for "_" length
-    L = rest.length / (len (Cs) + 1)
-  else:
-    L = None
+  VL, CL = compute_cv_times (Cs, "_", rest.length)
+
+  print()
   for c in rest.c_start:
-    print ("%s %.2f %.2f" % (c, short_length (c_length ([c]), L), rest.start_freq))
+    print ("%s %.2f %.2f" % (c, CL (c), rest.start_freq))
   if rest:
-    print ("_ %.2f" % short_length ((rest.length - total_c_ms), L))
+    print ("_ %.2f" % VL)
   if next_note:
     for c in next_note.c_in:
-      print ("%s %.2f %.2f" % (c, short_length (c_length ([c]), L), note.freq))
-  print (";]]")
+      print ("%s %.2f %.2f" % (c, CL (c), note.freq))
 
 last_note = None
 last_rest = None
 for note in notes:
   if isinstance (note, Note):
-    print (";;note: %f %f %s" % (note.freq, note.ms, note.c_in + [ note.v ] + note.c_out))
     if last_note:
       print_note (last_note, note)
     if last_rest:
@@ -416,10 +409,9 @@ for note in notes:
       last_rest = None
     last_note = note
   else:
-    print (";;rest: %f" % (note.length))
     if last_note:
       print_note_v (last_note)
-      last_rest = Segment()
+      last_rest = RestSegment()
       last_rest.c_start = last_note.c_out
       last_rest.length = note.length
       last_rest.start_freq = last_note.freq
@@ -427,13 +419,11 @@ for note in notes:
     elif last_rest:
       last_rest.length += note.length
     else:
-      last_rest = Segment()
+      last_rest = RestSegment()
       last_rest.c_start = []
       last_rest.start_freq = 0
       last_rest.length = note.length
-if last_note:
-  print_note (last_note, None)
-if last_rest:
-  print_rest (last_rest, None)
-  #for c in last_rest.c_start:
-  #  print ("%s %.2f %.2f" % (c, c_length ([c]), last_rest.start_freq))
+
+# we ensure that the last item in notes is always a rest
+assert (last_rest)
+print_rest (last_rest, None)
