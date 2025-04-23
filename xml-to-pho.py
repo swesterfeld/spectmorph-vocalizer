@@ -258,7 +258,11 @@ for part in score.parts:
             random_cv()
           cv_16_skip = 0
           lyric = random_cv()
-        lyric = cvc_split (lyric)
+        try:
+          lyric = cvc_split (lyric)
+        except Exception as exception:
+          print ("%s, note at measure measure %d beat %d" % (exception, element.measureNumber, element.beat), file=sys.stderr)
+          sys.exit (1)
         c_in, v, c_out = lyric
         note = Note()
         note.c_in = c_in
