@@ -17,9 +17,9 @@ int
 main (int argc, char **argv)
 {
   Main main (&argc, &argv);
-  if (argc != 4)
+  if (argc != 5)
     {
-      fprintf (stderr, "usage: smscript <plan> <script> <out_wav>\n");
+      fprintf (stderr, "usage: smscript <plan> <voice_sm> <script> <out_wav>\n");
       return 1;
     }
 
@@ -29,6 +29,10 @@ main (int argc, char **argv)
   Error error = project.load (argv[1]);
   assert (!error);
 
+  Audio audio;
+  error = audio.load (argv[2]);
+  assert (!error);
+
   vector<MorphWavSource *> wav_sources;
   vector<double>           volume_factor;
   for (MorphOperator *op : project.morph_plan()->operators())
@@ -36,8 +40,11 @@ main (int argc, char **argv)
       if (op->type_name() == "WavSource")
         {
           auto wav_source = dynamic_cast<MorphWavSource *> (op);
+#if 0
           while (project.rebuild_active (wav_source->object_id()))
              usleep (10 * 1000);
+#endif
+          wav_source->set_override_audio (&audio);
           wav_sources.push_back (wav_source);
           volume_factor.push_back (1);
         }
@@ -46,10 +53,10 @@ main (int argc, char **argv)
 
   MidiSynth& midi_synth = *project.midi_synth();
 
-  MicroConf script_parser (argv[2]);
+  MicroConf script_parser (argv[3]);
   if (!script_parser.open_ok())
     {
-      fprintf (stderr, "error opening file %s\n", argv[2]);
+      fprintf (stderr, "error opening file %s\n", argv[3]);
       exit (1);
     }
   script_parser.set_number_format (MicroConf::NO_I18N);
@@ -99,9 +106,9 @@ main (int argc, char **argv)
         }
     }
   WavData wav_data (output, 1, 48000, 24);
-  if (!wav_data.save (argv[3]))
+  if (!wav_data.save (argv[4]))
     {
-      fprintf (stderr,"export to file %s failed: %s\n", argv[3], wav_data.error_blurb());
+      fprintf (stderr,"export to file %s failed: %s\n", argv[4], wav_data.error_blurb());
       return 1;
     }
 }
