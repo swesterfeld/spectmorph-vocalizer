@@ -1,7 +1,7 @@
 set -e
 
 #---------------- voice downloader ----------------------
-VOICE_EXPECT=09f0fbd6281592d4d46ced2e7b062c6cbe8585b0
+VOICE_EXPECT=5388b9660bb47eecc42f132f8de1a98c9069445a
 VOICE_URL="https://space.twc.de/~stefan/download2/voice/${VOICE_EXPECT}.flac"
 
 check_voice()
