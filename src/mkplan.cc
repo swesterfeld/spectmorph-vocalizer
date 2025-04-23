@@ -121,9 +121,8 @@ main (int argc, char **argv)
 
                           auto str = string_printf ("%f %f", audio->frame_step_ms * i - zero_values_at_start_ms + audio->frame_size_ms / 2, relative_volume); // avoid i18n
                           fprintf (vol_file, "%s\n", str.c_str());
-
-                          audio->save (argv[3]);
                         }
+                      audio->save (argv[3]);
                     }
                 }
               first = false;
