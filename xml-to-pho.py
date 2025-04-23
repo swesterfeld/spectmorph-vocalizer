@@ -242,8 +242,7 @@ for part in score.parts:
           assert (last_note.freq == freq)
           last_note.ms += note_duration_ms
         else:
-          print ("no lyric")
-          sys.exit (1)
+          raise RuntimeError ("no lyric, note at measure measure %d beat %d" % (element.measureNumber, element.beat))
       else:
         has_accent = False
         has_staccato = False
