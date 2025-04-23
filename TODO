@@ -7,6 +7,7 @@
  - normalization of input material
  - diphthong a + U should be one entry in .pho file: a_U
  - ramp for volume normalization @, 6
+ - dictionary download: https://kaikki.org/dictionary/German/
 
 possible improvements for quality:
 - use harmonic resynthesis only for voiced consonants and vowels
