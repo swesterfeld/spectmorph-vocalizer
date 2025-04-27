@@ -33,6 +33,19 @@ check_voice sven.volume $VOICE_VSUM || {
 }
 check_voice sven.volume $VOICE_VSUM
 
+remove_music_extension() {
+  local filename="$1"
+
+  if [[ "$filename" == *.musicxml ]]; then
+    echo "${filename%.musicxml}"
+  elif [[ "$filename" == *.xml ]]; then
+    echo "${filename%.xml}"
+  else
+    echo "Error: File must have .xml or .musicxml extension" >&2
+    return 1
+  fi
+}
+
 XMLS="$@"
 if test -z "$XMLS"; then
   XMLS="$(cd testxml; ls)"
@@ -41,9 +54,10 @@ fi
 for xml in $XMLS
 do
   xml=$(basename "$xml")
-  pho=$(echo $xml|sed s/.xml$/.pho/g)
-  script=$(echo $xml|sed s/.xml$/.script/g)
-  wav=$(echo $xml|sed s/.xml$/.wav/g)
+  filename_noext=$(remove_music_extension $xml)
+  pho="${filename_noext}.pho"
+  script="${filename_noext}.script"
+  wav="${filename_noext}.wav"
   rm -f $pho $script $wav
 
   echo "$xml..."
