@@ -9,6 +9,9 @@
  - ramp for volume normalization @, 6
  - dictionary download: https://kaikki.org/dictionary/German/
 
+improved handling for plosives
+ - merge tata.py rules into phomorphdi.py
+
 possible improvements for quality:
 - use harmonic resynthesis only for voiced consonants and vowels
 - enable noise synthesis for voiceless fricatives only
@@ -17,3 +20,22 @@ test cases:
  - extra test case for extremely short notes
  - extra test case for "h" consonant
  - staccato at end + rest test case
+
+"humanized" chorus with multiple voice rendering:
+ - humanize timing
+ - humanize vibrato
+ - generate stereo output instead of mono output
+
+- how do we "install" the vocalizer on a user machine (language, static
+  linking, ...)?
+
+musicxml interpretation
+ - crescendo
+ - dynamics
+ - accent
+ - ritardando & tempo changes
+
+recording:
+ - recording script
+ - tools for validating recording script
+ - "suggestion" mechanism for words to add to recording script
