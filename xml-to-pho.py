@@ -274,6 +274,8 @@ for part in score.parts:
         note.has_staccato = has_staccato
         note.volume = volume
         note.volume_state = volume_state
+        note.measure_number = element.measureNumber
+        note.beat = element.beat
         notes.append (note)
         last_note = note
         '''
@@ -381,6 +383,7 @@ def print_note (note, next_note):
   for c in note.c_out:
     print ("%s %.2f %.2f" % (c, CL (c), note.freq))
   if next_note:
+    print ("meta bar_beat %d %d" % (note.measure_number, note.beat))
     for c in next_note.c_in:
       print ("%s %.2f %.2f" % (c, CL (c), next_note.freq))
 

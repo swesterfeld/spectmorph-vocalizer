@@ -37,14 +37,27 @@ def volume_factor (time_stamp, text):
 
   return target_volume / time_to_volume (time_stamp)
 
+class PhoEntry:
+  pass
+
 pho = []
 line_number = 1
+bar = 1
+beat = 1
 with open (sys.argv[1], "r") as file:
   for line in file:
     x = line.split()
     if len (x) > 0:
       #x.append (line_number)
-      if x[0][0] != ';':
+      if x[0] == "meta":
+        if x[1] == "bar_beat":
+          bar = int (x[2])
+          beat = int (x[3])
+      elif x[0][0] != ';':
+        pho_entry = PhoEntry()
+        pho_entry.bar = bar
+        pho_entry.beat = beat
+        x.append (pho_entry)
         pho.append (x)
     line_number += 1
 
@@ -136,6 +149,7 @@ for i in range (len (pho)):
       P1 = P1[0][0]
     if is_v (P2):
       P2 = P2[0][0]
+    pho_entry = pho[i][-1]
     if P1 == '_' and (float (pho[i][1]) > pause_fade_ms):
       d = Diphone()
       d.start_ms = start_ms
@@ -156,7 +170,7 @@ for i in range (len (pho)):
           possible_matches.append (x)
       if len (possible_matches) == 0:
         # print ("missing diphone %s" % (P1 + P2))
-        errors += [ "%s: missing diphone %s" % (sys.argv[1], P1 + P2) ]
+        errors += [ "%s: missing diphone %s, bar %d, beat %d" % (sys.argv[1], P1 + P2, pho_entry.bar, pho_entry.beat) ]
       else:
         # since we have a vowel at start, last_f is already the frequency of the vowel
         if len (pho[i + 1]) >= 3:
@@ -187,7 +201,7 @@ for i in range (len (pho)):
           possible_matches.append (x)
       if len (possible_matches) == 0:
         #print ("line %d: missing diphone %s" % (pho[i][-1], P1 + P2))
-        errors += [ "%s: missing diphone %s" % (sys.argv[1], P1 + P2) ]
+        errors += [ "%s: missing diphone %s, bar %d, beat %d" % (sys.argv[1], P1 + P2, pho_entry.bar, pho_entry.beat) ]
       else:
         m = random.choice (possible_matches)
         d = Diphone()
