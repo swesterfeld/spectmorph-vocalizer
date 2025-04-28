@@ -57,6 +57,10 @@ with open (sys.argv[1], "r") as file:
         pho_entry = PhoEntry()
         pho_entry.bar = bar
         pho_entry.beat = beat
+        if x[0] == "_":
+          pho_entry.freq = None
+        else:
+          pho_entry.freq = float (x[2])
         x.append (pho_entry)
         pho.append (x)
     line_number += 1
@@ -150,6 +154,7 @@ for i in range (len (pho)):
     if is_v (P2):
       P2 = P2[0][0]
     pho_entry = pho[i][-1]
+    next_pho_entry = pho[i + 1][-1]
     if P1 == '_' and (float (pho[i][1]) > pause_fade_ms):
       d = Diphone()
       d.start_ms = start_ms
@@ -172,10 +177,10 @@ for i in range (len (pho)):
         # print ("missing diphone %s" % (P1 + P2))
         errors += [ "%s: missing diphone %s, bar %d, beat %d" % (sys.argv[1], P1 + P2, pho_entry.bar, pho_entry.beat) ]
       else:
-        # since we have a vowel at start, last_f is already the frequency of the vowel
-        if len (pho[i + 1]) >= 3:
-          # true: vowel -> vowel case (melisma)
-          last_f = float (pho[i + 1][2])
+        # we have a vowel at start & end, so there is a next frequency (melisma)
+        # vowel -> vowel case (melisma)
+        last_f = next_pho_entry.freq
+        assert (last_f)
         m = random.choice (possible_matches)
         d = Diphone()
         d.lyric = P1 + P2
@@ -217,10 +222,10 @@ for i in range (len (pho)):
           d.p2_ms = min (d.p2_ms, pause_fade_ms / 2)
         start_ms += last_p2_ms + d.p1_ms # FIXME: doesn't seem to be the right value
         last_p2_ms = d.p2_ms
-        if len (pho[i]) >= 3:
-          last_f = float (pho[i][2])
-        if len (pho[i + 1]) >= 3:
-          last_f = float (pho[i + 1][2])
+        if pho_entry.freq:
+          last_f = pho_entry.freq
+        if next_pho_entry.freq:
+          last_f = next_pho_entry.freq
 
         # volume normalization:
         #  - if we have a vowel in our diphone, we use it for volume normalization
