@@ -40,30 +40,41 @@ def volume_factor (time_stamp, text):
 class PhoEntry:
   pass
 
-pho = []
-line_number = 1
-bar = 1
-beat = 1
-with open (sys.argv[1], "r") as file:
-  for line in file:
-    x = line.split()
-    if len (x) > 0:
-      #x.append (line_number)
-      if x[0] == "meta":
-        if x[1] == "bar_beat":
-          bar = int (x[2])
-          beat = int (x[3])
-      elif x[0][0] != ';':
-        pho_entry = PhoEntry()
-        pho_entry.bar = bar
-        pho_entry.beat = beat
-        if x[0] == "_":
-          pho_entry.freq = None
-        else:
-          pho_entry.freq = float (x[2])
-        x.append (pho_entry)
-        pho.append (x)
-    line_number += 1
+def load_pho (filename):
+  pho = []
+  with open (filename, "r") as file:
+    line_number = 1
+    bar = 1
+    beat = 1
+    for line in file:
+      def parse_line (line):
+        nonlocal line_number
+        nonlocal bar, beat
+        x = line.split()
+        if len (x) > 0:
+          if x[0] == "meta":
+            if x[1] == "bar_beat":
+              bar = int (x[2])
+              beat = int (x[3])
+          elif x[0][0] != ';':
+            pho_entry = PhoEntry()
+            pho_entry.bar = bar
+            pho_entry.beat = beat
+            pho_entry.line_number = line_number
+            if x[0] == "_":
+              pho_entry.freq = None
+            else:
+              pho_entry.freq = float (x[2])
+            x.append (pho_entry)
+            pho.append (x)
+        line_number += 1
+      parse_line (line)
+  # ensure last diphone ends in a break
+  if (pho[-1][0] != "_"):
+    parse_line ("_ 50")
+  return pho
+
+pho = load_pho (sys.argv[1])
 
 # collapse multiple pause (_) lines into one - this is necessary because
 # mbrola does not support long pauses
@@ -77,9 +88,6 @@ for i in range (len (pho)):
   last = pho[i]
 pho = out
 
-# ensure last diphone ends in a break
-if (pho[-1][0] != "_"):
-  pho.append (["_", 50])
 
 class Diphone:
   def __repr__ (self):
