@@ -2,7 +2,9 @@
  - diphthongs 80/20 rule (or something?)
  - detect long vowels and use a_a (or similar) for those
  - record humming m_m, ...
+ - support notes without vowel center (m)
  - melisma frequency bend: should we use a slide instead of a frequency jump
+ - melisma: support melisma on cvc (or similar) syllable
  - whispering voice
  - normalization of input material
  - diphthong a + U should be one entry in .pho file: a_U
