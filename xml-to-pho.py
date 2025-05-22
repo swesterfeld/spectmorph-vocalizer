@@ -60,6 +60,17 @@ def check_lyric (lyric):
     if not re.match (r'^[a-zA-Z@0-9:?]+$', l):
       raise RuntimeError ("failed to process lyric: lyric contains invalid char: lyric = '%s', char = '%s'" % (lyric, l))
 
+def diphthong_split (d):
+  Vs = d.split ('_')
+  if len (Vs) == 2 and all (v in V for v in Vs):
+    return Vs
+  return None
+
+def canonical_v (v):
+  if v.endswith(':'):
+    return v[:-1]
+  return v
+
 def cvc_split (s):
   check_lyric (s)
   Cs = []
@@ -78,12 +89,19 @@ def cvc_split (s):
   has_v = False
   for v_candidate in V:
     if s[0:len(v_candidate)] == v_candidate:
-      v = s[0:len(v_candidate)]
+      v = canonical_v (s[0:len(v_candidate)])
       s = s[len(v_candidate):]
       has_v = True
       break
   if not has_v:
     raise RuntimeError ("phoneme missing: %s" % s)
+  # diphthong matching: vv (optional second vowel)
+  for v_candidate in V:
+    if s[0:len(v_candidate)] == v_candidate:
+      v2 = canonical_v (s[0:len(v_candidate)])
+      s = s[len(v_candidate):]
+      v += "_" + v2
+      break
   while len (s):
     has_cv = False
     for v_candidate in V:
@@ -108,6 +126,9 @@ def search_c (c):
   for v_candidate in V:
     if v_candidate == c:
       return  (c, 50)
+  # constify diphthongs with 50ms (should this be 100?)
+  if diphthong_split (c):
+    return (c, 50)
   for c_candidate in C:
     if c_candidate[0] == c:
       return c_candidate
@@ -236,7 +257,11 @@ for part in score.parts:
       freq = element.pitch.frequency
       # melisma: extend last vowel over new note without lyric
       if (element.lyric is None) and last_note and not last_note.c_out:
-        element.lyric = last_note.v
+        Vs = diphthong_split (last_note.v)
+        if Vs:
+          element.lyric = Vs[0] + Vs[1]
+        else:
+          element.lyric = last_note.v
       if element.lyric is None:
         if last_note:
           assert (last_note.freq == freq)

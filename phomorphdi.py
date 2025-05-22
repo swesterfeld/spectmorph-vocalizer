@@ -115,6 +115,15 @@ def is_v (v):
       return True
   return v == '_'
 
+def diphthong_split (d):
+  Vs = d.split ('_')
+  if len (Vs) == 2 and all ((is_v (v) and v != '_') for v in Vs):
+    return Vs
+  return None
+
+def is_diphthong (d):
+  return diphthong_split (d) is not None
+
 def vowel_insertion (pho):
   # for long vowels, we use steady state vowel recordings, so that
   #
@@ -135,7 +144,7 @@ def vowel_insertion (pho):
       vi_pho.append (p)
   return vi_pho
 
-pho = vowel_insertion (pho)
+#pho = vowel_insertion (pho)
 
 def validate_durations (pho):
   l = 1
@@ -145,6 +154,197 @@ def validate_durations (pho):
     l += 1
 
 validate_durations (pho)
+
+errors = []
+synlist = []
+
+print ("note_on 0 52 100")
+
+def lookup_diphone_entry (P1, P2, pho_entry):
+  global errors
+  possible_matches = []
+  for j in range (len (lines) - 2):
+    x = lines[j:j+3]
+    if x[0][1] == P1 and x[1][1] == P2:
+      possible_matches.append (x)
+  if len (possible_matches) == 0:
+    #print ("line %d: missing diphone %s" % (pho[i][-1], P1 + P2))
+    errors += [ "%s: missing diphone %s, bar %d, beat %d" % (sys.argv[1], P1 + P2, pho_entry.bar, pho_entry.beat) ]
+    return None
+  return possible_matches
+
+def lookup_diphone_entry_vv (P1, P2, pho_entry):
+  global errors
+  possible_matches = []
+  for j in range (len (lines) - 1):
+    x = lines[j:j+3]
+    if x[0][1] == P1 + '_' + P2:
+      possible_matches.append (x)
+  if len (possible_matches) == 0:
+    # print ("missing diphone %s" % (P1 + P2))
+    errors += [ "%s: missing diphone %s, bar %d, beat %d" % (sys.argv[1], P1 + P2, pho_entry.bar, pho_entry.beat) ]
+    return None
+  return possible_matches
+
+items = []
+last_f = 130.81
+
+class Item:
+  pass
+
+for i in range (len (pho)):
+  pho[i][-1].v_time = 0
+  if is_v (pho[i][0]):
+    print ("XM", pho[i][0], pho[i][1], file=sys.stderr)
+    if float (pho[i][1]) > 200:
+      pho[i][-1].v_time = float (pho[i][1]) - 100
+      pho[i][1] = "100"
+  if is_diphthong (pho[i][0]):
+    print ("XM", pho[i][0], pho[i][1], file=sys.stderr)
+    assert (float (pho[i][1]) > 200)  # FIXME
+    pho[i][-1].v_time = float (pho[i][1]) - 100
+    pho[i][1] = "100"
+  #if i + 1 < len (pho):
+  #  print ("XD", pho[i][0] + pho[i + 1][0], pho[i][1], pho[i + 1][1], file=sys.stderr)
+
+#for i in range (len (pho)):
+#  pho[i][1] = str (float (pho[i][1]) - pho[i][-1].v_time)
+#  print (">", pho[i][0], pho[i][1], file=sys.stderr)
+
+print ("============================================", file=sys.stderr)
+for i in range (len (pho)):
+  if pho[i][0] == "_":
+    item = Item()
+    item.pos1 = 0
+    item.pos2 = 0.001
+    item.type = "M"
+    item.volume_factor = 1
+    item.ms = pho[i][-1].v_time
+    item.lyric = "_"
+    item.bend = log2 (last_f / 164.81) * 12
+    items.append (item)
+  elif is_v (pho[i][0]):
+    pho_entry = pho[i][-1]
+    P1 = pho[i][0]
+    P1 = P1[0][0]
+    print ("M", pho[i][0], file=sys.stderr)
+    possible_matchesv = lookup_diphone_entry_vv (P1, P1, pho[i][-1])
+    if possible_matchesv:
+      mv = random.choice (possible_matchesv)
+      pos1 = mv[0][0] # FIXME should be before a_a marker
+      pos2 = mv[1][0]
+      item = Item()
+      item.volume_factor = volume_factor (mv[0][0], P1)
+      if pho_entry.freq:
+        last_f = pho_entry.freq
+      item.pos1 = pos1
+      item.pos2 = pos2
+      item.type = "M"
+      item.ms = pho[i][-1].v_time
+      item.lyric = pho[i][0]
+      item.bend = log2 (last_f / 164.81) * 12
+      items.append (item)
+  elif is_diphthong (pho[i][0]):
+    pho_entry = pho[i][-1]
+    Vs = diphthong_split (pho[i][0])
+    print ("M", Vs, file=sys.stderr)
+    possible_matchesv = lookup_diphone_entry_vv (Vs[0], Vs[1], pho[i][-1])
+    if possible_matchesv:
+      # take the longest diphthong recording available to maximize quality
+      mv = max (possible_matchesv, key = lambda x: x[1][0] - x[0][0])
+      item = Item()
+      item.pos1 = mv[0][0]
+      item.pos2 = mv[1][0]
+      item.volume_factor = volume_factor (mv[0][0], Vs[0]) # FIXME: could ramp for different volumes for Vs
+      if pho_entry.freq:
+        last_f = pho_entry.freq
+      item.type = "M"
+      item.ms = pho[i][-1].v_time
+      item.lyric = pho[i][0]
+      item.bend = log2 (last_f / 164.81) * 12
+      items.append (item)
+  if i + 1 < len (pho):
+    P1 = pho[i][0]
+    if is_diphthong (P1):
+      P1 = diphthong_split (P1)[1]
+    if is_v (P1):
+      P1 = P1[0][0]
+
+    P2 = pho[i + 1][0]
+    if is_diphthong (P2):
+      P2 = diphthong_split (P2)[0]
+    if is_v (P2):
+      P2 = P2[0][0]
+
+    print ("D", P1 + P2, file=sys.stderr)
+    pho_entry = pho[i][-1]
+    next_pho_entry = pho[i + 1][-1]
+
+    possible_matches = lookup_diphone_entry (P1, P2, pho[i][-1])
+    if possible_matches:
+      m = random.choice (possible_matches)
+      item = Item()
+      item.lyric = P1 + P2
+      item.type = "D"
+      item.ms = (float (pho[i][1]) + float (pho[i + 1][1])) / 2
+      pos1 = (m[0][0] + m[1][0]) / 2
+      pos2 = (m[1][0] + m[2][0]) / 2
+      item.pos1 = pos1
+      item.pos2 = pos2
+      # volume normalization:
+      #  - if we have a vowel in our diphone, we use it for volume normalization
+      #  - this does not volume normalize diphones without vowels (such as St),
+      #    so it is still important to have a consistent overall volume
+      item.volume_factor = 1
+      if is_v (P1) and P1 != '_':
+        item.volume_factor = volume_factor ((m[0][0] + m[1][0]) / 2, P1)
+      if is_v (P2) and P2 != '_':
+        item.volume_factor = volume_factor ((m[1][0] + m[2][0]) / 2, P2)
+      if pho_entry.freq:
+        last_f = pho_entry.freq
+      #if next_pho_entry.freq:
+      #  last_f = next_pho_entry.freq
+      item.bend = log2 (last_f / 164.81) * 12
+
+      items.append (item)
+
+if errors:
+  for e in sorted (set (errors)):
+    print (e, file=sys.stderr)
+
+total_ms = 0
+for item in items:
+  print ("ITEM:", item.lyric, item.type, item.ms, file=sys.stderr)
+  total_ms += item.ms
+  if item.ms > 0:
+    synlist.append ((item.pos1, item.pos2, item.ms, item.volume_factor, item.bend))
+    print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=sys.stderr)
+print ("TOTAL_MS:", total_ms, file=sys.stderr)
+
+phase = 0
+ms = 0
+ct = synlist[0][0]
+sp = 1.0
+for i in range (1000 * 1000):
+  ratio = (synlist[phase][1] - synlist[phase][0]) * 1000 / synlist[phase][2]
+  print ("#", ratio)
+  ct += sp / 1000 * ratio
+  if ct > synlist[phase][1]:
+    phase += 1
+    if (phase >= len (synlist)):
+      sys.exit (0)
+    ct = synlist[phase][0]
+
+  print ("control 0", time_to_control (ct))
+  print ("control 1", 0)
+  print ("control 2", -1)
+  #print (ws1[i], ws2[i], morph[i], "#X")
+  print ("pitch_expression 0 52 %f" % synlist[phase][4])
+  print ("volume 0", synlist[phase][3])
+  print ("process 48")
+  # FIXME print ("global_volume", synlist[phase][3])
+
+sys.exit (0)
 
 errors = []
 start_ms = 0
