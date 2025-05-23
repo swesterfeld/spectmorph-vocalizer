@@ -201,9 +201,12 @@ for i in range (len (pho)):
       pho[i][1] = "100"
   if is_diphthong (pho[i][0]):
     print ("XM", pho[i][0], pho[i][1], file=sys.stderr)
-    assert (float (pho[i][1]) > 200)  # FIXME
-    pho[i][-1].v_time = float (pho[i][1]) - 100
-    pho[i][1] = "100"
+    if (float (pho[i][1]) > 200):
+      pho[i][-1].v_time = float (pho[i][1]) - 100
+      pho[i][1] = "100"
+    else:
+      pho[i][-1].v_time = float (pho[i][1]) / 2
+      pho[i][1] = str (pho[i][-1].v_time)
   #if i + 1 < len (pho):
   #  print ("XD", pho[i][0] + pho[i + 1][0], pho[i][1], pho[i + 1][1], file=sys.stderr)
 
@@ -248,18 +251,36 @@ for i in range (len (pho)):
     pho_entry = pho[i][-1]
     Vs = diphthong_split (pho[i][0])
     print ("M", Vs, file=sys.stderr)
-    possible_matchesv = lookup_diphone_entry_vv (Vs[0], Vs[1], pho[i][-1])
-    if possible_matchesv:
-      # take the longest diphthong recording available to maximize quality
-      mv = max (possible_matchesv, key = lambda x: x[1][0] - x[0][0])
+    possible_matches_v = lookup_diphone_entry_vv (Vs[0], Vs[0], pho[i][-1])
+    possible_matches_d = lookup_diphone_entry_vv (Vs[0], Vs[1], pho[i][-1])
+    if possible_matches_v and possible_matches_d:
+      time1 = pho[i][-1].v_time * 0.8
+      time2 = pho[i][-1].v_time * 0.2
+
+      mv = random.choice (possible_matches_v)
       item = Item()
-      item.pos1 = mv[0][0]
+      item.pos1 = mv[0][0] # FIXME should be before a_a marker
       item.pos2 = mv[1][0]
       item.volume_factor = volume_factor (mv[0][0], Vs[0]) # FIXME: could ramp for different volumes for Vs
       if pho_entry.freq:
         last_f = pho_entry.freq
       item.type = "M"
-      item.ms = pho[i][-1].v_time
+      item.ms = time1
+      item.lyric = Vs[0]
+      item.bend = log2 (last_f / 164.81) * 12
+      items.append (item)
+
+      # take the longest diphthong recording available to maximize quality
+      md = max (possible_matches_d, key = lambda x: x[1][0] - x[0][0])
+
+      item = Item()
+      item.pos1 = md[0][0]
+      item.pos2 = md[1][0]
+      item.volume_factor = volume_factor (md[0][0], Vs[0]) # FIXME: could ramp for different volumes for Vs
+      if pho_entry.freq:
+        last_f = pho_entry.freq
+      item.type = "M"
+      item.ms = time2
       item.lyric = pho[i][0]
       item.bend = log2 (last_f / 164.81) * 12
       items.append (item)
