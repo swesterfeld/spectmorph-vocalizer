@@ -187,7 +187,6 @@ def lookup_diphone_entry_vv (P1, P2, pho_entry):
   return possible_matches
 
 items = []
-last_f = 130.81
 
 class Item:
   pass
@@ -199,7 +198,7 @@ def prepare_melisma (pho):
   out = []
   out_f = []
   last = None
-  global last_f
+  last_f = 130.81
   for i in range (len (pho)):
     pho_entry = pho[i][-1]
     if pho_entry.freq:
@@ -256,7 +255,6 @@ for i in range (len (pho)):
     item.volume_factor = 1
     item.ms = pho[i][-1].v_time
     item.lyric = "_"
-    item.bend = log2 (last_f / 164.81) * 12
     items.append (item)
   elif is_v (pho[i][0]):
     pho_entry = pho[i][-1]
@@ -270,14 +268,11 @@ for i in range (len (pho)):
       pos2 = mv[1][0]
       item = Item()
       item.volume_factor = volume_factor (mv[0][0], P1)
-      if pho_entry.freq:
-        last_f = pho_entry.freq
       item.pos1 = pos1
       item.pos2 = pos2
       item.type = "M"
       item.ms = pho[i][-1].v_time
       item.lyric = pho[i][0]
-      item.bend = log2 (last_f / 164.81) * 12
       items.append (item)
   elif is_diphthong (pho[i][0]):
     pho_entry = pho[i][-1]
@@ -294,12 +289,9 @@ for i in range (len (pho)):
       item.pos1 = mv[0][0] # FIXME should be before a_a marker
       item.pos2 = mv[1][0]
       item.volume_factor = volume_factor (mv[0][0], Vs[0]) # FIXME: could ramp for different volumes for Vs
-      if pho_entry.freq:
-        last_f = pho_entry.freq
       item.type = "M"
       item.ms = time1
       item.lyric = Vs[0]
-      item.bend = log2 (last_f / 164.81) * 12
       items.append (item)
 
       # take the longest diphthong recording available to maximize quality
@@ -309,12 +301,9 @@ for i in range (len (pho)):
       item.pos1 = md[0][0]
       item.pos2 = md[1][0]
       item.volume_factor = volume_factor (md[0][0], Vs[0]) # FIXME: could ramp for different volumes for Vs
-      if pho_entry.freq:
-        last_f = pho_entry.freq
       item.type = "M"
       item.ms = time2
       item.lyric = pho[i][0]
-      item.bend = log2 (last_f / 164.81) * 12
       items.append (item)
   if i + 1 < len (pho):
     P1 = pho[i][0]
@@ -353,11 +342,6 @@ for i in range (len (pho)):
         item.volume_factor = volume_factor ((m[0][0] + m[1][0]) / 2, P1)
       if is_v (P2) and P2 != '_':
         item.volume_factor = volume_factor ((m[1][0] + m[2][0]) / 2, P2)
-      if pho_entry.freq:
-        last_f = pho_entry.freq
-      #if next_pho_entry.freq:
-      #  last_f = next_pho_entry.freq
-      item.bend = log2 (last_f / 164.81) * 12
 
       items.append (item)
 
@@ -370,7 +354,7 @@ for item in items:
   print ("ITEM:", item.lyric, item.type, item.ms, file=sys.stderr)
   total_ms += item.ms
   if item.ms > 0:
-    synlist.append ((item.pos1, item.pos2, item.ms, item.volume_factor, item.bend))
+    synlist.append ((item.pos1, item.pos2, item.ms, item.volume_factor))
     print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=sys.stderr)
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
 
