@@ -192,6 +192,38 @@ last_f = 130.81
 class Item:
   pass
 
+# prepare for melisma:
+#  - merge repeated vowels into one
+#  - build a list to be able to find the frequency for a given time
+def prepare_melisma (pho):
+  out = []
+  out_f = []
+  last = None
+  global last_f
+  for i in range (len (pho)):
+    pho_entry = pho[i][-1]
+    if pho_entry.freq:
+      last_f = pho_entry.freq
+    out_f.append ((float (pho[i][1]), last_f))
+
+    V_last = V_current = None
+    if last and is_v (last[0]):
+      V_last = last[0]
+      V_last = V_last[0].rstrip (":")
+
+    if is_v (pho[i][0]):
+      V_current = pho[i][0]
+      V_current = V_current[0].rstrip (":")
+
+    if last and V_last and V_current and V_last == V_current:
+      out[-1][1] = str (float (out[-1][1]) + float (pho[i][1]))
+    else:
+      out.append (pho[i])
+    last = pho[i]
+  return out, out_f
+
+pho, m_freqs = prepare_melisma (pho)
+
 for i in range (len (pho)):
   pho[i][-1].v_time = 0
   if is_v (pho[i][0]):
@@ -342,28 +374,41 @@ for item in items:
     print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=sys.stderr)
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
 
-phase = 0
+def find_freq (ms):
+  elapsed = 0
+  for duration, freq in m_freqs:
+    last_freq = freq
+    if ms < elapsed + duration:
+      return freq
+    elapsed += duration
+  return last_freq
+
+def find_synlist_pos (ms):
+  elapsed = 0
+  for x in synlist:
+    duration = x[2]
+    if ms < elapsed + duration:
+      frac = (ms - elapsed) / duration
+      return (x[0] * (1 - frac) + x[1] * frac), x
+    elapsed += duration
+  return None, None
+
 ms = 0
-ct = synlist[0][0]
-sp = 1.0
-for i in range (1000 * 1000):
-  ratio = (synlist[phase][1] - synlist[phase][0]) * 1000 / synlist[phase][2]
-  print ("#", ratio)
-  ct += sp / 1000 * ratio
-  if ct > synlist[phase][1]:
-    phase += 1
-    if (phase >= len (synlist)):
-      sys.exit (0)
-    ct = synlist[phase][0]
+while True:
+  ct, x = find_synlist_pos (ms)
+  if ct is None:
+    break
 
   print ("control 0", time_to_control (ct))
   print ("control 1", 0)
   print ("control 2", -1)
-  #print (ws1[i], ws2[i], morph[i], "#X")
-  print ("pitch_expression 0 52 %f" % synlist[phase][4])
-  print ("volume 0", synlist[phase][3])
+  freq = find_freq (ms)
+  bend = log2 (freq / 164.81) * 12
+  print ("pitch_expression 0 52 %f" % bend)
+  print ("volume 0", x[3])
   print ("process 48")
-  # FIXME print ("global_volume", synlist[phase][3])
+
+  ms += 1
 
 sys.exit (0)
 
