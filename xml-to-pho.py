@@ -172,6 +172,12 @@ volume = 0.55 # mf
 last_note = None
 last_rest = None
 
+class MelismaState (Enum):
+  NONE = 1
+  START = 2
+  MIDDLE = 3
+  END = 4
+
 class VolumeState (Enum):
   CONST = 1
   START = 2
@@ -256,12 +262,16 @@ for part in score.parts:
       quarter_offset += element.duration.quarterLength
       freq = element.pitch.frequency
       # melisma: extend last vowel over new note without lyric
-      if (element.lyric is None) and last_note and not last_note.c_out:
-        Vs = diphthong_split (last_note.v)
-        if Vs:
-          element.lyric = Vs[0] + Vs[1]
-        else:
-          element.lyric = last_note.v
+      if (element.lyric is None) and last_note and last_note.freq != freq:
+        element.lyric = last_note.lyric
+        if last_note.melisma_state == MelismaState.NONE:
+          last_note.melisma_state = MelismaState.START
+          melisma_state = MelismaState.END
+        elif last_note.melisma_state == MelismaState.END:
+          last_note.melisma_state = MelismaState.MIDDLE
+          melisma_state = MelismaState.END
+      else:
+        melisma_state = MelismaState.NONE
       if element.lyric is None:
         if last_note:
           assert (last_note.freq == freq)
@@ -277,7 +287,9 @@ for part in score.parts:
           if art.name == "staccato":
             has_staccato = True
           print (";;;", art.name)
+        note = Note()
         lyric = element.lyric
+        note.lyric = lyric
         if lyric == "$":
           for i in range (cv_16_skip):
             random_cv()
@@ -289,7 +301,6 @@ for part in score.parts:
           print ("%s, note at measure measure %d beat %d" % (exception, element.measureNumber, element.beat), file=sys.stderr)
           sys.exit (1)
         c_in, v, c_out = lyric
-        note = Note()
         note.c_in = c_in
         note.v = v
         note.c_out = c_out
@@ -299,6 +310,7 @@ for part in score.parts:
         note.has_staccato = has_staccato
         note.volume = volume
         note.volume_state = volume_state
+        note.melisma_state = melisma_state
         note.measure_number = element.measureNumber
         note.beat = element.beat
         notes.append (note)
@@ -367,6 +379,19 @@ for note in notes:
     notes_with_staccato.append (note)
 
 notes = notes_with_staccato
+
+notes_melisma = []
+for note in notes:
+  if isinstance (note, Note) and note.melisma_state == MelismaState.START:
+    note.c_out = []
+  if isinstance (note, Note) and note.melisma_state == MelismaState.MIDDLE:
+    note.c_in = []
+    note.c_out = []
+  if isinstance (note, Note) and note.melisma_state == MelismaState.END:
+    note.c_in = []
+  notes_melisma.append (note)
+
+notes = notes_melisma
 
 # staccato: FIXME: may want to collapse multiple rests into one at this point
 

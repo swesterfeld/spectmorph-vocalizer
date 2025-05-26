@@ -209,14 +209,20 @@ def prepare_melisma (pho):
     if last and is_v (last[0]):
       V_last = last[0]
       V_last = V_last[0].rstrip (":")
+    if last and is_diphthong (last[0]):
+      V_last = last[0]
 
     if is_v (pho[i][0]):
       V_current = pho[i][0]
       V_current = V_current[0].rstrip (":")
+    if is_diphthong (pho[i][0]):
+      V_current = pho[i][0]
 
     if last and V_last and V_current and V_last == V_current:
       out[-1][1] = str (float (out[-1][1]) + float (pho[i][1]))
+      out[-1][-1].last_diph_frac_time = float (pho[i][1]) / float (out[-1][1])
     else:
+      pho[i][-1].last_diph_frac_time = 1
       out.append (pho[i])
     last = pho[i]
   return out, out_f
@@ -231,7 +237,7 @@ for i in range (len (pho)):
       pho[i][-1].v_time = float (pho[i][1]) - 100
       pho[i][1] = "100"
   if is_diphthong (pho[i][0]):
-    print ("XM", pho[i][0], pho[i][1], file=sys.stderr)
+    print ("XM", pho[i][0], pho[i][1], pho[i][-1].last_diph_frac_time, file=sys.stderr)
     if (float (pho[i][1]) > 200):
       pho[i][-1].v_time = float (pho[i][1]) - 100
       pho[i][1] = "100"
@@ -281,8 +287,10 @@ for i in range (len (pho)):
     possible_matches_v = lookup_diphone_entry_vv (Vs[0], Vs[0], pho[i][-1])
     possible_matches_d = lookup_diphone_entry_vv (Vs[0], Vs[1], pho[i][-1])
     if possible_matches_v and possible_matches_d:
-      time1 = pho[i][-1].v_time * 0.8
-      time2 = pho[i][-1].v_time * 0.2
+      # FIXME: which is better here: a relative length for the last diphone segment
+      # (like pho_entry last_diph_frac_time) or some kind of absolute time?
+      time2 = pho[i][-1].v_time * pho[i][-1].last_diph_frac_time * 0.2
+      time1 = pho[i][-1].v_time - time2
 
       mv = random.choice (possible_matches_v)
       item = Item()
