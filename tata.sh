@@ -10,7 +10,7 @@ for i in $F
 do
   echo -n "$i ..."
   tata.py $(soxi -D voice/sven.flac) 1 $i > tata.script
-  src/smscript voice/sven.smplan tata.script ${i}${i}.wav
+  src/smscript template.smplan voice/sven.sm tata.script ${i}${i}.wav
   if [ "x$PLAY" != "x" ]; then
     gst123 ${i}${i}.wav
   fi
