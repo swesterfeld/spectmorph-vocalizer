@@ -289,7 +289,7 @@ for i in range (len (pho)):
     if possible_matches_v and possible_matches_d:
       # FIXME: which is better here: a relative length for the last diphone segment
       # (like pho_entry last_diph_frac_time) or some kind of absolute time?
-      time2 = pho[i][-1].v_time * pho[i][-1].last_diph_frac_time * 0.2
+      time2 = min (pho[i][-1].v_time * pho[i][-1].last_diph_frac_time, 150)
       time1 = pho[i][-1].v_time - time2
 
       mv = random.choice (possible_matches_v)
@@ -356,10 +356,15 @@ for i in range (len (pho)):
 if errors:
   for e in sorted (set (errors)):
     print (e, file=sys.stderr)
+  sys.exit (1)
 
 total_ms = 0
 for item in items:
-  print ("ITEM:", item.lyric, item.type, item.ms, file=sys.stderr)
+  if item.ms > 0:
+    compression = (item.pos2 - item.pos1) * 1000 / item.ms
+  else:
+    compression = 1
+  print ("ITEM: %-5s %-5s %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression), file=sys.stderr)
   total_ms += item.ms
   if item.ms > 0:
     synlist.append ((item.pos1, item.pos2, item.ms, item.volume_factor))
