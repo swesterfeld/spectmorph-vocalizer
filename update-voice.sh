@@ -1,7 +1,7 @@
 set -e
 
 #---------------- voice downloader ----------------------
-VOICE_EXPECT=bd051dbdcfeb3d73e2c5345b59f26c836a67b31d
+VOICE_EXPECT=14e71f5f5ded9c8ab3cd557268a1bede6e5ec068
 VOICE_URL="https://space.twc.de/~stefan/download2/voice/${VOICE_EXPECT}.flac"
 
 check_voice()
@@ -22,6 +22,8 @@ check_voice || {
 check_voice
 echo "Using Voice from $VOICE_URL"
 #--------------------------------------------------------
+
+[ "x$1" == "xdownload" ] && exit 0
 
 make -Csrc
 
