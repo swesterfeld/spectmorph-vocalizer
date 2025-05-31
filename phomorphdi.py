@@ -289,7 +289,7 @@ for i in range (len (pho)):
     if possible_matches_v and possible_matches_d:
       # FIXME: which is better here: a relative length for the last diphone segment
       # (like pho_entry last_diph_frac_time) or some kind of absolute time?
-      time2 = min (pho[i][-1].v_time * pho[i][-1].last_diph_frac_time, 150)
+      time2 = min (pho[i][-1].v_time * pho[i][-1].last_diph_frac_time, 200)
       time1 = pho[i][-1].v_time - time2
 
       mv = random.choice (possible_matches_v)
