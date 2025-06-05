@@ -6,8 +6,8 @@ mkdir -p testxml pho script wav voice
 
 make -C src
 
-VOICE_ASUM=2124bc4d0ff2239838cd45e46a8c772f75ae9e86
-VOICE_VSUM=c4c7d6c0e6bdb62e38c65724ca7e08b119f57691
+VOICE_ASUM=abfc736ffd557b1514b8695def16de81dda8d937
+VOICE_VSUM=d73ac3781b03b9ef5c1cdc1126cf002ad90ec2ad
 
 VOICE_AURL=https://space.twc.de/~stefan/download2/voice/${VOICE_ASUM}.sm
 VOICE_VURL=https://space.twc.de/~stefan/download2/voice/${VOICE_VSUM}.volume

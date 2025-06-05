@@ -60,6 +60,17 @@ def check_lyric (lyric):
     if not re.match (r'^[a-zA-Z@0-9:?]+$', l):
       raise RuntimeError ("failed to process lyric: lyric contains invalid char: lyric = '%s', char = '%s'" % (lyric, l))
 
+def diphthong_split (d):
+  Vs = d.split ('_')
+  if len (Vs) == 2 and all (v in V for v in Vs):
+    return Vs
+  return None
+
+def canonical_v (v):
+  if v.endswith(':'):
+    return v[:-1]
+  return v
+
 def cvc_split (s):
   check_lyric (s)
   Cs = []
@@ -78,12 +89,19 @@ def cvc_split (s):
   has_v = False
   for v_candidate in V:
     if s[0:len(v_candidate)] == v_candidate:
-      v = s[0:len(v_candidate)]
+      v = canonical_v (s[0:len(v_candidate)])
       s = s[len(v_candidate):]
       has_v = True
       break
   if not has_v:
     raise RuntimeError ("phoneme missing: %s" % s)
+  # diphthong matching: vv (optional second vowel)
+  for v_candidate in V:
+    if s[0:len(v_candidate)] == v_candidate:
+      v2 = canonical_v (s[0:len(v_candidate)])
+      s = s[len(v_candidate):]
+      v += "_" + v2
+      break
   while len (s):
     has_cv = False
     for v_candidate in V:
@@ -108,6 +126,9 @@ def search_c (c):
   for v_candidate in V:
     if v_candidate == c:
       return  (c, 50)
+  # constify diphthongs with 50ms (should this be 100?)
+  if diphthong_split (c):
+    return (c, 50)
   for c_candidate in C:
     if c_candidate[0] == c:
       return c_candidate
@@ -150,6 +171,12 @@ volume = 0.55 # mf
 
 last_note = None
 last_rest = None
+
+class MelismaState (Enum):
+  NONE = 1
+  START = 2
+  MIDDLE = 3
+  END = 4
 
 class VolumeState (Enum):
   CONST = 1
@@ -235,8 +262,16 @@ for part in score.parts:
       quarter_offset += element.duration.quarterLength
       freq = element.pitch.frequency
       # melisma: extend last vowel over new note without lyric
-      if (element.lyric is None) and last_note and not last_note.c_out:
-        element.lyric = last_note.v
+      if (element.lyric is None) and last_note and last_note.freq != freq:
+        element.lyric = last_note.lyric
+        if last_note.melisma_state == MelismaState.NONE:
+          last_note.melisma_state = MelismaState.START
+          melisma_state = MelismaState.END
+        elif last_note.melisma_state == MelismaState.END:
+          last_note.melisma_state = MelismaState.MIDDLE
+          melisma_state = MelismaState.END
+      else:
+        melisma_state = MelismaState.NONE
       if element.lyric is None:
         if last_note:
           assert (last_note.freq == freq)
@@ -252,7 +287,9 @@ for part in score.parts:
           if art.name == "staccato":
             has_staccato = True
           print (";;;", art.name)
+        note = Note()
         lyric = element.lyric
+        note.lyric = lyric
         if lyric == "$":
           for i in range (cv_16_skip):
             random_cv()
@@ -264,7 +301,6 @@ for part in score.parts:
           print ("%s, note at measure measure %d beat %d" % (exception, element.measureNumber, element.beat), file=sys.stderr)
           sys.exit (1)
         c_in, v, c_out = lyric
-        note = Note()
         note.c_in = c_in
         note.v = v
         note.c_out = c_out
@@ -274,6 +310,7 @@ for part in score.parts:
         note.has_staccato = has_staccato
         note.volume = volume
         note.volume_state = volume_state
+        note.melisma_state = melisma_state
         note.measure_number = element.measureNumber
         note.beat = element.beat
         notes.append (note)
@@ -342,6 +379,19 @@ for note in notes:
     notes_with_staccato.append (note)
 
 notes = notes_with_staccato
+
+notes_melisma = []
+for note in notes:
+  if isinstance (note, Note) and note.melisma_state == MelismaState.START:
+    note.c_out = []
+  if isinstance (note, Note) and note.melisma_state == MelismaState.MIDDLE:
+    note.c_in = []
+    note.c_out = []
+  if isinstance (note, Note) and note.melisma_state == MelismaState.END:
+    note.c_in = []
+  notes_melisma.append (note)
+
+notes = notes_melisma
 
 # staccato: FIXME: may want to collapse multiple rests into one at this point
 
