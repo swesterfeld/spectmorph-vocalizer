@@ -22,18 +22,28 @@ if args.s is not None:
   print (f"seeding RNG with {args.s}", file=sys.stderr)
   random.seed(args.s)
 
-lines = []
-ignore_labels = []
-with open ("diphone-sven.label", "r") as file:
-  for line in file:
-    line = line.split()
-    if line[2] in ["dh", "bh", "th", "gh", "kh", "ph", "?h" ]:
-      ignore_labels.append (line[2])
-    else:
-      lines.append ((float (line[0]), line[2].rstrip(":")))
+def load_labels():
+  lines_raw = []
+  ignore_labels = []
+  with open ("diphone-sven.label", "r") as file:
+    for line in file:
+      line = line.split()
+      lines_raw.append ((float (line[0]), line[2].rstrip(":")))
 
-if ignore_labels:
-  print ("ignore labels", set (ignore_labels), file=sys.stderr)
+  lines = []
+  i = 0
+  while i < len (lines_raw):
+    F = lines_raw[i]
+    if F[1][0] == '.' and i + 1 < len (lines_raw):
+      S = lines_raw[i + 1]
+      i += 1
+      lines.append ((F[0], S[1][0], S[0]))
+    else:
+      lines.append ((F[0], F[1]))
+    i += 1
+  return lines
+
+lines = load_labels()
 
 def volume_factor (time_stamp, text):
   assert (is_v (text) and len (text) == 1)
@@ -166,6 +176,17 @@ errors = []
 synlist = []
 
 print ("note_on 0 52 100")
+
+def phone_class (p):
+  if p in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '@', 'E' ]:
+    return "v"
+  if p in  [ "?", "t", "p", "k", "d", "b", "g" ]:
+    return "p"
+  if p in [ 'n', 'm', 'l', 's', 'Z', 'S', 'f', 'v', 'r', 'h', 'N', 'z', 'j', 'C', 'x' ]:
+    return "c"
+  if p in [ "_" ]:
+    return "_"
+  raise RuntimeError ("unknown phone class: %s" % p)
 
 def lookup_diphone_entry (P1, P2, pho_entry):
   global errors
@@ -344,8 +365,15 @@ for i in range (len (pho)):
       item.lyric = P1 + P2
       item.type = "D"
       item.ms = (float (pho[i][1]) + float (pho[i + 1][1])) / 2
-      pos1 = (m[0][0] + m[1][0]) / 2
-      pos2 = (m[1][0] + m[2][0]) / 2
+      if phone_class (P1) == "p":
+        pos1 = m[0][2]
+      else:
+        pos1 = (m[0][0] + m[1][0]) / 2
+      if phone_class (P2) == "p":
+        print (m, file=sys.stderr)
+        pos2 = (m[1][0] + m[1][2]) / 2
+      else:
+        pos2 = (m[1][0] + m[2][0]) / 2
       item.pos1 = pos1
       item.pos2 = pos2
       # volume normalization:
