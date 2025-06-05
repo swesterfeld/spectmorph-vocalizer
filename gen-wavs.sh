@@ -84,5 +84,5 @@ do
     phomorphdi.py pho/$pho $seed_param > script/$script || echo "$pho -> $script" failed
     src/smscript template.smplan voice/sven.sm script/$script wav/$wav
   fi
-#  ./apply-accent.py pho/$pho wav/$wav wav/$wav
+  ./volume-normalize.py wav/$wav
 done
