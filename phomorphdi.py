@@ -8,12 +8,19 @@
 
 import sys
 import random
+import argparse
 from math import log2
 from utils import time_to_volume, time_to_control
 
-assert (len (sys.argv) == 3)
+# Set up parser
+parser = argparse.ArgumentParser (description = "phomorphdi")
+parser.add_argument ("pho", help = "Input .ph file")
+parser.add_argument("-s", type=int, help="Optional seed")
+args = parser.parse_args()
 
-voice_length = float (sys.argv[2])
+if args.s is not None:
+  print (f"seeding RNG with {args.s}", file=sys.stderr)
+  random.seed(args.s)
 
 lines = []
 ignore_labels = []
@@ -74,7 +81,7 @@ def load_pho (filename):
     parse_line ("_ 50")
   return pho
 
-pho = load_pho (sys.argv[1])
+pho = load_pho (args.pho)
 
 # collapse multiple pause (_) lines into one - this is necessary because
 # mbrola does not support long pauses
@@ -169,7 +176,7 @@ def lookup_diphone_entry (P1, P2, pho_entry):
       possible_matches.append (x)
   if len (possible_matches) == 0:
     #print ("line %d: missing diphone %s" % (pho[i][-1], P1 + P2))
-    errors += [ "%s: missing diphone %s, bar %d, beat %d" % (sys.argv[1], P1 + P2, pho_entry.bar, pho_entry.beat) ]
+    errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + P2, pho_entry.bar, pho_entry.beat) ]
     return None
   return possible_matches
 
@@ -182,7 +189,7 @@ def lookup_diphone_entry_vv (P1, P2, pho_entry):
       possible_matches.append (x)
   if len (possible_matches) == 0:
     # print ("missing diphone %s" % (P1 + P2))
-    errors += [ "%s: missing diphone %s, bar %d, beat %d" % (sys.argv[1], P1 + P2, pho_entry.bar, pho_entry.beat) ]
+    errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + P2, pho_entry.bar, pho_entry.beat) ]
     return None
   return possible_matches
 
@@ -446,7 +453,7 @@ for i in range (len (pho)):
           possible_matches.append (x)
       if len (possible_matches) == 0:
         # print ("missing diphone %s" % (P1 + P2))
-        errors += [ "%s: missing diphone %s, bar %d, beat %d" % (sys.argv[1], P1 + P2, pho_entry.bar, pho_entry.beat) ]
+        errors += [ "%s: missing diphone %s, bar %d, beat %d" % (argv[1], P1 + P2, pho_entry.bar, pho_entry.beat) ]
       else:
         # we have a vowel at start & end, so there is a next frequency (melisma)
         # vowel -> vowel case (melisma)

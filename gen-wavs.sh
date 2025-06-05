@@ -46,6 +46,20 @@ remove_music_extension() {
   fi
 }
 
+# handle -s <seed> option
+seed_param=""
+while getopts "s:" opt
+do
+  case $opt in
+    s) seed_param="-s $OPTARG"
+       ;;
+    *) echo "Usage: $0 [-s <seed>]"
+       exit 1
+       ;;
+  esac
+done
+shift $((OPTIND - 1))
+
 XMLS="$@"
 if test -z "$XMLS"; then
   XMLS="$(cd testxml; ls)"
@@ -67,7 +81,7 @@ do
     test -f /usr/share/mbrola/$voice/$voice || voice=de2
     mbrola /usr/share/mbrola/$voice/$voice pho/$pho wav/$wav
   else
-    phomorphdi.py pho/$pho $(soxi -D voice/sven.flac) > script/$script || echo "$pho -> $script" failed
+    phomorphdi.py pho/$pho $seed_param > script/$script || echo "$pho -> $script" failed
     src/smscript template.smplan voice/sven.sm script/$script wav/$wav
   fi
 #  ./apply-accent.py pho/$pho wav/$wav wav/$wav
