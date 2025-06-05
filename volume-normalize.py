@@ -2,15 +2,18 @@
 from scipy.io import wavfile
 import numpy as np
 import sys
+import math
 
 sample_rate, int_data = wavfile.read (sys.argv[1])
 
 # normalize
 try:
+  int_max = np.iinfo (int_data.dtype).max
   int_data = int_data.astype (np.float64)
   max_val = np.max (np.abs (int_data))
   if max_val > 1e-4:
     int_data /= max_val
+  print ("normalize: %f dB" % (20 * math.log10 (int_max / max_val)))
 except:
   print ("normalization failed")
 
