@@ -372,6 +372,10 @@ for i in range (len (pho)):
       if phone_class (P2) == "p":
         print (m, file=sys.stderr)
         pos2 = (m[1][0] + m[1][2]) / 2
+      elif phone_class (P2) == "v":
+        pos2 = min ((m[1][0] + m[2][0]) / 2, m[1][0] + 0.150)
+      elif phone_class (P2) == "_":
+        pos2 = min ((m[1][0] + m[2][0]) / 2, m[1][0] + 0.025)
       else:
         pos2 = (m[1][0] + m[2][0]) / 2
       item.pos1 = pos1
