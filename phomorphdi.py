@@ -127,7 +127,7 @@ class Diphone:
     self.volume_factor = 1
 
 def is_v (v):
-  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '@', 'E' ]:
+  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E' ]:
     if v == vv or v == vv + ':':
       return True
   return v == '_'
@@ -178,7 +178,7 @@ synlist = []
 print ("note_on 0 52 100")
 
 def phone_class (p):
-  if p in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '@', 'E' ]:
+  if p in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E' ]:
     return "v"
   if p in  [ "?", "t", "p", "k", "d", "b", "g" ]:
     return "p"
