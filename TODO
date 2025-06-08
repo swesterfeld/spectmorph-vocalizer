@@ -16,8 +16,6 @@
 
 improved handling for plosives
  - merge tata.py rules into phomorphdi.py
- - relabel t, th => .t t
- - use .t, t in phomorphdi.py
 
 possible improvements for quality:
 - use harmonic resynthesis only for voiced consonants and vowels
