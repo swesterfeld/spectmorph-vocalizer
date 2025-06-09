@@ -12,36 +12,37 @@ def load_want_diphones (filename):
       want_diphones.append (line)
   return want_diphones
 
+def load_wordlist (filename):
+  wordlist = []
+  with open (filename, "r") as file:
+    for line in file:
+      re_match = re.match (r'''([-'.\w ]+):[ \t]+([\w@?_ ]+)$''', line, re.UNICODE)
+      if not re_match:
+        raise RuntimeError ("%s: line %s doesn't match" % (filename, line))
+
+      letters = re_match.groups()[1]
+      letters = letters.split()
+      # every word starts with silence and ends with silence
+      # (irgnore word start/end for diphthongs though)
+      if len (letters[0]) == 1:
+        letters = [ "_" ] + letters
+      if len (letters[-1]) == 1:
+        letters = letters + [ "_" ]
+      diphones = []
+      for i in range (len (letters)):
+        if i + 1 < len (letters) and len (letters[i]) == 1 and len (letters[i+1]) == 1:
+          diphones.append (letters[i] + letters[i+1])
+        if len (letters[i]) == 3 and i > 0 and i < len (letters) - 1 and letters[i] != '?':
+          # diphthong, like a_U
+          # only usable if in the middle of a word
+          # no ? at start
+          diphones.append (letters[i])
+      wordlist.append ((re_match.groups()[0], re_match.groups()[1], diphones))
+  return wordlist
+
 if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <wordlist>
   want_diphones = load_want_diphones (sys.argv[2])
   have_diphones = []
-  def load_wordlist (filename):
-    wordlist = []
-    with open (filename, "r") as file:
-      for line in file:
-        re_match = re.match (r'''([-'.\w ]+):[ \t]+([\w@?_ ]+)$''', line, re.UNICODE)
-        if not re_match:
-          raise RuntimeError ("%s: line %s doesn't match" % (filename, line))
-
-        letters = re_match.groups()[1]
-        letters = letters.split()
-        # every word starts with silence and ends with silence
-        # (irgnore word start/end for diphthongs though)
-        if len (letters[0]) == 1:
-          letters = [ "_" ] + letters
-        if len (letters[-1]) == 1:
-          letters = letters + [ "_" ]
-        diphones = []
-        for i in range (len (letters)):
-          if i + 1 < len (letters) and len (letters[i]) == 1 and len (letters[i+1]) == 1:
-            diphones.append (letters[i] + letters[i+1])
-          if len (letters[i]) == 3 and i > 0 and i < len (letters) - 1 and letters[i] != '?':
-            # diphthong, like a_U
-            # only usable if in the middle of a word
-            # no ? at start
-            diphones.append (letters[i])
-        wordlist.append ((re_match.groups()[0], re_match.groups()[1], diphones))
-    return wordlist
 
   wordlist = load_wordlist (sys.argv[3])
 
@@ -81,23 +82,18 @@ if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <wordlist>
 if sys.argv[1] == "test-script": # <want-diphones> <script>
   want_diphones = load_want_diphones (sys.argv[2])
   have_diphones = []
-  with open (sys.argv[3], "r") as file:
-    for line in file:
-      re_match = re.match (r'''([-'.\w ]+):[ \t]+([\w@?_ ]+)$''', line, re.UNICODE)
-      if not re_match:
-          raise RuntimeError ("line %s doesn't match" % line)
-      print ("%-30s%s" % (re_match.groups()[0] + ":", re_match.groups()[1]))
-      letters = re_match.groups()[1]
-      letters = letters.split()
-      pairs = [letters[i] + letters[i+1] for i in range (len (letters) - 1)]
-      new_diphones = []
-      for pair in pairs:
-        if not pair in have_diphones:
+  wordlist = load_wordlist (sys.argv[3])
+  for word in wordlist:
+    print ("%-30s%s" % (word[0] + ":", word[1]))
+    new_diphones = []
+    for pair in word[2]:
+      if not pair in have_diphones:
+        if not pair in new_diphones:
           if pair in want_diphones:
             new_diphones.append (pair)
-      print ("%-30s%s" % ("new diphones:", ", ".join (new_diphones)))
-      print ()
-      have_diphones += new_diphones
+    print ("%-30s%s" % ("new diphones:", ", ".join (new_diphones)))
+    print ()
+    have_diphones += new_diphones
 
   for d in want_diphones:
     if d in have_diphones:
