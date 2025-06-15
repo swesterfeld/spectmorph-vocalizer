@@ -601,10 +601,9 @@ www.klangsignale.com</rights>
         <type>quarter</type>
         <stem>down</stem>
         <staff>1</staff>
-        <lyric number="1" placement="below" default-y="-76.875" name="verse">
-          <syllabic>single</syllabic>
+        <lyric number="1" placement="below" name="verse">
+          <syllabic>begin</syllabic>
           <text>tro:nt</text>
-          <extend type="start"/>
         </lyric>
       </note>
       <note>
@@ -628,9 +627,6 @@ www.klangsignale.com</rights>
         <type>quarter</type>
         <stem>down</stem>
         <staff>1</staff>
-        <lyric number="1" placement="below" default-y="-76.875" name="verse">
-          <extend type="stop"/>
-        </lyric>
         <lyric number="1" placement="below" default-y="-76.875" name="verse">
           <syllabic>single</syllabic>
           <text>das</text>
