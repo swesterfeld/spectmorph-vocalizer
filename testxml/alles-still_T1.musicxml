@@ -259,7 +259,7 @@ www.klangsignale.com</rights>
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>ra</text>
+          <text>raI</text>
         </lyric>
       </note>
       <note>
@@ -272,10 +272,6 @@ www.klangsignale.com</rights>
         <type>quarter</type>
         <stem>down</stem>
         <staff>1</staff>
-        <lyric number="1" placement="below" name="verse">
-          <syllabic>middle</syllabic>
-          <text>haI</text>
-        </lyric>
       </note>
     </measure>
     <measure number="6">
