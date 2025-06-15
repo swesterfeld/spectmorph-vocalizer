@@ -94,7 +94,8 @@ with open('x.json', 'r') as file:
     if line == '}':
       data = json.loads (word_string)
       try:
-        if data["pos"] == "noun":
+        print (data["pos"])
+        if data["pos"] in { "noun", "adj", "verb" }:
           for i in data["sounds"]:
             try:
               xipa = i["ipa"]
@@ -102,7 +103,7 @@ with open('x.json', 'r') as file:
               if match:
                 ALL += 1
                 print ("ALL = %d FAIL = %d COV %f" % (ALL, FAIL, (ALL - FAIL) / ALL * 100))
-                print (":::::::", data["word"])
+                print ("######", data["word"])
                 ipa = match.group (1)
                 print (ipa)
                 ipa = ipa.replace ("(ː)", "")
@@ -141,9 +142,9 @@ with open('x.json', 'r') as file:
                       ipa = ipa[1:]
                     else:
                       FAIL += 1
-                      print ("fail: %s" % ipa)
+                      print ("FAIL! %s" % ipa)
                       raise RuntimeError ("bad convert")
-                print ("X %s" % X)
+                print ("%s: %s" % (data["word"], X))
                 print ("############################")
                 break
                 '''
