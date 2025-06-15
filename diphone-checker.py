@@ -22,6 +22,25 @@ def load_wordlist (filename):
 
       letters = re_match.groups()[1]
       letters = letters.split()
+
+      normalized_letters = []
+      for l in letters:
+        if l == "dZ":
+          normalized_letters.extend (["d", "Z"])
+        elif l == "pf":
+          normalized_letters.extend (["p", "f"])
+        elif l == "ts":
+          normalized_letters.extend (["t", "s"])
+        elif l == "tS":
+          normalized_letters.extend (["t", "S"])
+        else:
+          normalized_letters.append (l)
+      letters = normalized_letters
+
+      for l in letters:
+        if len (l) != 1 and len (l) != 3:
+          raise RuntimeError ("bad sampa: %s" % l)
+
       # every word starts with silence and ends with silence
       # (irgnore word start/end for diphthongs though)
       if len (letters[0]) == 1:
