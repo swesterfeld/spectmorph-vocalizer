@@ -12,7 +12,6 @@
  - normalization of input material
  - diphone-checker.py should support both: a_I and aI
  - ramp for volume normalization @, 6
- - dictionary download: https://kaikki.org/dictionary/German/
 
 improved handling for plosives
  - merge tata.py rules into phomorphdi.py
@@ -41,9 +40,7 @@ musicxml interpretation
  - ritardando & tempo changes
 
 recording:
- - recording script
- - tools for validating recording script
- - "suggestion" mechanism for words to add to recording script
+ - recording script (can be generated/validated using diphone-checker.py)
  - how to record? pseudo singing with constant tempo
    stra - ssen - bahn - hal - te - stel - le (60 bpm? 90bpm? 120 bpm?)
  - record insertions (vowels, diphthongs) at different pitches

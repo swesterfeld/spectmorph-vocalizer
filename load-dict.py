@@ -85,6 +85,7 @@ def convert (char):
 state = 0
 word_string = ""
 # Load JSON file
+# origin: https://kaikki.org/dictionary/German/
 with lzma.open ('/home/stefan/annex/downloads/kaikki.org-dictionary-German-words.xz', mode='rt') as file:
   for line in file:
     line = line.rstrip ("\n")
