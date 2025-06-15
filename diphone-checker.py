@@ -3,6 +3,9 @@
 import sys
 import re
 
+def is_v (v):
+  return v in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E' ]
+
 def load_want_diphones (filename):
   want_diphones = []
   with open (filename, "r") as file:
@@ -48,8 +51,16 @@ def load_wordlist (filename):
       if len (letters[-1]) == 1:
         letters = letters + [ "_" ]
       diphones = []
+
+      # ignore diphones after last vowel, because they can have unnatural
+      # timing/quality when used inside a word
+      last_vowel_index = 0
       for i in range (len (letters)):
-        if i + 1 < len (letters) and len (letters[i]) == 1 and len (letters[i+1]) == 1:
+        if is_v (letters[i]) or len (letters[i]) == 3:
+          last_vowel_index = i
+
+      for i in range (len (letters)):
+        if i + 1 < len (letters) and len (letters[i]) == 1 and len (letters[i+1]) == 1 and (i < last_vowel_index or letters[i+1] == "_"):
           diphones.append (letters[i] + letters[i+1])
         if len (letters[i]) == 3 and i > 0 and i < len (letters) - 1 and letters[i] != '?':
           # diphthong, like a_U
