@@ -210,7 +210,7 @@ def lookup_diphone_entry_vv (P1, P2, pho_entry):
       possible_matches.append (x)
   if len (possible_matches) == 0:
     # print ("missing diphone %s" % (P1 + P2))
-    errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + P2, pho_entry.bar, pho_entry.beat) ]
+    errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + "_" + P2, pho_entry.bar, pho_entry.beat) ]
     return None
   return possible_matches
 
