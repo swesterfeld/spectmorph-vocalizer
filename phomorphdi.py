@@ -366,7 +366,6 @@ for i in range (len (pho)):
       item.type = "D"
       item.ms = (float (pho[i][1]) + float (pho[i + 1][1])) / 2
       if phone_class (P1) == "p":
-        print ("@@@@@", m[0], file=sys.stderr)
         pos1 = m[0][2]
       elif phone_class (P1) == "v":
         pos1 = max ((m[0][0] + m[1][0]) / 2, m[1][0] - 0.150)
