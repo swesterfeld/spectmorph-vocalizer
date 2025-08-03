@@ -2,6 +2,7 @@
  - do not squeeze a_a,... insertions (loop)
  - auto-detect steady vowel state (60%?...)
  - morphing for overlapping segments
+ - currently melisma freq and note text are not in sync
  - rest->consonant, consonant->rest: avoid strong compression
  - try to use compression as close to 1 as possible
  - diphthongs: fine tune durations (150ms..250ms for second part)
@@ -10,7 +11,6 @@
  - melisma frequency bend: should we use a slide instead of a frequency jump
  - whispering voice
  - normalization of input material
- - diphone-checker.py should support both: a_I and aI
  - ramp for volume normalization @, 6
 
 improved handling for plosives
