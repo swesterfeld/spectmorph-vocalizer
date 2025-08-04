@@ -12,7 +12,7 @@
 www.klangsignale.com</rights>
     <encoding>
       <software>Dorico 5.1.81.2225</software>
-      <encoding-date>2025-06-15</encoding-date>
+      <encoding-date>2025-08-03</encoding-date>
       <supports type="yes" element="print" attribute="new-system" value="yes"/>
       <supports type="yes" element="print" attribute="new-page" value="yes"/>
       <supports type="yes" element="accidental"/>
@@ -136,7 +136,7 @@ www.klangsignale.com</rights>
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>a</text>
+          <text>?a</text>
         </lyric>
       </note>
       <note>
@@ -207,7 +207,7 @@ www.klangsignale.com</rights>
         <staff>1</staff>
         <lyric number="1" placement="below" default-y="-78.125" name="verse">
           <syllabic>single</syllabic>
-          <text>Es</text>
+          <text>?Es</text>
         </lyric>
       </note>
       <note>
@@ -514,7 +514,7 @@ www.klangsignale.com</rights>
         <staff>1</staff>
         <lyric number="1" placement="below" default-y="-78.125" name="verse">
           <syllabic>single</syllabic>
-          <text>Unt</text>
+          <text>?Unt</text>
         </lyric>
       </note>
       <note>
@@ -720,7 +720,7 @@ www.klangsignale.com</rights>
         <staff>1</staff>
         <lyric number="1" placement="below" default-y="-76.875" name="verse">
           <syllabic>single</syllabic>
-          <text>Unt</text>
+          <text>?Unt</text>
         </lyric>
       </note>
       <note>
@@ -863,7 +863,7 @@ www.klangsignale.com</rights>
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>a</text>
+          <text>?a</text>
         </lyric>
       </note>
       <note>
@@ -1489,7 +1489,7 @@ www.klangsignale.com</rights>
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>a</text>
+          <text>?a</text>
         </lyric>
       </note>
       <note>
@@ -2202,7 +2202,7 @@ www.klangsignale.com</rights>
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
           <syllabic>begin</syllabic>
-          <text>al</text>
+          <text>?a</text>
         </lyric>
       </note>
       <note>

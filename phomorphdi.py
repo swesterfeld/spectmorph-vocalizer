@@ -367,10 +367,11 @@ for i in range (len (pho)):
       item.ms = (float (pho[i][1]) + float (pho[i + 1][1])) / 2
       if phone_class (P1) == "p":
         pos1 = m[0][2]
+      elif phone_class (P1) == "v":
+        pos1 = max ((m[0][0] + m[1][0]) / 2, m[1][0] - 0.150)
       else:
         pos1 = (m[0][0] + m[1][0]) / 2
       if phone_class (P2) == "p":
-        print (m, file=sys.stderr)
         pos2 = (m[1][0] + m[1][2]) / 2
       elif phone_class (P2) == "v":
         pos2 = min ((m[1][0] + m[2][0]) / 2, m[1][0] + 0.150)
