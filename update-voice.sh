@@ -1,7 +1,7 @@
 set -e
 
 #---------------- voice downloader ----------------------
-VOICE_EXPECT=326d0e768fcdb50b2f8aaef3a6505d58d4481970
+VOICE_EXPECT=ae704f181c1c5b303df51d370c104aea5150994f
 VOICE_URL="https://space.twc.de/~stefan/download2/voice/${VOICE_EXPECT}.flac"
 echo "voice location stefan@space.twc.de:public_html/download2/voice/${VOICE_EXPECT}.flac"
 
