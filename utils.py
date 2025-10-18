@@ -1,8 +1,9 @@
 import random
+import os
 
 def load_volumes():
   volume_list = []
-  with open ("voice/sven.volume", "r") as file:
+  with open ("voice/" + os.getenv ("VOICE") + "/voice.volume", "r") as file:
     for line in file:
       line = line.split()
       time_ms = float (line[0])
