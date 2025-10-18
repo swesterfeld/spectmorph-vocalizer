@@ -7,6 +7,7 @@
 #  - morph should properly overlap, triphones should extend a bit in the morph range
 
 import sys
+import os
 import random
 import argparse
 from math import log2
@@ -25,7 +26,7 @@ if args.s is not None:
 def load_labels():
   lines_raw = []
   ignore_labels = []
-  with open ("diphone-sven.label", "r") as file:
+  with open ("voice/" + os.getenv ("VOICE") + "/voice.txt", "r") as file:
     for line in file:
       line = line.split()
       lines_raw.append ((float (line[0]), line[2].rstrip(":")))
@@ -290,7 +291,7 @@ for i in range (len (pho)):
     item.ms = pho[i][-1].v_time
     item.lyric = "_"
     items.append (item)
-  elif is_v (pho[i][0]):
+  elif is_v (pho[i][0]) and pho[i][-1].v_time > 0:
     pho_entry = pho[i][-1]
     P1 = pho[i][0]
     P1 = P1[0][0]
