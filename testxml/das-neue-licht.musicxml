@@ -8,7 +8,7 @@
   <identification>
     <encoding>
       <software>Dorico 5.1.81.2225</software>
-      <encoding-date>2025-08-03</encoding-date>
+      <encoding-date>2025-08-24</encoding-date>
       <supports type="yes" element="print" attribute="new-system" value="yes"/>
       <supports type="yes" element="print" attribute="new-page" value="yes"/>
       <supports type="yes" element="accidental"/>
@@ -88,6 +88,9 @@
           <sign>F</sign>
           <line>4</line>
         </clef>
+        <measure-style>
+          <multiple-rest>1</multiple-rest>
+        </measure-style>
       </attributes>
       <sound tempo="144"/>
       <direction placement="above" directive="yes" system="only-top">
@@ -99,6 +102,15 @@
         </direction-type>
         <staff>1</staff>
       </direction>
+      <forward>
+        <duration>16</duration>
+      </forward>
+    </measure>
+    <measure number="2">
+      <print new-system="no" new-page="no"/>
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
       <note>
         <pitch>
           <step>A</step>
@@ -160,7 +172,7 @@
         </lyric>
       </note>
     </measure>
-    <measure number="2">
+    <measure number="3">
       <print new-system="no" new-page="no"/>
       <attributes>
         <divisions>4</divisions>
@@ -200,9 +212,9 @@
           <step>E</step>
           <octave>3</octave>
         </pitch>
-        <duration>8</duration>
+        <duration>4</duration>
         <voice>1</voice>
-        <type>half</type>
+        <type>quarter</type>
         <stem>down</stem>
         <staff>1</staff>
         <lyric number="1" placement="below" default-y="-78.125" name="verse">
@@ -210,8 +222,15 @@
           <text>lICt</text>
         </lyric>
       </note>
+      <note>
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
     </measure>
-    <measure number="3">
+    <measure number="4">
       <print new-system="no" new-page="no"/>
       <attributes>
         <divisions>4</divisions>
@@ -277,8 +296,16 @@
         </lyric>
       </note>
     </measure>
-    <measure number="4">
-      <print new-system="no" new-page="no"/>
+    <measure number="5">
+      <print new-system="yes" new-page="no">
+        <system-layout>
+          <system-margins>
+            <left-margin>0</left-margin>
+            <right-margin>0</right-margin>
+          </system-margins>
+          <system-distance>100</system-distance>
+        </system-layout>
+      </print>
       <attributes>
         <divisions>4</divisions>
       </attributes>
@@ -317,9 +344,9 @@
           <step>E</step>
           <octave>3</octave>
         </pitch>
-        <duration>8</duration>
+        <duration>4</duration>
         <voice>1</voice>
-        <type>half</type>
+        <type>quarter</type>
         <stem>down</stem>
         <staff>1</staff>
         <lyric number="1" placement="below" default-y="-78.125" name="verse">
@@ -327,17 +354,16 @@
           <text>nICt</text>
         </lyric>
       </note>
+      <note>
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
     </measure>
-    <measure number="5">
-      <print new-system="yes" new-page="no">
-        <system-layout>
-          <system-margins>
-            <left-margin>0</left-margin>
-            <right-margin>0</right-margin>
-          </system-margins>
-          <system-distance>100</system-distance>
-        </system-layout>
-      </print>
+    <measure number="6">
+      <print new-system="no" new-page="no"/>
       <attributes>
         <divisions>4</divisions>
       </attributes>
@@ -402,7 +428,7 @@
         </lyric>
       </note>
     </measure>
-    <measure number="6">
+    <measure number="7">
       <print new-system="no" new-page="no"/>
       <attributes>
         <divisions>4</divisions>
@@ -442,9 +468,9 @@
           <step>E</step>
           <octave>3</octave>
         </pitch>
-        <duration>8</duration>
+        <duration>4</duration>
         <voice>1</voice>
-        <type>half</type>
+        <type>quarter</type>
         <stem>down</stem>
         <staff>1</staff>
         <lyric number="1" placement="below" default-y="-78.125" name="verse">
@@ -452,8 +478,15 @@
           <text>maxt</text>
         </lyric>
       </note>
+      <note>
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+      </note>
     </measure>
-    <measure number="7">
+    <measure number="8">
       <print new-system="no" new-page="no"/>
       <attributes>
         <divisions>4</divisions>
@@ -519,8 +552,16 @@
         </lyric>
       </note>
     </measure>
-    <measure number="8">
-      <print new-system="no" new-page="no"/>
+    <measure number="9">
+      <print new-system="yes" new-page="no">
+        <system-layout>
+          <system-margins>
+            <left-margin>0</left-margin>
+            <right-margin>0</right-margin>
+          </system-margins>
+          <system-distance>100</system-distance>
+        </system-layout>
+      </print>
       <attributes>
         <divisions>4</divisions>
       </attributes>
@@ -529,9 +570,9 @@
           <step>B</step>
           <octave>2</octave>
         </pitch>
-        <duration>4</duration>
+        <duration>8</duration>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>half</type>
         <stem>up</stem>
         <staff>1</staff>
         <lyric number="1" placement="below" name="verse">
@@ -544,16 +585,22 @@
           <step>C</step>
           <octave>3</octave>
         </pitch>
-        <duration>4</duration>
+        <duration>8</duration>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>half</type>
         <stem>up</stem>
         <staff>1</staff>
-        <lyric number="1" placement="below" default-y="-78.125" name="verse">
+        <lyric number="1" placement="below" default-y="-76.875" name="verse">
           <syllabic>end</syllabic>
           <text>@</text>
         </lyric>
       </note>
+    </measure>
+    <measure number="10">
+      <print new-system="no" new-page="no"/>
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
       <note>
         <pitch>
           <step>A</step>
@@ -564,10 +611,17 @@
         <type>half</type>
         <stem>up</stem>
         <staff>1</staff>
-        <lyric number="1" placement="below" default-y="-78.125" name="verse">
+        <lyric number="1" placement="below" default-y="-76.875" name="verse">
           <syllabic>single</syllabic>
           <text>naxt</text>
         </lyric>
+      </note>
+      <note>
+        <rest/>
+        <duration>8</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <staff>1</staff>
       </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
