@@ -52,9 +52,9 @@ int
 main (int argc, char **argv)
 {
   Main main (&argc, &argv);
-  if (argc != 5)
+  if (argc != 6)
     {
-      fprintf (stderr, "usage: mkplan <template> <flac> <plan> <volumes>\n");
+      fprintf (stderr, "usage: mkplan <template> <flac> <plan> <volumes> <note>\n");
       return 1;
     }
   Project project;
@@ -76,7 +76,7 @@ main (int argc, char **argv)
 
   Instrument instrument;
   auto sample = instrument.add_sample (wav_data, argv[2]);
-  sample->set_midi_note (50); /* FIXME */
+  sample->set_midi_note (atof (argv[5]));
 
   auto tune = instrument.auto_tune();
   tune.method = tune.SMOOTH;
