@@ -6,33 +6,6 @@ mkdir -p testxml pho script wav voice
 
 make -C src
 
-VOICE_ASUM=a5743c9708af6183c3a6d13db9152e4a8250eab7
-VOICE_VSUM=b3b4b9ddbec96f0613d1b93b45fff4d7afbe140a
-
-VOICE_AURL=https://space.twc.de/~stefan/download2/voice/${VOICE_ASUM}.sm
-VOICE_VURL=https://space.twc.de/~stefan/download2/voice/${VOICE_VSUM}.volume
-
-check_voice()
-{
-  if test -f voice/$1; then
-    VOICE_HASH=$(sha1sum voice/$1 | awk '{print $1;}')
-    if [ "x$VOICE_HASH" = "x$2" ]; then
-      return 0
-    fi
-  fi
-  return 1
-}
-
-check_voice sven.sm $VOICE_ASUM || {
-  wget ${VOICE_AURL} -O voice/sven.sm
-}
-check_voice sven.sm $VOICE_ASUM
-
-check_voice sven.volume $VOICE_VSUM || {
-  wget ${VOICE_VURL} -O voice/sven.volume
-}
-check_voice sven.volume $VOICE_VSUM
-
 remove_music_extension() {
   local filename="$1"
 
@@ -48,10 +21,15 @@ remove_music_extension() {
 
 # handle -s <seed> option
 seed_param=""
-while getopts "s:" opt
+# handle -v <voice> option
+VOICE=sven
+export VOICE
+while getopts "s:v:" opt
 do
   case $opt in
     s) seed_param="-s $OPTARG"
+       ;;
+    v) VOICE="$OPTARG"
        ;;
     *) echo "Usage: $0 [-s <seed>]"
        exit 1
@@ -59,6 +37,35 @@ do
   esac
 done
 shift $((OPTIND - 1))
+
+echo "VOICE: $VOICE"
+. voice/$VOICE/voice.sh
+
+check_voice()
+{
+  if test -f voice/$VOICE/$1; then
+    LOCAL_HASH=$(sha1sum voice/$VOICE/$1 | awk '{print $1;}')
+    if [ "x$LOCAL_HASH" = "x$2" ]; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
+download()
+{
+  local EXT=$1
+  local HASH=$2
+  local URL="https://space.twc.de/~stefan/download2/voice/${HASH}.$EXT"
+
+  check_voice voice.$EXT $HASH || {
+    wget ${URL} -O voice/$VOICE/voice.$EXT
+  }
+  check_voice voice.$EXT $HASH
+}
+
+download sm $VOICE_SM_HASH
+download volume $VOICE_VOLUME_HASH
 
 XMLS="$@"
 if test -z "$XMLS"; then
@@ -82,7 +89,7 @@ do
     mbrola /usr/share/mbrola/$voice/$voice pho/$pho wav/$wav
   else
     phomorphdi.py pho/$pho $seed_param > script/$script || echo "$pho -> $script" failed
-    src/smscript template.smplan voice/sven.sm script/$script wav/$wav
+    src/smscript template.smplan voice/$VOICE/voice.sm script/$script wav/$wav
   fi
   ./volume-normalize.py wav/$wav
 done
