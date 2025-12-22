@@ -190,6 +190,8 @@ class Note:
 class Rest:
   pass
 
+last_note_rest_offset = -1
+polyphony_errors = 0
 tempo_change_sounding = []
 quarter_offset = 0
 cresc = None
@@ -258,6 +260,10 @@ for part in score.parts:
       tempo_change_sounding = tempo_change_sounding[1:]
     print (";;; quarter_offset: ", quarter_offset)
     if isinstance (element, music21.note.Note):
+      if last_note_rest_offset == element.offset:
+        print ("polyphony error, bar %d" % element.measureNumber, file=sys.stderr)
+        polyphony_errors += 1
+      last_note_rest_offset = element.offset
       note_duration_ms = element.duration.quarterLength * ms_per_beat
       quarter_offset += element.duration.quarterLength
       freq = element.pitch.frequency
@@ -342,6 +348,10 @@ for part in score.parts:
         '''
         last_rest = None
     if isinstance (element, music21.note.Rest):
+      if last_note_rest_offset == element.offset:
+        print ("polyphony error, bar %d" % element.measureNumber, file=sys.stderr)
+        polyphony_errors += 1
+      last_note_rest_offset = element.offset
       length = element.duration.quarterLength * ms_per_beat
       if not last_rest:
         new_rest = Rest()
@@ -365,6 +375,9 @@ for part in score.parts:
         last_rest = length
       '''
 
+if polyphony_errors:
+  print ("%d polyphony errors" % polyphony_errors, file=sys.stderr)
+  sys.exit (1)
 # staccato: replace notes with note-rest (duration 50% each)
 notes_with_staccato = []
 for note in notes:
