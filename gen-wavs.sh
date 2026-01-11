@@ -89,7 +89,7 @@ do
     mbrola /usr/share/mbrola/$voice/$voice pho/$pho wav/$wav
   else
     phomorphdi.py pho/$pho $seed_param > script/$script || echo "$pho -> $script" failed
-    src/smscript template.smplan voice/$VOICE/voice.sm script/$script wav/$wav
+    src/smscript script/$script wav/$wav
   fi
   ./volume-normalize.py wav/$wav
 done
