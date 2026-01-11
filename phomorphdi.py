@@ -176,8 +176,6 @@ validate_durations (pho)
 errors = []
 synlist = []
 
-print ("note_on 0 52 100")
-
 def phone_class (p):
   if p in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E' ]:
     return "v"
@@ -431,19 +429,15 @@ def find_synlist_pos (ms):
     elapsed += duration
   return None, None
 
+print ("load \"voice/" + os.getenv ("VOICE") + "/voice.sm\"")
 ms = 0
 while True:
   ct, x = find_synlist_pos (ms)
   if ct is None:
     break
 
-  print ("control 0", time_to_control (ct))
-  print ("control 1", 0)
-  print ("control 2", -1)
-  freq = find_freq (ms)
-  bend = log2 (freq / 164.81) * 12
-  print ("pitch_expression 0 52 %f" % bend)
-  print ("volume 0", x[3])
+  print ("seek 0", (time_to_control (ct) + 1) / 2, find_freq (ms))
+  #print ("volume 0", x[3]) TODO
   print ("process 48")
 
   ms += 1
