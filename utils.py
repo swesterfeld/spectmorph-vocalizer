@@ -1,9 +1,16 @@
 import random
 import os
 
-def load_volumes():
+def list_voice_segments():
+  return [
+    os.path.splitext (f)[0]
+    for f in os.listdir ("voice/" + os.getenv ("VOICE"))
+    if f.endswith (".sh")
+  ]
+
+def load_volumes (segment):
   volume_list = []
-  with open ("voice/" + os.getenv ("VOICE") + "/voice.volume", "r") as file:
+  with open ("voice/" + os.getenv ("VOICE") + "/" + segment + ".volume", "r") as file:
     for line in file:
       line = line.split()
       time_ms = float (line[0])
@@ -11,9 +18,12 @@ def load_volumes():
       volume_list.append ((time_stamp, float (line[1])))
   return volume_list
 
-volumes = load_volumes()
+volumes_dict = dict()
+for segment in list_voice_segments():
+  volumes_dict[segment] = load_volumes (segment)
 
-def get_closest_index_from_volumes (time_stamp):
+def get_closest_index_from_volumes (segment, time_stamp):
+  volumes = volumes_dict[segment]
   t0 = volumes[0][0]
   t1 = volumes[-1][0]
   n = len (volumes)
@@ -28,12 +38,14 @@ def get_closest_index_from_volumes (time_stamp):
   index = round ((time_stamp - t0) / dt)
   return max (0, min (index, n - 1))
 
-def time_to_volume (time_stamp):
-  index = get_closest_index_from_volumes (time_stamp)
+def time_to_volume (segment, time_stamp):
+  volumes = volumes_dict[segment]
+  index = get_closest_index_from_volumes (segment, time_stamp)
   return volumes[index][1]
 
-def time_to_control (time_stamp):
-  return (get_closest_index_from_volumes (time_stamp) / (len (volumes) - 1)) * 2 - 1
+def time_to_control (segment, time_stamp):
+  volumes = volumes_dict[segment]
+  return (get_closest_index_from_volumes (segment, time_stamp) / (len (volumes) - 1)) * 2 - 1
 
 if __name__ == "__main__":
   def random_test_diff():
