@@ -55,9 +55,25 @@ public:
     return true;
   }
   void
-  set_audio_block (const AudioBlock& block, double ratio)
+  set_audio_block (const AudioBlock& in_block, double ratio, double volume_factor)
   {
     formant_correction.set_ratio (ratio);
+
+    /* scale volume of in_block * volume_factor */
+    AudioBlock block = in_block;
+    const int norm_delta_idb = sm_factor2delta_idb (volume_factor);
+
+    vector<uint16_t>& mags = block.mags;
+    for (size_t i = 0; i < mags.size(); i++)
+      mags[i] = std::clamp (mags[i] + norm_delta_idb, 0, 65535);
+
+    vector<uint16_t>& noise = block.noise;
+    for (size_t i = 0; i < noise.size(); i++)
+      noise[i] = std::clamp (noise[i] + norm_delta_idb, 0, 65535);
+
+    vector<uint16_t>& env = block.env;
+    for (size_t i = 0; i < env.size(); i++)
+      env[i] = std::clamp (env[i] + norm_delta_idb, 0, 65535);
     my_audio_block = block;
   }
   void
@@ -117,7 +133,7 @@ main (int argc, char **argv)
 #endif
       int i;
       string s;
-      double d, f;
+      double d, f, v;
 
       if (script_parser.command ("load", s))
         {
@@ -139,7 +155,7 @@ main (int argc, char **argv)
           double time_ms = i / 48000. * 1000;
           source.advance (time_ms);
         }
-      else if (script_parser.command ("seek", i, d, f))
+      else if (script_parser.command ("seek", i, d, f, v))
         {
           assert (i >= 0 && size_t (i) < audio_vector.size());
           freq = f;
@@ -150,7 +166,7 @@ main (int argc, char **argv)
           int end = active_audio->contents.size() - 1;
           int index = std::clamp (sm_round_positive (d * end), start, end);
 
-          source.set_audio_block (active_audio->contents[index], freq / active_audio->fundamental_freq);
+          source.set_audio_block (active_audio->contents[index], freq / active_audio->fundamental_freq, v);
         }
       else
         {
