@@ -11,7 +11,8 @@ import os
 import random
 import argparse
 from math import log2
-from utils import time_to_volume, time_to_control
+from dataclasses import dataclass
+from utils import time_to_volume, time_to_control, list_voice_segments
 
 # Set up parser
 parser = argparse.ArgumentParser (description = "phomorphdi")
@@ -23,10 +24,17 @@ if args.s is not None:
   print (f"seeding RNG with {args.s}", file=sys.stderr)
   random.seed(args.s)
 
-def load_labels():
+
+def load_labels (segment):
   lines_raw = []
   ignore_labels = []
-  with open ("voice/" + os.getenv ("VOICE") + "/voice.txt", "r") as file:
+  with open ("voice/" + os.getenv ("VOICE") + "/" + segment + ".sh", "r") as file:
+    for line in file:
+      line = line.split ("=")
+      if (line[0] == "VOICE_MIDI_NOTE"):
+        note = int (line[1])
+
+  with open ("voice/" + os.getenv ("VOICE") + "/" + segment + ".txt", "r") as file:
     for line in file:
       line = line.split()
       lines_raw.append ((float (line[0]), line[2].rstrip(":")))
@@ -42,18 +50,33 @@ def load_labels():
     else:
       lines.append ((F[0], F[1]))
     i += 1
-  return lines
+  return note, lines
 
-lines = load_labels()
+lines_dict = dict()
 
-def volume_factor (time_stamp, text):
+@dataclass
+class Segment:
+  note: str
+  lines: list[str]
+  number: int = -1
+
+for segment in list_voice_segments():
+  note, lines = load_labels (segment)
+  lines_dict[segment] = Segment (note = note, lines = lines)
+
+lines = None
+
+def volume_factor (segment, time_stamp, text):
   assert (is_v (text) and len (text) == 1)
   if text in [ "@", "6" ]:
     target_volume = 0.35
   else:
     target_volume = 0.5
 
-  return target_volume / time_to_volume (time_stamp)
+  return target_volume / time_to_volume (segment, time_stamp)
+
+def freq_to_note (freq):
+  return 69 + 12 * log2 (freq/440)
 
 class PhoEntry:
   pass
@@ -190,6 +213,7 @@ def phone_class (p):
 def lookup_diphone_entry (P1, P2, pho_entry):
   global errors
   possible_matches = []
+  lines = lines_dict["voice"].lines
   for j in range (len (lines) - 2):
     x = lines[j:j+3]
     if x[0][1] == P1 and x[1][1] == P2:
@@ -200,13 +224,33 @@ def lookup_diphone_entry (P1, P2, pho_entry):
     return None
   return possible_matches
 
-def lookup_diphone_entry_vv (P1, P2, pho_entry):
+def lookup_diphone_entry_vv (P1, P2, pho_entry, note):
   global errors
   possible_matches = []
-  for j in range (len (lines) - 1):
-    x = lines[j:j+3]
-    if x[0][1] == P1 + '_' + P2:
-      possible_matches.append (x)
+  for segment in lines_dict:
+    lines = lines_dict[segment].lines
+    for j in range (len (lines) - 1):
+      x = lines[j:j+3]
+      if x[0][1] == P1 + '_' + P2:
+        possible_matches.append ([segment] + x)
+  print (P1,P2, "=>", file=sys.stderr)
+  for p in possible_matches:
+    print ("   ", p, file=sys.stderr)
+
+  distance = 128
+  for p in possible_matches:
+    distance = min (abs (note - lines_dict[p[0]].note), distance)
+    print (lines_dict[p[0]].note, file=sys.stderr)
+  print (distance, file=sys.stderr)
+  filtered_matches = []
+  for p in possible_matches:
+    if abs (note - lines_dict[p[0]].note) <= distance:
+      filtered_matches.append (p)
+  possible_matches = filtered_matches
+  for p in possible_matches:
+    print ("   ", p, file=sys.stderr)
+
+
   if len (possible_matches) == 0:
     # print ("missing diphone %s" % (P1 + P2))
     errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + "_" + P2, pho_entry.bar, pho_entry.beat) ]
@@ -282,6 +326,7 @@ print ("============================================", file=sys.stderr)
 for i in range (len (pho)):
   if pho[i][0] == "_":
     item = Item()
+    item.segment = "voice"
     item.pos1 = 0
     item.pos2 = 0.001
     item.type = "M"
@@ -293,14 +338,18 @@ for i in range (len (pho)):
     pho_entry = pho[i][-1]
     P1 = pho[i][0]
     P1 = P1[0][0]
-    print ("M", pho[i][0], file=sys.stderr)
-    possible_matchesv = lookup_diphone_entry_vv (P1, P1, pho[i][-1])
+    note = freq_to_note (pho_entry.freq)
+    print ("M", pho[i][0], freq_to_note (pho_entry.freq), file=sys.stderr)
+    possible_matchesv = lookup_diphone_entry_vv (P1, P1, pho[i][-1], note)
     if possible_matchesv:
       mv = random.choice (possible_matchesv)
+      mseg = mv[0]
+      mv = mv[1:]
       pos1 = mv[0][0] # FIXME should be before a_a marker
       pos2 = mv[1][0]
       item = Item()
-      item.volume_factor = volume_factor (mv[0][0], P1)
+      item.volume_factor = volume_factor (mseg, mv[0][0], P1)
+      item.segment = mseg
       item.pos1 = pos1
       item.pos2 = pos2
       item.type = "M"
@@ -311,8 +360,9 @@ for i in range (len (pho)):
     pho_entry = pho[i][-1]
     Vs = diphthong_split (pho[i][0])
     print ("M", Vs, file=sys.stderr)
-    possible_matches_v = lookup_diphone_entry_vv (Vs[0], Vs[0], pho[i][-1])
-    possible_matches_d = lookup_diphone_entry_vv (Vs[0], Vs[1], pho[i][-1])
+    note = freq_to_note (pho_entry.freq)
+    possible_matches_v = lookup_diphone_entry_vv (Vs[0], Vs[0], pho[i][-1], note)
+    possible_matches_d = lookup_diphone_entry_vv (Vs[0], Vs[1], pho[i][-1], note)
     if possible_matches_v and possible_matches_d:
       # FIXME: which is better here: a relative length for the last diphone segment
       # (like pho_entry last_diph_frac_time) or some kind of absolute time?
@@ -320,22 +370,28 @@ for i in range (len (pho)):
       time1 = pho[i][-1].v_time - time2
 
       mv = random.choice (possible_matches_v)
+      mseg = mv[0]
+      mv = mv[1:]
       item = Item()
+      item.segment = mseg
       item.pos1 = mv[0][0] # FIXME should be before a_a marker
       item.pos2 = mv[1][0]
-      item.volume_factor = volume_factor (mv[0][0], Vs[0]) # FIXME: could ramp for different volumes for Vs
+      item.volume_factor = volume_factor (mseg, mv[0][0], Vs[0]) # FIXME: could ramp for different volumes for Vs
       item.type = "M"
       item.ms = time1
       item.lyric = Vs[0]
       items.append (item)
 
       # take the longest diphthong recording available to maximize quality
-      md = max (possible_matches_d, key = lambda x: x[1][0] - x[0][0])
+      md = max (possible_matches_d, key = lambda x: x[2][0] - x[1][0])
+      mseg = md[0]
+      md = md[1:]
 
       item = Item()
+      item.segment = mseg
       item.pos1 = md[0][0]
       item.pos2 = md[1][0]
-      item.volume_factor = volume_factor (md[0][0], Vs[0]) # FIXME: could ramp for different volumes for Vs
+      item.volume_factor = volume_factor (mseg, md[0][0], Vs[0]) # FIXME: could ramp for different volumes for Vs
       item.type = "M"
       item.ms = time2
       item.lyric = pho[i][0]
@@ -361,6 +417,7 @@ for i in range (len (pho)):
     if possible_matches:
       m = random.choice (possible_matches)
       item = Item()
+      item.segment = None
       item.lyric = P1 + P2
       item.type = "D"
       item.ms = (float (pho[i][1]) + float (pho[i + 1][1])) / 2
@@ -386,9 +443,9 @@ for i in range (len (pho)):
       #    so it is still important to have a consistent overall volume
       item.volume_factor = 1
       if is_v (P1) and P1 != '_':
-        item.volume_factor = volume_factor ((m[0][0] + m[1][0]) / 2, P1)
+        item.volume_factor = volume_factor ("voice", (m[0][0] + m[1][0]) / 2, P1)
       if is_v (P2) and P2 != '_':
-        item.volume_factor = volume_factor ((m[1][0] + m[2][0]) / 2, P2)
+        item.volume_factor = volume_factor ("voice", (m[1][0] + m[2][0]) / 2, P2)
 
       items.append (item)
 
@@ -406,7 +463,11 @@ for item in items:
   print ("ITEM: %-5s %-5s %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression), file=sys.stderr)
   total_ms += item.ms
   if item.ms > 0:
-    synlist.append ((item.pos1, item.pos2, item.ms, item.volume_factor))
+    if item.segment:
+      segment = item.segment
+    else:
+      segment = "voice"
+    synlist.append ((item.pos1, item.pos2, item.ms, item.volume_factor, segment))
     print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=sys.stderr)
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
 
@@ -429,14 +490,19 @@ def find_synlist_pos (ms):
     elapsed += duration
   return None, None
 
-print ("load \"voice/" + os.getenv ("VOICE") + "/voice.sm\"")
+segment_number = 0
+for segment in lines_dict:
+  print ("load \"voice/" + os.getenv ("VOICE") + "/" + segment + ".sm\"")
+  lines_dict[segment].number = segment_number
+  segment_number += 1
+
 ms = 0
 while True:
   ct, x = find_synlist_pos (ms)
   if ct is None:
     break
 
-  print ("seek 0", (time_to_control (ct) + 1) / 2, find_freq (ms))
+  print ("seek", lines_dict[x[4]].number, (time_to_control (x[4], ct) + 1) / 2, find_freq (ms), x[3])
   #print ("volume 0", x[3]) TODO
   print ("process 48")
 
