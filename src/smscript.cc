@@ -107,11 +107,16 @@ main (int argc, char **argv)
   audio_block.noise.resize (32);
 
   const int mix_freq = 48000;
+  const int freq_slide_ms = 20;
+
   ScriptBlockSource source (audio_block, mix_freq);
   LiveDecoder live_decoder (&source, mix_freq);
   RTMemoryArea rt_memory_area;
 
   double freq = 440; // will be overwritten from script
+  double target_freq = 0;
+  double freq_factor = 0;
+  int    freq_steps = 0;
   live_decoder.retrigger (0, freq, 127);
 
   vector<std::unique_ptr<Audio>> audio_vector;
@@ -119,18 +124,6 @@ main (int argc, char **argv)
   vector<float> output;
   while (script_parser.next())
     {
-#if 0
-      if (script_parser.command ("volume", i, d))
-        {
-          assert (i >= 0 && i < int (wav_sources.size()));
-          if (volume_factor[i] != d)
-            {
-              wav_sources[i]->set_volume_factor (d);
-              volume_factor[i] = d;
-              project.try_update_synth();
-            }
-        }
-#endif
       int i;
       string s;
       double d, f, v;
@@ -149,7 +142,16 @@ main (int argc, char **argv)
         {
           size_t offset = output.size();
           output.resize (output.size() + i);
-          vector<float> freq_in (i, freq);
+          vector<float> freq_in (i);
+          for (auto &f : freq_in)
+            {
+              if (freq_steps)
+                {
+                  freq *= freq_factor;
+                  freq_steps--;
+                }
+              f = freq;
+            }
           live_decoder.process (rt_memory_area, i, freq_in.data(), output.data() + offset);
 
           double time_ms = i / 48000. * 1000;
@@ -158,7 +160,20 @@ main (int argc, char **argv)
       else if (script_parser.command ("seek", i, d, f, v))
         {
           assert (i >= 0 && size_t (i) < audio_vector.size());
-          freq = f;
+          if (target_freq != f)
+            {
+              if (target_freq == 0) /* start of the audio file */
+                {
+                  target_freq = f;
+                  freq = f;
+                }
+              else
+                {
+                  target_freq = f;
+                  freq_steps = mix_freq / 1000. * freq_slide_ms;
+                  freq_factor = pow (target_freq / freq, 1.0 / freq_steps);
+                }
+            }
 
           const auto& active_audio = audio_vector[i];
 
