@@ -108,6 +108,9 @@ main (int argc, char **argv)
 
   const int mix_freq = 48000;
   const int freq_slide_ms = 20;
+  const double vibrato_attack = 0;
+  const double vibrato_depth = 15;
+  const double vibrato_frequency = 4;
 
   ScriptBlockSource source (audio_block, mix_freq);
   LiveDecoder live_decoder (&source, mix_freq);
@@ -117,6 +120,8 @@ main (int argc, char **argv)
   double target_freq = 0;
   double freq_factor = 0;
   int    freq_steps = 0;
+
+  live_decoder.set_vibrato (true, vibrato_depth, vibrato_frequency, vibrato_attack);
   live_decoder.retrigger (0, freq, 127);
 
   vector<std::unique_ptr<Audio>> audio_vector;
