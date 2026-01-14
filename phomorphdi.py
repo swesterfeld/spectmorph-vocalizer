@@ -213,11 +213,12 @@ def phone_class (p):
 def lookup_diphone_entry (P1, P2, pho_entry):
   global errors
   possible_matches = []
-  lines = lines_dict["voice"].lines
-  for j in range (len (lines) - 2):
-    x = lines[j:j+3]
-    if x[0][1] == P1 and x[1][1] == P2:
-      possible_matches.append (x)
+  for segment in lines_dict:
+    lines = lines_dict[segment].lines
+    for j in range (len (lines) - 2):
+      x = lines[j:j+3]
+      if x[0][1] == P1 and x[1][1] == P2:
+        possible_matches.append ([segment] + x)
   if len (possible_matches) == 0:
     #print ("line %d: missing diphone %s" % (pho[i][-1], P1 + P2))
     errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + P2, pho_entry.bar, pho_entry.beat) ]
@@ -416,8 +417,10 @@ for i in range (len (pho)):
     possible_matches = lookup_diphone_entry (P1, P2, pho[i][-1])
     if possible_matches:
       m = random.choice (possible_matches)
+      mseg = m[0]
+      m = m[1:]
       item = Item()
-      item.segment = None
+      item.segment = mseg
       item.lyric = P1 + P2
       item.type = "D"
       item.ms = (float (pho[i][1]) + float (pho[i + 1][1])) / 2
@@ -463,11 +466,7 @@ for item in items:
   print ("ITEM: %-5s %-5s %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression), file=sys.stderr)
   total_ms += item.ms
   if item.ms > 0:
-    if item.segment:
-      segment = item.segment
-    else:
-      segment = "voice"
-    synlist.append ((item.pos1, item.pos2, item.ms, item.volume_factor, segment))
+    synlist.append ((item.pos1, item.pos2, item.ms, item.volume_factor, item.segment))
     print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=sys.stderr)
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
 
