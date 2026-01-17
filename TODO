@@ -1,4 +1,5 @@
 TODO before recording: X
+High Priority H
 
  - for short notes, both vowel and consonants need to be shortened
  - do not squeeze a_a,... insertions (loop)
@@ -10,6 +11,7 @@ TODO before recording: X
  - rest->consonant, consonant->rest: avoid strong compression
  - try to use compression as close to 1 as possible
  - diphthongs: fine tune durations (150ms..250ms for second part)
+ X labelling: instead of labelling a a_a a, we could label a_a
  X record humming m_m, ...
  X support notes without vowel center (m)
  - melisma frequency bend: should we use a slide instead of a frequency jump
@@ -25,7 +27,7 @@ improved handling for plosives
 possible improvements for quality:
 - use harmonic resynthesis only for voiced consonants and vowels
 - enable noise synthesis for voiceless fricatives only
-- insertions should morph between adjacent available recordings
+H insertions should morph between adjacent available recordings
 
 test cases:
  - extra test case for extremely short notes
