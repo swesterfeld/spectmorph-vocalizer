@@ -5,6 +5,7 @@ TODO before recording: X
  - auto-detect steady vowel state (60%?...)
  X morphing for overlapping segments
  X morphing into / out of insertions
+ - add configuration file which enables/disables insertions by note
  - currently melisma freq and note text are not in sync
  - rest->consonant, consonant->rest: avoid strong compression
  - try to use compression as close to 1 as possible
