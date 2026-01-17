@@ -63,7 +63,7 @@ do
     local HASH=$2
     local URL="https://space.twc.de/~stefan/download2/voice/${HASH}.$EXT"
 
-    check_voice voice.$EXT $HASH || {
+    check_voice $VOICE_SEGMENT.$EXT $HASH || {
       wget ${URL} -O voice/$VOICE/$VOICE_SEGMENT.$EXT
     }
     check_voice $VOICE_SEGMENT.$EXT $HASH
