@@ -20,6 +20,7 @@ improved handling for plosives
 possible improvements for quality:
 - use harmonic resynthesis only for voiced consonants and vowels
 - enable noise synthesis for voiceless fricatives only
+- insertions should morph between adjacent available recordings
 
 test cases:
  - extra test case for extremely short notes
