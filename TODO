@@ -13,6 +13,7 @@ TODO before recording: X
  X record humming m_m, ...
  X support notes without vowel center (m)
  - melisma frequency bend: should we use a slide instead of a frequency jump
+ - glissando
  - whispering voice
  - normalization of input material
  - ramp for volume normalization @, 6
