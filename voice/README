@@ -1,21 +1,21 @@
 To update a voice:
 
- - ensure that <voice>/voice.sh contains a midi note
+ - ensure that <voice>/<segment>.sh contains a midi note
 
    VOICE_MIDI_NOTE=52
 
- - ensure that <voice>/voice.txt contains labels
+ - ensure that <voice>/<segment>.txt contains labels
 
  - run
 
-   update-voice.sh <voice> /path/to/new/voice.flac
+   update-voice.sh <voice> <segment> /path/to/new/voice.flac
 
    this will upload the new flac file with checksum to space.twc.de,
-             replace <voice>/voice.flac and compute checksum / upload
-             <voice>/voice.sm
-             <voice>/voice.volume
+             replace <voice>/<segment>.flac and compute checksum / upload
+             <voice>/<segment>.sm
+             <voice>/<segment>.volume
 
 TODO:
 
  - should have a way to download flac from checksum into checkout,
-   similar to <voice>/voice.sm <voice>/voice.volume in gen-wavs.sh
+   similar to <voice>/<segment>.sm <voice>/<segment>.volume in gen-wavs.sh

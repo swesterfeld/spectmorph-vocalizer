@@ -38,6 +38,8 @@ def text_to_musicxml(input_file_path, output_file_path="output.xml"):
         for line in f:
             if line.strip() == "":
                 continue  # skip empty lines
+            if line.lstrip().startswith ("#"):
+                continue # skip comments
             musical_element = parse_line(line)
             s.append(musical_element)
     s.write('musicxml', fp=output_file_path)

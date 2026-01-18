@@ -39,33 +39,37 @@ done
 shift $((OPTIND - 1))
 
 echo "VOICE: $VOICE"
-. voice/$VOICE/voice.sh
+for VOICE_SEGMENT in $(find voice/$VOICE -iname '*.sh' | sed 's/.sh$//')
+do
+  VOICE_SEGMENT=$(basename $VOICE_SEGMENT)
+  . voice/$VOICE/$VOICE_SEGMENT.sh
 
-check_voice()
-{
-  if test -f voice/$VOICE/$1; then
-    LOCAL_HASH=$(sha1sum voice/$VOICE/$1 | awk '{print $1;}')
-    if [ "x$LOCAL_HASH" = "x$2" ]; then
-      return 0
+  check_voice()
+  {
+    if test -f voice/$VOICE/$1; then
+      LOCAL_HASH=$(sha1sum voice/$VOICE/$1 | awk '{print $1;}')
+      if [ "x$LOCAL_HASH" = "x$2" ]; then
+        return 0
+      fi
     fi
-  fi
-  return 1
-}
-
-download()
-{
-  local EXT=$1
-  local HASH=$2
-  local URL="https://space.twc.de/~stefan/download2/voice/${HASH}.$EXT"
-
-  check_voice voice.$EXT $HASH || {
-    wget ${URL} -O voice/$VOICE/voice.$EXT
+    return 1
   }
-  check_voice voice.$EXT $HASH
-}
 
-download sm $VOICE_SM_HASH
-download volume $VOICE_VOLUME_HASH
+  download()
+  {
+    local EXT=$1
+    local HASH=$2
+    local URL="https://space.twc.de/~stefan/download2/voice/${HASH}.$EXT"
+
+    check_voice $VOICE_SEGMENT.$EXT $HASH || {
+      wget ${URL} -O voice/$VOICE/$VOICE_SEGMENT.$EXT
+    }
+    check_voice $VOICE_SEGMENT.$EXT $HASH
+  }
+
+  download sm $VOICE_SM_HASH
+  download volume $VOICE_VOLUME_HASH
+done
 
 XMLS="$@"
 if test -z "$XMLS"; then
@@ -89,7 +93,7 @@ do
     mbrola /usr/share/mbrola/$voice/$voice pho/$pho wav/$wav
   else
     phomorphdi.py pho/$pho $seed_param > script/$script || echo "$pho -> $script" failed
-    src/smscript template.smplan voice/$VOICE/voice.sm script/$script wav/$wav
+    src/smscript script/$script wav/$wav
   fi
   ./volume-normalize.py wav/$wav
 done
