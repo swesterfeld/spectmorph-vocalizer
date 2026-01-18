@@ -234,24 +234,16 @@ def lookup_diphone_entry_vv (P1, P2, pho_entry, note):
       x = lines[j:j+3]
       if x[0][1] == P1 + '_' + P2:
         possible_matches.append ([segment] + x)
-  print (P1,P2, "=>", file=sys.stderr)
-  for p in possible_matches:
-    print ("   ", p, file=sys.stderr)
-
+  # find best note distance
   distance = 128
   for p in possible_matches:
     distance = min (abs (note - lines_dict[p[0]].note), distance)
-    print (lines_dict[p[0]].note, file=sys.stderr)
-  print (distance, file=sys.stderr)
+  # use only best distance matches
   filtered_matches = []
   for p in possible_matches:
     if abs (note - lines_dict[p[0]].note) <= distance:
       filtered_matches.append (p)
   possible_matches = filtered_matches
-  for p in possible_matches:
-    print ("   ", p, file=sys.stderr)
-
-
   if len (possible_matches) == 0:
     # print ("missing diphone %s" % (P1 + P2))
     errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + "_" + P2, pho_entry.bar, pho_entry.beat) ]
