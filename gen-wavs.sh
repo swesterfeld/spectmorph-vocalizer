@@ -44,8 +44,6 @@ do
   VOICE_SEGMENT=$(basename $VOICE_SEGMENT)
   . voice/$VOICE/$VOICE_SEGMENT.sh
 
-  echo $VOICE $VOICE_SEGMENT
-
   check_voice()
   {
     if test -f voice/$VOICE/$1; then
