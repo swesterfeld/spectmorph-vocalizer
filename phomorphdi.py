@@ -332,7 +332,7 @@ for i in range (len (pho)):
     P1 = pho[i][0]
     P1 = P1[0][0]
     note = freq_to_note (pho_entry.freq)
-    print ("M", pho[i][0], freq_to_note (pho_entry.freq), file=sys.stderr)
+    print ("M", pho[i][0], round (freq_to_note (pho_entry.freq), 3), file=sys.stderr)
     possible_matchesv = lookup_diphone_entry_vv (P1, P1, pho[i][-1], note)
     if possible_matchesv:
       mv = random.choice (possible_matchesv)
