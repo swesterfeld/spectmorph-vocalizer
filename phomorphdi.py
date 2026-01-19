@@ -458,7 +458,7 @@ for item in items:
   print ("ITEM: %-5s %-5s %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression), file=sys.stderr)
   total_ms += item.ms
   if item.ms > 0:
-    synlist.append ((item.pos1, item.pos2, item.ms, item.volume_factor, item.segment))
+    synlist.append (item)
     print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=sys.stderr)
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
 
@@ -473,13 +473,21 @@ def find_freq (ms):
 
 def find_synlist_pos (ms):
   elapsed = 0
-  for x in synlist:
-    duration = x[2]
+  for i in range (len (synlist)):
+    item = synlist[i]
+    duration = item.ms
     if ms < elapsed + duration:
-      frac = (ms - elapsed) / duration
-      return (x[0] * (1 - frac) + x[1] * frac), x
+      if i > 0:
+        last_item = synlist[i - 1]
+      else:
+        last_item = None
+      if i < len (synlist) - 1:
+        next_item = synlist[i + 1]
+      else:
+        next_item = None
+      return ms - elapsed, item, last_item, next_item
     elapsed += duration
-  return None, None
+  return None, None, None, None
 
 segment_number = 0
 for segment in lines_dict:
@@ -488,13 +496,39 @@ for segment in lines_dict:
   segment_number += 1
 
 ms = 0
+insert_ms_morph = 100
 while True:
-  ct, x = find_synlist_pos (ms)
-  if ct is None:
+  pos_ms, item, last_item, next_item = find_synlist_pos (ms)
+  if pos_ms is None:
     break
 
-  print ("seek", lines_dict[x[4]].number, (time_to_control (x[4], ct) + 1) / 2, find_freq (ms), x[3])
-  #print ("volume 0", x[3]) TODO
+  frac = pos_ms / item.ms
+  ct = item.pos1 * (1 - frac) + item.pos2 * frac
+
+  print ("freq", find_freq (ms))
+
+  done = False
+  if item.type == "M" and last_item and item.lyric != "_":
+    if (pos_ms < insert_ms_morph and item.ms > insert_ms_morph):
+      morphing = 1 - pos_ms / insert_ms_morph
+      x = pos_ms / 1000
+      print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
+      print ("seek", 1, lines_dict[last_item.segment].number, (time_to_control (last_item.segment, last_item.pos2 + x) + 1) / 2, last_item.volume_factor)
+      print ("morphing", morphing)
+      done = True
+    elif next_item and item.ms - pos_ms < insert_ms_morph:
+      morphing = 1 - (item.ms - pos_ms) / insert_ms_morph
+      x = (item.ms - pos_ms) / 1000
+      print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
+      print ("seek", 1, lines_dict[next_item.segment].number, (time_to_control (next_item.segment, next_item.pos1 - x) + 1) / 2, next_item.volume_factor)
+      print ("morphing", morphing)
+      done = True
+
+  if not done:
+    print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
+    print ("seek", 1, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
+    print ("morphing", 0)
+
   print ("process 48")
 
   ms += 1
