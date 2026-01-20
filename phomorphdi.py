@@ -497,6 +497,15 @@ for segment in lines_dict:
   lines_dict[segment].number = segment_number
   segment_number += 1
 
+def fade_time (x):
+  if x in [ 'g', 'b', 'd', 't', 'p', 'k', '?' ]:
+    return 0
+  if x in [ 'n', 'm', 'l', 's', 'Z', 'S', 'f', 'v', 'r', 'h', 'N', 'z', 'j', 'C', 'x' ]:
+    return 25
+  if is_v (x):
+    return 100
+  raise RuntimeError ("missing fade time %s" % x)
+
 ms = 0
 insert_ms_morph = 100
 while True:
@@ -536,6 +545,28 @@ while True:
       morphing = pos_ms / item.ms
       print ("seek", 0, lines_dict[last_item.segment].number, (time_to_control (last_item.segment, a) + 1) / 2, last_item.volume_factor)
       print ("seek", 1, lines_dict[next_item.segment].number, (time_to_control (next_item.segment, b) + 1) / 2, next_item.volume_factor)
+      print ("morphing", morphing)
+      done = True
+  if item.type == "D":
+    # TODO:
+    # - handle the case where fade_in + fade_out > item.ms
+    # - is vowel handling reasonable?
+    fade_in = fade_time (item.lyric[0])
+    fade_out = fade_time (item.lyric[1])
+    if last_item and last_item.type == "D" and pos_ms < fade_in:
+      # morph from last item into this item
+      morphing = 0.5 + pos_ms / fade_in / 2
+      x = pos_ms / 1000
+      print ("seek", 0, lines_dict[last_item.segment].number, (time_to_control (last_item.segment, last_item.pos2 + x) + 1) / 2, last_item.volume_factor)
+      print ("seek", 1, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
+      print ("morphing", morphing)
+      done = True
+    if next_item and next_item.type == "D" and item.ms - pos_ms < fade_out:
+      # morph from this item into next item
+      morphing = 0.5 - (item.ms - pos_ms) / fade_out / 2
+      x = (item.ms - pos_ms) / 1000
+      print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
+      print ("seek", 1, lines_dict[next_item.segment].number, (time_to_control (next_item.segment, next_item.pos1 - x) + 1) / 2, next_item.volume_factor)
       print ("morphing", morphing)
       done = True
 
