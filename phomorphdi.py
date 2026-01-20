@@ -449,6 +449,7 @@ if errors:
     print (e, file=sys.stderr)
   sys.exit (1)
 
+time_stretch = 1
 total_ms = 0
 for item in items:
   if item.ms > 0:
@@ -456,10 +457,11 @@ for item in items:
   else:
     compression = 1
   print ("ITEM: %-5s %-5s %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression), file=sys.stderr)
-  total_ms += item.ms
   if item.ms > 0:
     synlist.append (item)
     print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=sys.stderr)
+    print ("%f\t%f\t%s" % (total_ms / 1000 * time_stretch, (total_ms + item.ms) / 1000 * time_stretch, "item_" + item.lyric), file=sys.stderr)
+  total_ms += item.ms
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
 
 def find_freq (ms):
@@ -509,18 +511,31 @@ while True:
 
   done = False
   if item.type == "M" and last_item and item.lyric != "_":
-    if (pos_ms < insert_ms_morph and item.ms > insert_ms_morph):
-      morphing = 1 - pos_ms / insert_ms_morph
-      x = pos_ms / 1000
-      print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
-      print ("seek", 1, lines_dict[last_item.segment].number, (time_to_control (last_item.segment, last_item.pos2 + x) + 1) / 2, last_item.volume_factor)
-      print ("morphing", morphing)
-      done = True
-    elif next_item and item.ms - pos_ms < insert_ms_morph:
-      morphing = 1 - (item.ms - pos_ms) / insert_ms_morph
-      x = (item.ms - pos_ms) / 1000
-      print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
-      print ("seek", 1, lines_dict[next_item.segment].number, (time_to_control (next_item.segment, next_item.pos1 - x) + 1) / 2, next_item.volume_factor)
+    if item.ms >= 2 * insert_ms_morph:
+      if pos_ms < insert_ms_morph:
+        morphing = 1 - pos_ms / insert_ms_morph
+        x = pos_ms / 1000
+        print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
+        print ("seek", 1, lines_dict[last_item.segment].number, (time_to_control (last_item.segment, last_item.pos2 + x) + 1) / 2, last_item.volume_factor)
+        print ("morphing", morphing)
+        done = True
+      elif next_item and item.ms - pos_ms < insert_ms_morph:
+        morphing = 1 - (item.ms - pos_ms) / insert_ms_morph
+        x = (item.ms - pos_ms) / 1000
+        print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
+        print ("seek", 1, lines_dict[next_item.segment].number, (time_to_control (next_item.segment, next_item.pos1 - x) + 1) / 2, next_item.volume_factor)
+        print ("morphing", morphing)
+        done = True
+    else:
+      # if insertion is not long enough for morphing in and out of the inserted vowel,
+      # simply morph end of last segment with start of next segment
+      #
+      # TODO: maybe not generated an insertion at all for such cases
+      a = last_item.pos2 + pos_ms / 1000
+      b = next_item.pos1 - (item.ms - pos_ms) / 1000
+      morphing = pos_ms / item.ms
+      print ("seek", 0, lines_dict[last_item.segment].number, (time_to_control (last_item.segment, a) + 1) / 2, last_item.volume_factor)
+      print ("seek", 1, lines_dict[next_item.segment].number, (time_to_control (next_item.segment, b) + 1) / 2, next_item.volume_factor)
       print ("morphing", morphing)
       done = True
 
@@ -531,7 +546,7 @@ while True:
 
   print ("process 48")
 
-  ms += 1
+  ms += 1 / time_stretch
 
 sys.exit (0)
 
