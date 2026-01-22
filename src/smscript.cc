@@ -20,6 +20,7 @@ class ScriptBlockSource : public LiveDecoderSource
   Audio                       my_audio;
   array<AudioBlock, 2>        my_audio_block;
   array<FormantCorrection, 2> formant_correction;
+  array<double, 2>            block_volume_factor {};
   RTMemoryArea&               rt_memory_area;
   double                      morphing = 0;
 public:
@@ -59,17 +60,29 @@ public:
   bool
   rt_audio_block (size_t index, RTAudioBlock& out_block)
   {
-    RTAudioBlock block_a (&rt_memory_area);
-    RTAudioBlock block_b (&rt_memory_area);
-    formant_correction[0].process_block (my_audio_block[0], block_a);
-    formant_correction[1].process_block (my_audio_block[1], block_b);
-    morph (out_block, true, block_a, true, block_b, morphing, MorphUtils::MorphMode::DB_LINEAR);
+    if (block_volume_factor[0] == 0 && block_volume_factor[1] == 0)
+      {
+        /* silence */
+        out_block.noise.set_capacity (my_audio_block[0].noise.size());
+        for (size_t i = 0; i < my_audio_block[0].noise.size(); i++)
+          out_block.noise.push_back (0);
+      }
+    else
+      {
+        RTAudioBlock block_a (&rt_memory_area);
+        RTAudioBlock block_b (&rt_memory_area);
+
+        formant_correction[0].process_block (my_audio_block[0], block_a);
+        formant_correction[1].process_block (my_audio_block[1], block_b);
+        morph (out_block, true, block_a, true, block_b, morphing, MorphUtils::MorphMode::DB_LINEAR);
+      }
     return true;
   }
   void
   set_audio_block (size_t blk, const AudioBlock& in_block, double ratio, double volume_factor)
   {
     formant_correction[blk].set_ratio (ratio);
+    block_volume_factor[blk] = volume_factor;
 
     /* scale volume of in_block * volume_factor */
     AudioBlock block = in_block;

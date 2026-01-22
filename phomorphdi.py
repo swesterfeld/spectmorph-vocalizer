@@ -345,7 +345,7 @@ for i in range (len (pho)):
     item.pos1 = 0
     item.pos2 = 0.001
     item.type = "M"
-    item.volume_factor = 1
+    item.volume_factor = 0
     item.ms = pho[i][-1].v_time
     item.lyric = "_"
     items.append (item)
