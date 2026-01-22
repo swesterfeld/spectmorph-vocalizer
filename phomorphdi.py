@@ -267,7 +267,16 @@ def prepare_melisma (pho):
     pho_entry = pho[i][-1]
     if pho_entry.freq:
       last_f = pho_entry.freq
-    out_f.append ((float (pho[i][1]), last_f))
+    if pho[i][0] == "_" and i + 1 < len (pho):
+      # for rests, we have no frequency, but we want the end of the last note
+      # have the old frequency, and the start of the new note have the new
+      # frequency, so we put the frequency jump into the middle of the rest,
+      # which usually should be inaudible
+      out_f.append ((float (pho[i][1]) / 2, last_f))
+      next_f = pho[i + 1][-1].freq
+      out_f.append ((float (pho[i][1]) / 2, next_f))
+    else:
+      out_f.append ((float (pho[i][1]), last_f))
 
     V_last = V_current = None
     if last and is_v (last[0]):
