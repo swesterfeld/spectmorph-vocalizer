@@ -308,7 +308,10 @@ for i in range (len (pho)):
   if is_v (pho[i][0]):
     print ("XM", pho[i][0], pho[i][1], file=sys.stderr)
     if float (pho[i][1]) > 200:
-      pho[i][-1].v_time = float (pho[i][1]) - 100
+      if i == 0:
+        pho[i][-1].v_time = float (pho[i][1]) - 50
+      else:
+        pho[i][-1].v_time = float (pho[i][1]) - 100
       pho[i][1] = "100"
   if is_diphthong (pho[i][0]):
     print ("XM", pho[i][0], pho[i][1], pho[i][-1].last_diph_frac_time, file=sys.stderr)
