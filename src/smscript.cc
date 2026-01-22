@@ -121,7 +121,7 @@ main (int argc, char **argv)
   script_parser.set_number_format (MicroConf::NO_I18N);
 
   const int mix_freq = 48000;
-  const int freq_slide_ms = 20;
+  const int freq_slide_ms = 80;
   const double vibrato_attack = 0;
   const double vibrato_depth = 15;
   const double vibrato_frequency = 4;
