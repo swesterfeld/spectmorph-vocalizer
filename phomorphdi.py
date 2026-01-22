@@ -460,9 +460,9 @@ for i in range (len (pho)):
       #    so it is still important to have a consistent overall volume
       item.volume_factor = 1
       if is_v (P1) and P1 != '_':
-        item.volume_factor = volume_factor ("voice", (m[0][0] + m[1][0]) / 2, P1)
+        item.volume_factor = volume_factor (mseg, (m[0][0] + m[1][0]) / 2, P1)
       if is_v (P2) and P2 != '_':
-        item.volume_factor = volume_factor ("voice", (m[1][0] + m[2][0]) / 2, P2)
+        item.volume_factor = volume_factor (mseg, (m[1][0] + m[2][0]) / 2, P2)
 
       items.append (item)
 
