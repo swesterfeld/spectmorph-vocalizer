@@ -293,8 +293,18 @@ def prepare_melisma (pho):
 
 pho, m_freqs = prepare_melisma (pho)
 
+def print_input_pho (pho):
+  t = 0
+  for i in range (len (pho)):
+    print ("%f\t%f\tinput_pho_%s" % (t, t, pho[i][0]), file=sys.stderr)
+    t += float (pho[i][1]) / 1000
+
+print_input_pho (pho)
+
 for i in range (len (pho)):
   pho[i][-1].v_time = 0
+  # FIXME: "_" is not really a vowel insertion, but not using insertions here
+  # blurs attack/release next to the "_"
   if is_v (pho[i][0]):
     print ("XM", pho[i][0], pho[i][1], file=sys.stderr)
     if float (pho[i][1]) > 200:
