@@ -571,10 +571,9 @@ while True:
       done = True
   if item.type == "D":
     # TODO:
-    # - handle the case where fade_in + fade_out > item.ms
     # - is vowel handling reasonable?
-    fade_in = fade_time (item.lyric[0])
-    fade_out = fade_time (item.lyric[1])
+    fade_in = min (fade_time (item.lyric[0]), item.ms / 2)
+    fade_out = min (fade_time (item.lyric[1]), item.ms / 2)
     if last_item and last_item.type == "D" and pos_ms < fade_in:
       # morph from last item into this item
       morphing = 0.5 + pos_ms / fade_in / 2
@@ -583,7 +582,7 @@ while True:
       print ("seek", 1, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
       print ("morphing", morphing)
       done = True
-    if next_item and next_item.type == "D" and item.ms - pos_ms < fade_out:
+    elif next_item and next_item.type == "D" and item.ms - pos_ms < fade_out:
       # morph from this item into next item
       morphing = 0.5 - (item.ms - pos_ms) / fade_out / 2
       x = (item.ms - pos_ms) / 1000
