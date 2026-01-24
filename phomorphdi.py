@@ -528,6 +528,11 @@ def fade_time (x):
     return 100
   raise RuntimeError ("missing fade time %s" % x)
 
+def is_insertion (item):
+  if item.type == "M" and not is_diphthong (item.lyric):
+    return True
+  return False
+
 ms = 0
 insert_ms_morph = 100
 while True:
@@ -541,7 +546,7 @@ while True:
   print ("freq", find_freq (ms))
 
   done = False
-  if item.type == "M" and last_item and item.lyric != "_":
+  if is_insertion (item) and last_item and item.lyric != "_":
     if item.ms >= 2 * insert_ms_morph:
       if pos_ms < insert_ms_morph:
         morphing = 1 - pos_ms / insert_ms_morph
@@ -569,12 +574,12 @@ while True:
       print ("seek", 1, lines_dict[next_item.segment].number, (time_to_control (next_item.segment, b) + 1) / 2, next_item.volume_factor)
       print ("morphing", morphing)
       done = True
-  if item.type == "D":
+  if not is_insertion (item):
     # TODO:
     # - is vowel handling reasonable?
     fade_in = min (fade_time (item.lyric[0]), item.ms / 2)
     fade_out = min (fade_time (item.lyric[1]), item.ms / 2)
-    if last_item and last_item.type == "D" and pos_ms < fade_in:
+    if last_item and not is_insertion (last_item) and pos_ms < fade_in:
       # morph from last item into this item
       morphing = 0.5 + pos_ms / fade_in / 2
       x = pos_ms / 1000
@@ -582,7 +587,7 @@ while True:
       print ("seek", 1, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
       print ("morphing", morphing)
       done = True
-    elif next_item and next_item.type == "D" and item.ms - pos_ms < fade_out:
+    elif next_item and not is_insertion (next_item) and item.ms - pos_ms < fade_out:
       # morph from this item into next item
       morphing = 0.5 - (item.ms - pos_ms) / fade_out / 2
       x = (item.ms - pos_ms) / 1000
