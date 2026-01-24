@@ -577,6 +577,7 @@ while True:
   if not is_insertion (item):
     # TODO:
     # - is vowel handling reasonable?
+    # - diphthong should not use lyric[1]
     fade_in = min (fade_time (item.lyric[0]), item.ms / 2)
     fade_out = min (fade_time (item.lyric[1]), item.ms / 2)
     if last_item and not is_insertion (last_item) and pos_ms < fade_in:
