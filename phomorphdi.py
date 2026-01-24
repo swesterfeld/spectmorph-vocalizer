@@ -12,7 +12,7 @@ import random
 import argparse
 from math import log2
 from dataclasses import dataclass
-from utils import time_to_volume, time_to_control, list_voice_segments
+from utils import time_to_volume, time_to_pos, list_voice_segments
 
 # Set up parser
 parser = argparse.ArgumentParser (description = "phomorphdi")
@@ -551,15 +551,15 @@ while True:
       if pos_ms < insert_ms_morph:
         morphing = 1 - pos_ms / insert_ms_morph
         x = pos_ms / 1000
-        print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
-        print ("seek", 1, lines_dict[last_item.segment].number, (time_to_control (last_item.segment, last_item.pos2 + x) + 1) / 2, last_item.volume_factor)
+        print ("seek", 0, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
+        print ("seek", 1, lines_dict[last_item.segment].number, time_to_pos (last_item.segment, last_item.pos2 + x), last_item.volume_factor)
         print ("morphing", morphing)
         done = True
       elif next_item and item.ms - pos_ms < insert_ms_morph:
         morphing = 1 - (item.ms - pos_ms) / insert_ms_morph
         x = (item.ms - pos_ms) / 1000
-        print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
-        print ("seek", 1, lines_dict[next_item.segment].number, (time_to_control (next_item.segment, next_item.pos1 - x) + 1) / 2, next_item.volume_factor)
+        print ("seek", 0, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
+        print ("seek", 1, lines_dict[next_item.segment].number, time_to_pos (next_item.segment, next_item.pos1 - x), next_item.volume_factor)
         print ("morphing", morphing)
         done = True
     else:
@@ -570,8 +570,8 @@ while True:
       a = last_item.pos2 + pos_ms / 1000
       b = next_item.pos1 - (item.ms - pos_ms) / 1000
       morphing = pos_ms / item.ms
-      print ("seek", 0, lines_dict[last_item.segment].number, (time_to_control (last_item.segment, a) + 1) / 2, last_item.volume_factor)
-      print ("seek", 1, lines_dict[next_item.segment].number, (time_to_control (next_item.segment, b) + 1) / 2, next_item.volume_factor)
+      print ("seek", 0, lines_dict[last_item.segment].number, time_to_pos (last_item.segment, a), last_item.volume_factor)
+      print ("seek", 1, lines_dict[next_item.segment].number, time_to_pos (next_item.segment, b), next_item.volume_factor)
       print ("morphing", morphing)
       done = True
   if not is_insertion (item):
@@ -583,22 +583,22 @@ while True:
       # morph from last item into this item
       morphing = 0.5 + pos_ms / fade_in / 2
       x = pos_ms / 1000
-      print ("seek", 0, lines_dict[last_item.segment].number, (time_to_control (last_item.segment, last_item.pos2 + x) + 1) / 2, last_item.volume_factor)
-      print ("seek", 1, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
+      print ("seek", 0, lines_dict[last_item.segment].number, time_to_pos (last_item.segment, last_item.pos2 + x), last_item.volume_factor)
+      print ("seek", 1, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
       print ("morphing", morphing)
       done = True
     elif next_item and not is_insertion (next_item) and item.ms - pos_ms < fade_out:
       # morph from this item into next item
       morphing = 0.5 - (item.ms - pos_ms) / fade_out / 2
       x = (item.ms - pos_ms) / 1000
-      print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
-      print ("seek", 1, lines_dict[next_item.segment].number, (time_to_control (next_item.segment, next_item.pos1 - x) + 1) / 2, next_item.volume_factor)
+      print ("seek", 0, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
+      print ("seek", 1, lines_dict[next_item.segment].number, time_to_pos (next_item.segment, next_item.pos1 - x), next_item.volume_factor)
       print ("morphing", morphing)
       done = True
 
   if not done:
-    print ("seek", 0, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
-    print ("seek", 1, lines_dict[item.segment].number, (time_to_control (item.segment, ct) + 1) / 2, item.volume_factor)
+    print ("seek", 0, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
+    print ("seek", 1, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
     print ("morphing", 0)
 
   print ("process 48")

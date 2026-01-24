@@ -55,9 +55,9 @@ def time_to_volume (segment, time_stamp):
   index = get_closest_index_from_volumes (segment, time_stamp)
   return volumes[index][1]
 
-def time_to_control (segment, time_stamp):
+def time_to_pos (segment, time_stamp):
   volumes = volumes_dict[segment]
-  return (get_closest_index_from_volumes (segment, time_stamp) / (len (volumes) - 1)) * 2 - 1
+  return get_closest_index_from_volumes (segment, time_stamp) / (len (volumes) - 1)
 
 if __name__ == "__main__":
   def random_test_diff():
