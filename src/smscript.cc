@@ -7,20 +7,25 @@
 #include "smmicroconf.hh"
 #include "smwavdata.hh"
 #include "smformantcorrection.hh"
+#include "smmorphutils.hh"
 
 using namespace SpectMorph;
 
 using std::vector;
 using std::string;
+using std::array;
 
 class ScriptBlockSource : public LiveDecoderSource
 {
-  Audio             my_audio;
-  AudioBlock        my_audio_block;
-  FormantCorrection formant_correction;
+  Audio                       my_audio;
+  array<AudioBlock, 2>        my_audio_block;
+  array<FormantCorrection, 2> formant_correction;
+  array<double, 2>            block_volume_factor {};
+  RTMemoryArea&               rt_memory_area;
+  double                      morphing = 0;
 public:
-  ScriptBlockSource (const AudioBlock& block, float mix_freq)
-    : my_audio_block (block)
+  ScriptBlockSource (float mix_freq, RTMemoryArea& rt_memory_area) :
+    rt_memory_area (rt_memory_area)
   {
     my_audio.frame_size_ms = 40;
     my_audio.frame_step_ms = 10;
@@ -33,16 +38,20 @@ public:
   void retrigger (int channel, float freq, int midi_velocity)
   {
     printf ("retrigger\n");
-    formant_correction.set_mode (FormantCorrection::MODE_HARMONIC_RESYNTHESIS);
-    formant_correction.set_max_partials (1000);
-    formant_correction.set_fuzzy_resynth (20);
-    formant_correction.retrigger();
+    for (auto& fc : formant_correction)
+      {
+        fc.set_mode (FormantCorrection::MODE_HARMONIC_RESYNTHESIS);
+        fc.set_max_partials (1000);
+        fc.set_fuzzy_resynth (20);
+        fc.retrigger();
+      }
     my_audio.fundamental_freq = freq;
   }
   void
   advance (double time_ms)
   {
-    formant_correction.advance (time_ms);
+    for (auto& fc : formant_correction)
+      fc.advance (time_ms);
   }
   Audio *audio()
   {
@@ -51,13 +60,29 @@ public:
   bool
   rt_audio_block (size_t index, RTAudioBlock& out_block)
   {
-    formant_correction.process_block (my_audio_block, out_block);
+    if (block_volume_factor[0] == 0 && block_volume_factor[1] == 0)
+      {
+        /* silence */
+        out_block.noise.set_capacity (my_audio_block[0].noise.size());
+        for (size_t i = 0; i < my_audio_block[0].noise.size(); i++)
+          out_block.noise.push_back (0);
+      }
+    else
+      {
+        RTAudioBlock block_a (&rt_memory_area);
+        RTAudioBlock block_b (&rt_memory_area);
+
+        formant_correction[0].process_block (my_audio_block[0], block_a);
+        formant_correction[1].process_block (my_audio_block[1], block_b);
+        morph (out_block, true, block_a, true, block_b, morphing, MorphUtils::MorphMode::DB_LINEAR);
+      }
     return true;
   }
   void
-  set_audio_block (const AudioBlock& in_block, double ratio, double volume_factor)
+  set_audio_block (size_t blk, const AudioBlock& in_block, double ratio, double volume_factor)
   {
-    formant_correction.set_ratio (ratio);
+    formant_correction[blk].set_ratio (ratio);
+    block_volume_factor[blk] = volume_factor;
 
     /* scale volume of in_block * volume_factor */
     AudioBlock block = in_block;
@@ -74,7 +99,12 @@ public:
     vector<uint16_t>& env = block.env;
     for (size_t i = 0; i < env.size(); i++)
       env[i] = std::clamp (env[i] + norm_delta_idb, 0, 65535);
-    my_audio_block = block;
+    my_audio_block[blk] = block;
+  }
+  void
+  set_morphing (double morphing)
+  {
+    this->morphing = morphing;
   }
   void
   set_portamento_freq (float freq)
@@ -103,18 +133,15 @@ main (int argc, char **argv)
     }
   script_parser.set_number_format (MicroConf::NO_I18N);
 
-  AudioBlock audio_block;
-  audio_block.noise.resize (32);
-
   const int mix_freq = 48000;
-  const int freq_slide_ms = 20;
+  const int freq_slide_ms = 80;
   const double vibrato_attack = 0;
   const double vibrato_depth = 15;
   const double vibrato_frequency = 4;
 
-  ScriptBlockSource source (audio_block, mix_freq);
-  LiveDecoder live_decoder (&source, mix_freq);
   RTMemoryArea rt_memory_area;
+  ScriptBlockSource source (mix_freq, rt_memory_area);
+  LiveDecoder live_decoder (&source, mix_freq);
 
   double freq = 440; // will be overwritten from script
   double target_freq = 0;
@@ -129,7 +156,7 @@ main (int argc, char **argv)
   vector<float> output;
   while (script_parser.next())
     {
-      int i;
+      int i, blk;
       string s;
       double d, f, v;
 
@@ -162,9 +189,8 @@ main (int argc, char **argv)
           double time_ms = i / 48000. * 1000;
           source.advance (time_ms);
         }
-      else if (script_parser.command ("seek", i, d, f, v))
+      else if (script_parser.command ("freq", f))
         {
-          assert (i >= 0 && size_t (i) < audio_vector.size());
           if (target_freq != f)
             {
               if (target_freq == 0) /* start of the audio file */
@@ -179,14 +205,21 @@ main (int argc, char **argv)
                   freq_factor = pow (target_freq / freq, 1.0 / freq_steps);
                 }
             }
-
+        }
+      else if (script_parser.command ("seek", blk, i, d, v))
+        {
+          assert (i >= 0 && size_t (i) < audio_vector.size());
           const auto& active_audio = audio_vector[i];
 
           int start = 0;
           int end = active_audio->contents.size() - 1;
           int index = std::clamp (sm_round_positive (d * end), start, end);
 
-          source.set_audio_block (active_audio->contents[index], freq / active_audio->fundamental_freq, v);
+          source.set_audio_block (blk, active_audio->contents[index], freq / active_audio->fundamental_freq, v);
+        }
+      else if (script_parser.command ("morphing", d))
+        {
+          source.set_morphing (d * 2 - 1);
         }
       else
         {
