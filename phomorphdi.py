@@ -471,7 +471,7 @@ if errors:
     print (e, file=sys.stderr)
   sys.exit (1)
 
-time_stretch = 1
+time_stretch = 5
 total_ms = 0
 for item in items:
   if item.ms > 0:
@@ -545,6 +545,8 @@ while True:
 
   print ("freq", find_freq (ms))
 
+  # TODO: morphing can jump from 0 to 1 or back, which is typically inaudible,
+  # but should be fixed anyway
   done = False
   if is_insertion (item) and last_item and item.lyric != "_":
     if item.ms >= 2 * insert_ms_morph:
