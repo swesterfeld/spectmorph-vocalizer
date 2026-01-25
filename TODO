@@ -4,22 +4,19 @@ High Priority H
  - for short notes, both vowel and consonants need to be shortened
  - do not squeeze a_a,... insertions (loop)
  - auto-detect steady vowel state (60%?...)
- X morphing for overlapping segments
- X morphing into / out of insertions
+ - hiatus freq change before vowel change
+ - hiatus preserve original transition time if possible
  - add configuration file which enables/disables insertions by note
- - currently melisma freq and note text are not in sync
  - rest->consonant, consonant->rest: avoid strong compression
  - try to use compression as close to 1 as possible
- - diphthongs: fine tune durations (150ms..250ms for second part)
  X labelling: instead of labelling a a_a a, we could label a_a
- X record humming m_m, ...
  X support notes without vowel center (m)
- - melisma frequency bend: should we use a slide instead of a frequency jump
  - glissando
  - whispering voice
  - normalization of input material
  - ramp for volume normalization @, 6
  X support non released plosives for instance t_>n or p_>m
+ - support syllabic consonants m_= synthesis via m_m
 
 improved handling for plosives
  - merge tata.py rules into phomorphdi.py
@@ -53,7 +50,19 @@ recording:
    stra - ssen - bahn - hal - te - stel - le (60 bpm)
  - record insertions (vowels, diphthongs) at different pitches
  - quality of E: "etwas weiter hinten"
+ - recording for syllabic consonants
+   like insertions (multiple recordings) n_n, m_m, l_l, Z_Z, v_v, r_r, N_N, z_z
+   once: s, S, f
 
 Notes Recording for Insertions:
  - sven: 40 45 (50) 55
  - claudia: 53 57 (60) 65 69 72
+
+
+Done:
+ X morphing for overlapping segments
+ X morphing into / out of insertions
+ - currently melisma freq and note text are not in sync
+ X record humming m_m, ...
+ - diphthongs: fine tune durations (150ms..250ms for second part)
+ - melisma frequency bend: should we use a slide instead of a frequency jump
