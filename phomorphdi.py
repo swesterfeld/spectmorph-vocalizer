@@ -471,7 +471,7 @@ if errors:
     print (e, file=sys.stderr)
   sys.exit (1)
 
-time_stretch = 5
+time_stretch = 1
 total_ms = 0
 for item in items:
   if item.ms > 0:
