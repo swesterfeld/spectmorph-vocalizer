@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import csv
 import sys
 
@@ -52,6 +54,9 @@ def convert (char):
   conv = ipa_to_sampa.get (char)
   return conv
 
+def is_v (v):
+  return v in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E' ]
+
 line = 1
 with open (sys.argv[1], newline="", encoding="utf-8") as f:
   reader = csv.reader (f, delimiter=";")
@@ -60,5 +65,10 @@ with open (sys.argv[1], newline="", encoding="utf-8") as f:
       for diphone in row[1:]:
         diphone = diphone.strip("[]")
         if diphone != "":
-          print (convert (diphone[0]) + convert (diphone[1]))
+          a = convert (diphone[0])
+          b = convert (diphone[1])
+          if is_v (a) and is_v (b): # diphthong
+            print (a + "_" + b)
+          else:
+            print (a + b)
     line += 1
