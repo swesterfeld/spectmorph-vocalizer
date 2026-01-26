@@ -139,15 +139,12 @@ if sys.argv[1] == "wordlist-diphone-list":
   with open ("diphones-german-possible.txt", "r") as file:
     for line in file:
       line = line.strip()
-      assert len (line) == 2
+      assert len (line) == 2 or len (line) == 3
       possible_diphones.add (line)
 
   for w in wordlist:
     phones = w[2]
     for d in phones:
-      D = diphthong_split (d)
-      if D:
-        d = D[0] + D[1]
       if not d in possible_diphones and not d in printed_diphones:
         printed_diphones.add (d)
         print ("##############", d)
@@ -161,15 +158,12 @@ if sys.argv[1] == "wordlist-diphone-impossible-check":
   with open ("diphones-german-impossible.txt", "r") as file:
     for line in file:
       line = line.strip()
-      assert len (line) == 2
+      assert len (line) == 2 or len (line) == 3
       impossible_diphones.add (line)
 
   for w in wordlist:
     phones = w[2]
     for d in phones:
-      D = diphthong_split (d)
-      if D:
-        d = D[0] + D[1]
       if d in impossible_diphones and not d in printed_diphones and not "r" in d:
         printed_diphones.add (d)
         print ("##############", d)
