@@ -19,7 +19,7 @@ def load_wordlist (filename):
   wordlist = []
   with open (filename, "r") as file:
     for line in file:
-      re_match = re.match (r'''([-'.\w ]+):[ \t]+([\w@?_ ]+)$''', line, re.UNICODE)
+      re_match = re.match (r'''([-'.,\w ]+):[ \t]+([\w@?_ ]+)$''', line, re.UNICODE)
       if not re_match:
         raise RuntimeError ("%s: line %s doesn't match" % (filename, line))
 
@@ -52,15 +52,8 @@ def load_wordlist (filename):
         letters = letters + [ "_" ]
       diphones = []
 
-      # ignore diphones after last vowel, because they can have unnatural
-      # timing/quality when used inside a word
-      last_vowel_index = 0
       for i in range (len (letters)):
-        if is_v (letters[i]) or len (letters[i]) == 3:
-          last_vowel_index = i
-
-      for i in range (len (letters)):
-        if i + 1 < len (letters) and len (letters[i]) == 1 and len (letters[i+1]) == 1 and (i < last_vowel_index or letters[i+1] == "_"):
+        if i + 1 < len (letters) and len (letters[i]) == 1 and len (letters[i+1]) == 1:
           diphones.append (letters[i] + letters[i+1])
         if len (letters[i]) == 3 and i > 0 and i < len (letters) - 1 and letters[i] != '?':
           # diphthong, like a_U
@@ -83,7 +76,7 @@ if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <wordlist>
     for word in wordlist:
       score = 0
       new_diphones = []
-      if len (word[1]) > 10 and len (word[1]) < 20:
+      if len (word[1]) > 3 and len (word[1]) < 20:
         for pair in word[2]:
           if not pair in have_diphones:
             if not pair in new_diphones:
@@ -99,7 +92,7 @@ if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <wordlist>
     if best_word is None:
       break
 
-    print ("%-30s%s" % (best_word[0] + ":", best_word[1]))
+    print ("%-30s%s" % (best_word[0] + ":", best_word[1]), flush = True)
     #print ("%.2f" % best_score, best_new_diphones, len (have_diphones), len (want_diphones))
     #print ()
     have_diphones += best_new_diphones
@@ -132,3 +125,52 @@ if sys.argv[1] == "test-script": # <want-diphones> <script>
   for d in want_diphones:
     if not d in have_diphones:
       print ("%s: missing." % d)
+
+def diphthong_split (d):
+  Vs = d.split ('_')
+  if len (Vs) == 2 and all ((is_v (v) and v != '_') for v in Vs):
+    return Vs
+  return None
+
+if sys.argv[1] == "wordlist-diphone-list":
+  wordlist = load_wordlist (sys.argv[2])
+  possible_diphones = set()
+  printed_diphones = set()
+  with open ("diphones-german-possible.txt", "r") as file:
+    for line in file:
+      line = line.strip()
+      assert len (line) == 2
+      possible_diphones.add (line)
+
+  for w in wordlist:
+    phones = w[2]
+    for d in phones:
+      D = diphthong_split (d)
+      if D:
+        d = D[0] + D[1]
+      if not d in possible_diphones and not d in printed_diphones:
+        printed_diphones.add (d)
+        print ("##############", d)
+        print (w)
+
+if sys.argv[1] == "wordlist-diphone-impossible-check":
+  wordlist = load_wordlist (sys.argv[2])
+  impossible_diphones = set()
+  printed_diphones = set()
+
+  with open ("diphones-german-impossible.txt", "r") as file:
+    for line in file:
+      line = line.strip()
+      assert len (line) == 2
+      impossible_diphones.add (line)
+
+  for w in wordlist:
+    phones = w[2]
+    for d in phones:
+      D = diphthong_split (d)
+      if D:
+        d = D[0] + D[1]
+      if d in impossible_diphones and not d in printed_diphones and not "r" in d:
+        printed_diphones.add (d)
+        print ("##############", d)
+        print (w)
