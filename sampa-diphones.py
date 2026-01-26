@@ -57,18 +57,43 @@ def convert (char):
 def is_v (v):
   return v in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E' ]
 
-line = 1
-with open (sys.argv[1], newline="", encoding="utf-8") as f:
-  reader = csv.reader (f, delimiter=";")
-  for row in reader:
-    if line >= 3: # skip header
-      for diphone in row[1:]:
-        diphone = diphone.strip("[]")
-        if diphone != "":
+if sys.argv[1] == "diphones":
+  line = 1
+  with open (sys.argv[2], newline="", encoding="utf-8") as f:
+    reader = csv.reader (f, delimiter=";")
+    for row in reader:
+      if line >= 3: # skip header
+        for diphone in row[1:]:
+          diphone = diphone.strip("[]")
+          if diphone != "":
+            a = convert (diphone[0])
+            b = convert (diphone[1])
+            if is_v (a) and is_v (b): # diphthong
+              print (a + "_" + b)
+            else:
+              print (a + b)
+      line += 1
+
+# sampa-diphones.py hiatus diphones-german-hiatus.csv > diphones-german-hiatus-possible.txt
+# sampa-diphones.py no-hiatus diphones-german-hiatus.csv > diphones-german-hiatus-impossible.txt
+if sys.argv[1] in [ "hiatus", "no-hiatus" ]:
+  line = 1
+  with open (sys.argv[2], newline="", encoding="utf-8") as f:
+    reader = csv.reader (f, delimiter=";")
+    for row in reader:
+      if line == 1:
+        header = row
+      else:
+        for x in range (1, len (row)):
+          diphone = header[x] + row[0]
+          diphone = diphone.strip("[]")
           a = convert (diphone[0])
           b = convert (diphone[1])
-          if is_v (a) and is_v (b): # diphthong
-            print (a + "_" + b)
+          assert (is_v (a) and is_v (b))
+          if sys.argv[1] == "hiatus":
+            if (row[x] != ""):
+              print (a + b) # list possible hiatus entries
           else:
-            print (a + b)
-    line += 1
+            if (row[x] == ""):
+              print (a + b) # list impossible hiatus entries
+      line += 1

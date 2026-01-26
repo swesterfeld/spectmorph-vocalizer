@@ -134,13 +134,9 @@ def diphthong_split (d):
 
 if sys.argv[1] == "wordlist-diphone-list":
   wordlist = load_wordlist (sys.argv[2])
-  possible_diphones = set()
+  possible_diphones_list = load_want_diphones ("diphones-german-possible.txt") + load_want_diphones ("diphones-german-hiatus-possible.txt")
+  possible_diphones = set(possible_diphones_list)
   printed_diphones = set()
-  with open ("diphones-german-possible.txt", "r") as file:
-    for line in file:
-      line = line.strip()
-      assert len (line) == 2 or len (line) == 3
-      possible_diphones.add (line)
 
   for w in wordlist:
     phones = w[2]
@@ -152,14 +148,9 @@ if sys.argv[1] == "wordlist-diphone-list":
 
 if sys.argv[1] == "wordlist-diphone-impossible-check":
   wordlist = load_wordlist (sys.argv[2])
-  impossible_diphones = set()
+  impossible_diphones_list = load_want_diphones ("diphones-german-impossible.txt") + load_want_diphones ("diphones-german-hiatus-impossible.txt")
+  impossible_diphones = set (impossible_diphones_list)
   printed_diphones = set()
-
-  with open ("diphones-german-impossible.txt", "r") as file:
-    for line in file:
-      line = line.strip()
-      assert len (line) == 2 or len (line) == 3
-      impossible_diphones.add (line)
 
   for w in wordlist:
     phones = w[2]
