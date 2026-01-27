@@ -121,7 +121,7 @@ for rep in range (40):
           #synlist.append ((quad[1][0] - 0.02, quad[2][0], S))
           synlist.append ((quad[1][0], quad[2][0], S, 0.001))
           sl_trace (d + "1")
-          synlist.append (((quad[2][0] + quad[3][0]) / 2 + 0.05, (quad[2][0] + quad[3][0]) / 2 + 0.1, S, 1))
+          synlist.append ((quad[2][0], (quad[2][0] + quad[3][0]) / 2, S, 1))
           sl_trace (d + "2")
           diphone_missing = False
           break
