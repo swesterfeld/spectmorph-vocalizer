@@ -16,23 +16,18 @@
 # 6t
 
 import sys
-from utils import time_to_control
+import os
+from utils import time_to_pos
 
 sp = float (sys.argv[2])
 voice_length = float (sys.argv[1])
 
 lines = []
-with open ("plosive.label", "r") as file:
+with open ("voice/" + os.getenv ("VOICE") + "/voice.txt", "r") as file:
   for line in file:
     line = line.split()
     lines.append ((float (line[0]), line[2].rstrip(":")))
 
-with open ("diphone-sven.label", "r") as file:
-  for line in file:
-    line = line.split()
-    lines.append ((float (line[0]), line[2].rstrip(":")))
-
-print ("note_on 0 52 100")
 #ct = 243.503731
 
 # split text into diphones
@@ -96,8 +91,8 @@ for rep in range (40):
     if dclass == "vp":
       for x in range (len (lines)):
         tri = lines[x:x+3]
-        # example: a | t | th
-        if tri[0][1] == d[0] and tri[1][1] == d[1] and tri[2][1] == d[1] + "h":
+        # example: a | .t | t
+        if tri[0][1] == d[0] and tri[1][1] == "." + d[1] and tri[2][1] == d[1]:
           ct = (tri[0][0] + tri[1][0]) / 2
           synlist.append ((ct, tri[1][0], L, 1))
           sl_trace (d + "1")
@@ -109,8 +104,8 @@ for rep in range (40):
     elif dclass == "pv":
       for x in range (len (lines)):
         quad = lines[x:x+4]
-        # example: t | th | a
-        if quad[0][1] == d[0] and quad[1][1] == d[0] + "h" and quad[2][1] == d[1]:
+        # example: .t | t | a
+        if quad[0][1] == "." + d[0] and quad[1][1] == d[0] and quad[2][1] == d[1]:
           #nextt = (tri[0][0] + tri[1][0]) / 2
           synlist.append ((quad[1][0] - 0.02, quad[2][0], S, 2))
           sl_trace (d + "1")
@@ -121,8 +116,8 @@ for rep in range (40):
     elif dclass == "pp":
       for x in range (len (lines)):
         quad = lines[x:x+4]
-        # example: k | kh | t | th
-        if quad[0][1] == d[0] and quad[1][1] == d[0] + "h" and quad[2][1] == d[1] and quad[3][1] == d[1] + "h":
+        # example: .k | k | .t | t
+        if quad[0][1] == "." + d[0] and quad[1][1] == d[0] and quad[2][1] == "." + d[1] and quad[3][1] == d[1]:
           #synlist.append ((quad[1][0] - 0.02, quad[2][0], S))
           synlist.append ((quad[1][0], quad[2][0], S, 0.001))
           sl_trace (d + "1")
@@ -196,6 +191,8 @@ if diphone_missing_set:
 phase = 0
 ms = 0
 ct = synlist[0][0]
+print ("load \"voice/" + os.getenv ("VOICE") + "/voice.sm\"")
+print ("freq", 146.83)
 for i in range (1000 * 1000):
   ratio = (synlist[phase][1] - synlist[phase][0]) * 1000 / synlist[phase][2]
   print ("#", ratio)
@@ -206,9 +203,7 @@ for i in range (1000 * 1000):
       sys.exit (0)
     ct = synlist[phase][0]
 
-  print ("control 0", time_to_control (ct))
-  print ("control 1", 0)
-  print ("control 2", -1)
-  #print (ws1[i], ws2[i], morph[i], "#X")
+  print ("seek", 0, 0, time_to_pos ("voice", ct), 1)
+  print ("seek", 1, 0, time_to_pos ("voice", ct), 1)
+  print ("morphing", 0)
   print ("process 48")
-  # FIXME print ("global_volume", synlist[phase][3])
