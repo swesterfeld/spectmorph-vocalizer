@@ -140,7 +140,8 @@ for rep in range (40):
     elif dclass == "cp":
       for x in range (len (lines)):
         tri = lines[x:x+3]
-        if tri[0][1] == d[0] and tri[1][1] == d[1] and tri[2][1] == d[1] + "h":
+        # example: l | .t | t
+        if tri[0][1] == d[0] and tri[1][1] == "." + d[1] and tri[2][1] == d[1]:
           ct = (tri[0][0] + tri[1][0]) / 2
           synlist.append ((ct, tri[1][0], S, 1))
           sl_trace (d + "1")
@@ -165,8 +166,8 @@ for rep in range (40):
     elif dclass == "pc":
       for x in range (len (lines)):
         quad = lines[x:x+4]
-        # example: t | th | S
-        if quad[0][1] == d[0] and quad[1][1] == d[0] + "h" and quad[2][1] == d[1]:
+        # example: .t | t | S
+        if quad[0][1] == "." + d[0] and quad[1][1] == d[0] and quad[2][1] == d[1]:
           #nextt = (tri[0][0] + tri[1][0]) / 2
           synlist.append ((quad[1][0] - 0.02, quad[2][0], S, 2))
           sl_trace (d + "1")
