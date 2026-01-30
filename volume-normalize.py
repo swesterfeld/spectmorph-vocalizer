@@ -1,20 +1,15 @@
 #!/usr/bin/env python3
-from scipy.io import wavfile
+import soundfile as sf
 import numpy as np
 import sys
 import math
 
-sample_rate, int_data = wavfile.read (sys.argv[1])
+data, sample_rate = sf.read (sys.argv[1], dtype='float64')
 
-# normalize
-try:
-  int_max = np.iinfo (int_data.dtype).max
-  int_data = int_data.astype (np.float64)
-  max_val = np.max (np.abs (int_data))
-  if max_val > 1e-4:
-    int_data /= max_val
-  print ("normalize: %f dB" % (20 * math.log10 (int_max / max_val)))
-except:
-  print ("normalization failed")
+max_val = np.max (np.abs (data))
+if max_val > 1e-4:
+    data /= max_val
 
-wavfile.write (sys.argv[1], sample_rate, int_data)
+print ("normalize: %f dB" % (20 * math.log10 (1.0 / max_val)))
+
+sf.write (sys.argv[1], data, sample_rate, subtype='PCM_24')
