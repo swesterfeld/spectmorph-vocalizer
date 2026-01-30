@@ -210,6 +210,46 @@ def phone_class (p):
     return "_"
   raise RuntimeError ("unknown phone class: %s" % p)
 
+# if we have a vowel in our diphone, use it for volume normalization:
+#   _n | al | _ => use a
+#   _a | Su | _ => use u
+#
+# otherwise: use closest vowel
+#   _a | st | ro => use a
+#   _S | tr | u_ => use u
+#   _i | St | u_ => use i (prefer vowel before)
+def find_volume_normalization (segment, lines, j):
+  best_dist = 10
+  best_match = None
+  # search for a vowel at or before index j
+  for i in range (10):
+    candidate = j - i
+    if candidate >= 0:
+      if lines[candidate][1] in [ "_", "!" ]: # stop searching if we hit rest or !
+        break
+      if is_v (lines[candidate][1]):
+        best_dist = i
+        best_match = candidate
+        break
+  # search for a vowel at or after index j + 1
+  for i in range (10):
+    if i < best_dist:
+      candidate = j + 1 + i
+      if candidate + 1 < len (lines):
+        if lines[candidate][1] in [ "_", "!" ]: # stop searching if we hit rest or !
+          break
+        if is_v (lines[candidate][1]):
+          best_match = candidate
+          break
+  if not best_match:
+    for i in range (-10, 10):
+      if i == 0 or i == 1:
+        print (" * ", lines[j + i], file=sys.stderr)
+      else:
+        print ("   ", lines[j + i], file=sys.stderr)
+    raise RuntimeError ("search for volume normalization for diphone failed")
+  return volume_factor (segment, (lines[best_match][0] + lines[best_match + 1][0]) / 2, lines[best_match][1])
+
 def lookup_diphone_entry (P1, P2, pho_entry):
   global errors
   possible_matches = []
@@ -218,7 +258,8 @@ def lookup_diphone_entry (P1, P2, pho_entry):
     for j in range (len (lines) - 2):
       x = lines[j:j+3]
       if x[0][1] == P1 and x[1][1] == P2:
-        possible_matches.append ([segment] + x)
+        vnorm = find_volume_normalization (segment, lines, j)
+        possible_matches.append ([segment, vnorm] + x)
   if len (possible_matches) == 0:
     #print ("line %d: missing diphone %s" % (pho[i][-1], P1 + P2))
     errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + P2, pho_entry.bar, pho_entry.beat) ]
@@ -432,7 +473,8 @@ for i in range (len (pho)):
     if possible_matches:
       m = random.choice (possible_matches)
       mseg = m[0]
-      m = m[1:]
+      vnorm = m[1]
+      m = m[2:]
       item = Item()
       item.segment = mseg
       item.lyric = P1 + P2
@@ -454,16 +496,7 @@ for i in range (len (pho)):
         pos2 = (m[1][0] + m[2][0]) / 2
       item.pos1 = pos1
       item.pos2 = pos2
-      # volume normalization:
-      #  - if we have a vowel in our diphone, we use it for volume normalization
-      #  - this does not volume normalize diphones without vowels (such as St),
-      #    so it is still important to have a consistent overall volume
-      item.volume_factor = 1
-      if is_v (P1) and P1 != '_':
-        item.volume_factor = volume_factor (mseg, (m[0][0] + m[1][0]) / 2, P1)
-      if is_v (P2) and P2 != '_':
-        item.volume_factor = volume_factor (mseg, (m[1][0] + m[2][0]) / 2, P2)
-
+      item.volume_factor = vnorm
       items.append (item)
 
 if errors:
@@ -478,7 +511,7 @@ for item in items:
     compression = (item.pos2 - item.pos1) * 1000 / item.ms
   else:
     compression = 1
-  print ("ITEM: %-5s %-5s %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression), file=sys.stderr)
+  print ("ITEM: %-5s %-5s %7.2f %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression, item.volume_factor), file=sys.stderr)
   if item.ms > 0:
     synlist.append (item)
     print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=sys.stderr)
