@@ -20,6 +20,7 @@ High Priority H
 
 improved handling for plosives
  - merge tata.py rules into phomorphdi.py
+   ~ fine tune closure (.t) and release (t) and vowel duration
 
 possible improvements for quality:
 - use harmonic resynthesis only for voiced consonants and vowels
