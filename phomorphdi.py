@@ -28,11 +28,11 @@ if args.s is not None:
 def load_labels (segment):
   lines_raw = []
   ignore_labels = []
+  properties = {}
   with open ("voice/" + os.getenv ("VOICE") + "/" + segment + ".sh", "r") as file:
     for line in file:
-      line = line.split ("=")
-      if (line[0] == "VOICE_MIDI_NOTE"):
-        note = int (line[1])
+      key, value = line.strip().split ("=", 1)
+      properties[key] = value
 
   with open ("voice/" + os.getenv ("VOICE") + "/" + segment + ".txt", "r") as file:
     for line in file:
@@ -50,19 +50,21 @@ def load_labels (segment):
     else:
       lines.append ((F[0], F[1]))
     i += 1
-  return note, lines
+  return properties, lines
 
 lines_dict = dict()
 
 @dataclass
 class Segment:
-  note: str
+  note: int
   lines: list[str]
+  properties: dict
   number: int = -1
 
 for segment in list_voice_segments():
-  note, lines = load_labels (segment)
-  lines_dict[segment] = Segment (note = note, lines = lines)
+  properties, lines = load_labels (segment)
+  note = int (properties["VOICE_MIDI_NOTE"])
+  lines_dict[segment] = Segment (note = note, lines = lines, properties = properties)
 
 lines = None
 
@@ -274,7 +276,14 @@ def lookup_diphone_entry_vv (P1, P2, pho_entry, note):
     for j in range (len (lines) - 1):
       x = lines[j:j+3]
       if x[0][1] == P1 + '_' + P2:
-        possible_matches.append ([segment] + x)
+        voice_dynamic = lines_dict[segment].properties.get ("VOICE_DYNAMIC")
+        want_dynamic = os.getenv ("DYNAMIC")
+        if P1 == P2 and want_dynamic:
+          if want_dynamic == voice_dynamic:
+            print ("selected dynamic %s for %s_%s" % (want_dynamic, P1, P2), file=sys.stderr)
+            possible_matches.append ([segment] + x)
+        elif not voice_dynamic:
+          possible_matches.append ([segment] + x)
   # find best note distance
   distance = 128
   for p in possible_matches:
