@@ -95,5 +95,5 @@ do
     phomorphdi.py pho/$pho $seed_param > script/$script || echo "$pho -> $script" failed
     src/smscript script/$script wav/$wav
   fi
-  ./volume-normalize.py wav/$wav
+  #./volume-normalize.py wav/$wav
 done
