@@ -18,12 +18,17 @@ from utils import time_to_volume, time_to_pos, list_voice_segments
 parser = argparse.ArgumentParser (description = "phomorphdi")
 parser.add_argument ("pho", help = "Input .ph file")
 parser.add_argument("-s", type=int, help="Optional seed")
+parser.add_argument("-i", type=str, help="Item file")
 args = parser.parse_args()
 
 if args.s is not None:
   print (f"seeding RNG with {args.s}", file=sys.stderr)
   random.seed(args.s)
 
+if args.i is not None:
+  item_file = open (args.i, "w")
+else:
+  item_file = sys.stderr
 
 def load_labels (segment):
   lines_raw = []
@@ -524,7 +529,7 @@ for item in items:
   if item.ms > 0:
     synlist.append (item)
     print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=sys.stderr)
-    print ("%f\t%f\t%s" % (total_ms / 1000 * time_stretch, (total_ms + item.ms) / 1000 * time_stretch, "item_" + item.lyric), file=sys.stderr)
+    print ("%f\t%f\t%s" % (total_ms / 1000 * time_stretch, (total_ms + item.ms) / 1000 * time_stretch, "item_" + item.lyric), file=item_file)
   total_ms += item.ms
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
 
@@ -567,7 +572,7 @@ def fade_time (x):
   if x in [ 'n', 'm', 'l', 's', 'Z', 'S', 'f', 'v', 'r', 'h', 'N', 'z', 'j', 'C', 'x' ]:
     return 25
   if is_v (x):
-    return 100
+    return 50
   raise RuntimeError ("missing fade time %s" % x)
 
 def is_insertion (item):
@@ -575,75 +580,64 @@ def is_insertion (item):
     return True
   return False
 
+def item_to_pos (slot, item, pos_ms):
+  if is_insertion (item) and item.lyric != "_":
+    # TODO: could start at random point in time
+    # ping pong loop for the insertion
+    loop_len_ms = int ((item.pos2 - item.pos1) * 1000)
+    assert (loop_len_ms > 0)
+    ping_pong_len_ms = loop_len_ms * 2
+    ping_pong_pos_ms = int (pos_ms) % ping_pong_len_ms
+    if ping_pong_pos_ms < loop_len_ms:
+      # ping part of the ping-pong loop (forward)
+      ct = item.pos1 + ping_pong_pos_ms / 1000
+    else:
+      # pong part of the ping-pong loop (backward)
+      ct = item.pos2 - (ping_pong_pos_ms - loop_len_ms) / 1000
+  else:
+    frac = pos_ms / item.ms
+    ct = item.pos1 * (1 - frac) + item.pos2 * frac
+  print ("seek", slot, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
+
 ms = 0
-insert_ms_morph = 100
 while True:
   pos_ms, item, last_item, next_item = find_synlist_pos (ms)
   if pos_ms is None:
     break
-
-  frac = pos_ms / item.ms
-  ct = item.pos1 * (1 - frac) + item.pos2 * frac
 
   print ("freq", find_freq (ms))
 
   # TODO: morphing can jump from 0 to 1 or back, which is typically inaudible,
   # but should be fixed anyway
   done = False
-  if is_insertion (item) and last_item and item.lyric != "_":
-    if item.ms >= 2 * insert_ms_morph:
-      if pos_ms < insert_ms_morph:
-        morphing = 1 - pos_ms / insert_ms_morph
-        x = pos_ms / 1000
-        print ("seek", 0, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
-        print ("seek", 1, lines_dict[last_item.segment].number, time_to_pos (last_item.segment, last_item.pos2 + x), last_item.volume_factor)
-        print ("morphing", morphing)
-        done = True
-      elif next_item and item.ms - pos_ms < insert_ms_morph:
-        morphing = 1 - (item.ms - pos_ms) / insert_ms_morph
-        x = (item.ms - pos_ms) / 1000
-        print ("seek", 0, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
-        print ("seek", 1, lines_dict[next_item.segment].number, time_to_pos (next_item.segment, next_item.pos1 - x), next_item.volume_factor)
-        print ("morphing", morphing)
-        done = True
-    else:
-      # if insertion is not long enough for morphing in and out of the inserted vowel,
-      # simply morph end of last segment with start of next segment
-      #
-      # TODO: maybe not generated an insertion at all for such cases
-      a = last_item.pos2 + pos_ms / 1000
-      b = next_item.pos1 - (item.ms - pos_ms) / 1000
-      morphing = pos_ms / item.ms
-      print ("seek", 0, lines_dict[last_item.segment].number, time_to_pos (last_item.segment, a), last_item.volume_factor)
-      print ("seek", 1, lines_dict[next_item.segment].number, time_to_pos (next_item.segment, b), next_item.volume_factor)
-      print ("morphing", morphing)
-      done = True
-  if not is_insertion (item):
+  if is_insertion (item):
+    fade_in = 50
+    fade_out = 50
+  else:
     # TODO:
     # - is vowel handling reasonable?
     # - diphthong should not use lyric[1]
     fade_in = min (fade_time (item.lyric[0]), item.ms / 2)
     fade_out = min (fade_time (item.lyric[1]), item.ms / 2)
-    if last_item and not is_insertion (last_item) and pos_ms < fade_in:
-      # morph from last item into this item
-      morphing = 0.5 + pos_ms / fade_in / 2
-      x = pos_ms / 1000
-      print ("seek", 0, lines_dict[last_item.segment].number, time_to_pos (last_item.segment, last_item.pos2 + x), last_item.volume_factor)
-      print ("seek", 1, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
-      print ("morphing", morphing)
-      done = True
-    elif next_item and not is_insertion (next_item) and item.ms - pos_ms < fade_out:
-      # morph from this item into next item
-      morphing = 0.5 - (item.ms - pos_ms) / fade_out / 2
-      x = (item.ms - pos_ms) / 1000
-      print ("seek", 0, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
-      print ("seek", 1, lines_dict[next_item.segment].number, time_to_pos (next_item.segment, next_item.pos1 - x), next_item.volume_factor)
-      print ("morphing", morphing)
-      done = True
+
+  if last_item and pos_ms < fade_in:
+    # morph from last item into this item
+    morphing = 0.5 + pos_ms / fade_in / 2
+    item_to_pos (0, last_item, last_item.ms + pos_ms)
+    item_to_pos (1, item, pos_ms)
+    print ("morphing", morphing)
+    done = True
+  if next_item and item.ms - pos_ms < fade_out:
+    # morph from this item into next item
+    morphing = 0.5 - (item.ms - pos_ms) / fade_out / 2
+    item_to_pos (0, item, pos_ms)
+    item_to_pos (1, next_item, pos_ms - item.ms)
+    print ("morphing", morphing)
+    done = True
 
   if not done:
-    print ("seek", 0, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
-    print ("seek", 1, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
+    item_to_pos (0, item, pos_ms)
+    item_to_pos (1, item, pos_ms)
     print ("morphing", 0)
 
   print ("process 48")

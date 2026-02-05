@@ -2,7 +2,6 @@ TODO before recording: X
 High Priority H
 
  - for short notes, both vowel and consonants need to be shortened
- - do not squeeze a_a,... insertions (loop)
  - auto-detect steady vowel state (60%?...)
  - hiatus freq change before vowel change
  - hiatus preserve original transition time if possible
@@ -67,3 +66,4 @@ Done:
  X record humming m_m, ...
  - diphthongs: fine tune durations (150ms..250ms for second part)
  - melisma frequency bend: should we use a slide instead of a frequency jump
+ - do not squeeze a_a,... insertions (loop)
