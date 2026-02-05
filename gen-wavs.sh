@@ -81,6 +81,7 @@ do
   xml=$(basename "$xml")
   filename_noext=$(remove_music_extension $xml)
   pho="${filename_noext}.pho"
+  txt="${filename_noext}.txt"
   script="${filename_noext}.script"
   wav="${filename_noext}.wav"
   rm -f $pho $script $wav
@@ -92,7 +93,7 @@ do
     test -f /usr/share/mbrola/$voice/$voice || voice=de2
     mbrola /usr/share/mbrola/$voice/$voice pho/$pho wav/$wav
   else
-    phomorphdi.py pho/$pho $seed_param > script/$script || echo "$pho -> $script" failed
+    phomorphdi.py pho/$pho $seed_param -i items/$txt > script/$script || echo "$pho -> $script" failed
     src/smscript script/$script wav/$wav
   fi
   #./volume-normalize.py wav/$wav
