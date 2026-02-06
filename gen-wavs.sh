@@ -93,7 +93,7 @@ do
     test -f /usr/share/mbrola/$voice/$voice || voice=de2
     mbrola /usr/share/mbrola/$voice/$voice pho/$pho wav/$wav
   else
-    phomorphdi.py pho/$pho $seed_param -i items/$txt > script/$script || echo "$pho -> $script" failed
+    phomorphdi.py pho/$pho $seed_param --items items/$txt --trace trace/$txt --input-pho input_pho/$txt > script/$script || echo "$pho -> $script" failed
     src/smscript script/$script wav/$wav
   fi
   #./volume-normalize.py wav/$wav

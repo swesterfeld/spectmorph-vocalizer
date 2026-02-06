@@ -18,17 +18,29 @@ from utils import time_to_volume, time_to_pos, list_voice_segments
 parser = argparse.ArgumentParser (description = "phomorphdi")
 parser.add_argument ("pho", help = "Input .ph file")
 parser.add_argument("-s", type=int, help="Optional seed")
-parser.add_argument("-i", type=str, help="Item file")
+parser.add_argument("--items", type=str, help="Item file")
+parser.add_argument("--trace", type=str, help="Trace file")
+parser.add_argument("--input-pho", type=str, help="Input pho file")
 args = parser.parse_args()
 
 if args.s is not None:
   print (f"seeding RNG with {args.s}", file=sys.stderr)
   random.seed(args.s)
 
-if args.i is not None:
-  item_file = open (args.i, "w")
+if args.items is not None:
+  item_file = open (args.items, "w")
 else:
   item_file = sys.stderr
+
+if args.trace is not None:
+  trace_file = open (args.trace, "w")
+else:
+  trace_file = sys.stderr
+
+if args.input_pho is not None:
+  input_pho_file = open (args.input_pho, "w")
+else:
+  input_pho_file = sys.stderr
 
 def load_labels (segment):
   lines_raw = []
@@ -360,7 +372,7 @@ pho, m_freqs = prepare_melisma (pho)
 def print_input_pho (pho):
   t = 0
   for i in range (len (pho)):
-    print ("%f\t%f\tinput_pho_%s" % (t, t, pho[i][0]), file=sys.stderr)
+    print ("%f\t%f\tinput_pho_%s" % (t, t, pho[i][0]), file=input_pho_file)
     t += float (pho[i][1]) / 1000
 
 print_input_pho (pho)
@@ -528,7 +540,7 @@ for item in items:
   print ("ITEM: %-5s %-5s %7.2f %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression, item.volume_factor), file=sys.stderr)
   if item.ms > 0:
     synlist.append (item)
-    print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=sys.stderr)
+    print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=trace_file)
     print ("%f\t%f\t%s" % (total_ms / 1000 * time_stretch, (total_ms + item.ms) / 1000 * time_stretch, "item_" + item.lyric), file=item_file)
   total_ms += item.ms
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
