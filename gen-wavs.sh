@@ -2,7 +2,7 @@
 
 set -e
 
-mkdir -p testxml pho script wav voice
+mkdir -p testxml pho script wav voice items trace input_pho
 
 make -C src
 
