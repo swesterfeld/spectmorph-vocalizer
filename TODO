@@ -18,11 +18,13 @@ High Priority H
  X support non released plosives for instance t_>n or p_>m
  - support syllabic consonants m_= synthesis via m_m
  - rules for alternative transcriptions
-   O_Y => O_I
-   O_y => O_I
    a_u => a_U
    a_i => a_I
    I_o => i_o
+ - rules
+   i_e => je
+   i_E => jE
+   i_o => jo
 
 improved handling for plosives
  - merge tata.py rules into phomorphdi.py
