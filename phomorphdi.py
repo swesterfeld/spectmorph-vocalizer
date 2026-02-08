@@ -372,7 +372,7 @@ pho, m_freqs = prepare_melisma (pho)
 def print_input_pho (pho):
   t = 0
   for i in range (len (pho)):
-    print ("%f\t%f\tinput_pho_%s" % (t, t, pho[i][0]), file=input_pho_file)
+    print ("%f\t%f\tP%s" % (t, t, pho[i][0]), file=input_pho_file)
     t += float (pho[i][1]) / 1000
 
 print_input_pho (pho)
@@ -541,7 +541,7 @@ for item in items:
   if item.ms > 0:
     synlist.append (item)
     print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=trace_file)
-    print ("%f\t%f\t%s" % (total_ms / 1000 * time_stretch, (total_ms + item.ms) / 1000 * time_stretch, "item_" + item.lyric), file=item_file)
+    print ("%f\t%f\t%s" % (total_ms / 1000 * time_stretch, (total_ms + item.ms) / 1000 * time_stretch, "I" + item.lyric), file=item_file)
   total_ms += item.ms
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
 

@@ -15,7 +15,7 @@ remove_txt_extension() {
 
 for txt in $@
 do
-  txt_noext=$(remove_txt_extension $txt)
+  txt_noext=$(remove_txt_extension $(basename $txt))
   txt2mxml.py $txt testxml/${txt_noext}.musicxml
   gen-wavs.sh testxml/${txt_noext}.musicxml
 done

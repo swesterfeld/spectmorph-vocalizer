@@ -154,11 +154,16 @@ if sys.argv[1] == "txt":
   sys.exit (0)
 
 if sys.argv[1] != "xml":
-  print ("use xml-to-pho.py txt or xml-to-pho.py xml <musicxml>")
+  print ("use xml-to-pho.py txt or xml-to-pho.py xml <musicxml> [ <debug_notes> ]")
   sys.exit (1)
 
 # Load the MusicXML file
 score = music21.converter.parse (sys.argv[2], format='musicxml')
+
+if len (sys.argv) > 3:
+  debug_notes_file = open (sys.argv[3], "w")
+else:
+  debug_notes_file = sys.stderr
 
 def set_tempo (quarter_length, tempo):
   global ms_per_beat
@@ -378,6 +383,21 @@ for part in score.parts:
 if polyphony_errors:
   print ("%d polyphony errors" % polyphony_errors, file=sys.stderr)
   sys.exit (1)
+
+def debug_notes():
+  time_ms = 0
+  for note in notes:
+    if isinstance (note, Note):
+      print ("%f\t%f\tN%s" % (time_ms / 1000, time_ms / 1000, "".join (note.c_in + [ note.v ] + note.c_out)), file=debug_notes_file)
+      time_ms += note.ms
+    elif isinstance (note, Rest):
+      print ("%f\t%f\tN_" % (time_ms / 1000, time_ms / 1000), file=debug_notes_file)
+      time_ms += note.length
+    else:
+      raise RuntimeError ("non-note non-rest item in notes?")
+
+debug_notes()
+
 # staccato: replace notes with note-rest (duration 50% each)
 notes_with_staccato = []
 for note in notes:
