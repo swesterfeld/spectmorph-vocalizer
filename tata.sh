@@ -9,7 +9,7 @@ fi
 for i in $F
 do
   echo -n "$i ..."
-  VOICE=sven tata.py $(soxi -D voice/sven.flac) 1 $i > tata.script
+  VOICE=sven tata.py 1 $i > tata.script
   src/smscript tata.script ${i}${i}.wav
   if [ "x$PLAY" != "x" ]; then
     gst123 ${i}${i}.wav

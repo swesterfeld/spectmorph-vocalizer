@@ -19,8 +19,7 @@ import sys
 import os
 from utils import time_to_pos
 
-sp = float (sys.argv[2])
-voice_length = float (sys.argv[1])
+sp = float (sys.argv[1])
 
 lines = []
 with open ("voice/" + os.getenv ("VOICE") + "/voice.txt", "r") as file:
@@ -31,7 +30,7 @@ with open ("voice/" + os.getenv ("VOICE") + "/voice.txt", "r") as file:
 #ct = 243.503731
 
 # split text into diphones
-text = sys.argv[3]
+text = sys.argv[2]
 text += text[0]
 tsplit = []
 for i in range (len (text) - 1):
