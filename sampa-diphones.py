@@ -71,7 +71,7 @@ if sys.argv[1] == "diphones":
             if is_v (a) and is_v (b): # diphthong
               print (a + "_" + b)
             else:
-              print (a + b)
+              print (a + " " + b)
       line += 1
 
 # sampa-diphones.py hiatus diphones-german-hiatus.csv > diphones-german-hiatus-possible.txt
@@ -92,8 +92,8 @@ if sys.argv[1] in [ "hiatus", "no-hiatus" ]:
           assert (is_v (a) and is_v (b))
           if sys.argv[1] == "hiatus":
             if (row[x] != ""):
-              print (a + b) # list possible hiatus entries
+              print (a + " " + b) # list possible hiatus entries
           else:
             if (row[x] == ""):
-              print (a + b) # list impossible hiatus entries
+              print (a + " " + b) # list impossible hiatus entries
       line += 1

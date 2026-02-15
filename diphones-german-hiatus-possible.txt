@@ -1,79 +1,115 @@
-ei
-2i
-Ei
-ai
-ui
-oi
-iI
-yI
-eI
-2I
-EI
-aI
-oI
-ie
-ae
-ue
-oe
-i2
-u2
-o2
-iE
-yE
-IE
-eE
-aE
-uE
-ia
-ya
-ea
-2a
-Ea
-ua
-oa
-iu
-eu
-au
-iU
-yU
-eU
-2U
-EU
-aU
-uU
-UU
-io
-yo
-eo
-2o
-Eo
-ao
-uo
-iO
-yO
-eO
-2O
-EO
-aO
-uO
-OO
-i@
-y@
-e@
-2@
-E@
-a@
-u@
-U@
-o@
-i6
-y6
-I6
-Y6
-e6
-26
-E6
-a6
-u6
-U6
-o6
+i i
+y i
+e i
+2 i
+E i
+a i
+u i
+o i
+e y
+2 y
+a y
+u y
+i I
+y I
+e I
+2 I
+E I
+a I
+u I
+o I
+@ I
+6 I
+e Y
+2 Y
+a Y
+u Y
+i e
+2 e
+a e
+u e
+o e
+6 e
+i 2
+e 2
+a 2
+u 2
+o 2
+i E
+y E
+I E
+e E
+2 E
+a E
+u E
+@ E
+6 E
+e 9
+2 9
+a 9
+u 9
+i a
+y a
+I a
+e a
+2 a
+E a
+u a
+o a
+@ a
+6 a
+i u
+e u
+2 u
+a u
+i U
+y U
+e U
+2 U
+E U
+a U
+u U
+U U
+o U
+@ U
+6 U
+i o
+y o
+e o
+2 o
+E o
+a o
+u o
+o o
+@ o
+i O
+y O
+e O
+2 O
+E O
+a O
+u O
+O O
+@ O
+6 O
+i @
+y @
+I @
+e @
+2 @
+E @
+a @
+u @
+U @
+o @
+i 6
+y 6
+I 6
+Y 6
+e 6
+2 6
+E 6
+a 6
+u 6
+U 6
+o 6
