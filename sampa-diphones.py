@@ -74,6 +74,20 @@ if sys.argv[1] == "diphones":
               print (a + " " + b)
       line += 1
 
+if sys.argv[1] == "non-released-plosives":
+  line = 1
+  with open (sys.argv[2], newline="", encoding="utf-8") as f:
+    reader = csv.reader (f, delimiter=";")
+    for row in reader:
+      if line >= 3: # skip header
+        for diphone in row[1:]:
+          diphone = diphone.strip("[]")
+          if diphone != "":
+            a = convert (diphone[0])
+            b = convert (diphone[1])
+            print (a + "_} " + b)
+      line += 1
+
 # sampa-diphones.py hiatus diphones-german-hiatus.csv > diphones-german-hiatus-possible.txt
 # sampa-diphones.py no-hiatus diphones-german-hiatus.csv > diphones-german-hiatus-impossible.txt
 if sys.argv[1] in [ "hiatus", "no-hiatus" ]:
