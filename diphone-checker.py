@@ -6,12 +6,23 @@ import re
 def is_v (v):
   return v in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E' ]
 
+import re
+
+def validate_diphone(s: str) -> bool:
+  s1 = s.split ("_")
+  if len (s1) == 2 and is_v (s1[0]) and is_v (s1[1]):
+    return True
+
+  pattern = r'^(?:[\w@?] [\w@?]|\w_\} [\w?])$'
+  return bool(re.match(pattern, s))
+
 def load_want_diphones (filename):
   want_diphones = []
   with open (filename, "r") as file:
     for line in file:
       line = line.strip()
-      assert len (line) == 2 or len (line) == 3
+      print (line)
+      assert validate_diphone (line)
       want_diphones.append (line)
   return want_diphones
 
@@ -54,7 +65,7 @@ def load_wordlist (filename):
 
       for i in range (len (letters)):
         if i + 1 < len (letters) and len (letters[i]) == 1 and len (letters[i+1]) == 1:
-          diphones.append (letters[i] + letters[i+1])
+          diphones.append (letters[i] + " " + letters[i+1])
         if len (letters[i]) == 3 and i > 0 and i < len (letters) - 1 and letters[i] != '?':
           # diphthong, like a_U
           # only usable if in the middle of a word

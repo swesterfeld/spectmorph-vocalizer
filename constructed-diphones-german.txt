@@ -1,0 +1,164 @@
+2h: Öheim
+2j: Öjahn
+2?: Bö erwartet
+2N: böhngen
+2p: mööp
+2S: mööschig
+2Z: Eugenie
+?6: Lehr-er (mit Pause)
+_6: (als Insertion vorhanden)
+6N: ärgerng 
+6x: der Ärger chömmt (schweizerdt)
+6Z: Meister-Genie 
+9b: Knöbbel
+9d: knöddeln
+9g: knöggern
+9h: ich möhöchte
+9j: röjösten
+9?: rö-östen (mit Pause)
+9_: (als Insertion vorhanden)
+9N: löngen
+9v: löwwen 
+9z: Össl (mit stimmhaftem s)
+9Z: löschen (mit stimmhaftem sch) 
+bj: Björn
+C2: Chömie 
+C9: chömmen
+Ce: Chemie 
+CE: (Kennst du) mich, Ella (legato)
+@C: ohne Chemie
+CO: (Kennst du) mich, Otto (legato)
+Cu: (Kennst du) mich, Udo (legato)
+Cy: mich über (legato)
+CY: (Kennst du) mich, Ülse (legato)
+CZ: (Kennst du) mich, Genie
+dd: paddeln
+Eh: ehecht
+E_I: Hey!
+ej: Ejakulat
+Ej: be-ähjen
+E?: äh-äh
+eN: Mehngen
+EZ: Mäh Genie
+fx: der Chef chömmt (schweizerdt)
+fZ: auf Genie 
+gg: joggen
+g_: -
+h6: der Lehr-her
+h@: Schuhe (mit h)
+h_: (ausatmen)
+hm: Hm
+Ih: Mihe (wie "Mitte")
+ij: Melodie-Jan 
+Ij: mijen (wie "mischen")
+I?: geri-en (wie "geritten")
+I_: (als Insertion vorhanden)
+Iv: living
+iZ: Melodie-Genie
+IZ: Vision (engl)
+j9: jöppen
+ji: jiepen
+jI: jippie 
+j_: -
+kj: Quak-Jahn 
+kx: der Quark chömmt (schweizerdt.)
+kZ: Quak-Genie 
+lZ: Algier
+?@: Schuh-e (mit Pause) 
+?_: -
+_@: (als Insertion vorhanden)
+mx: das Lamm chömmt (schweizerdt.)
+mZ: am Genie
+N2: es klang öde (legato)
+N9: es klang öfter (legato)
+Na: Klangabend (legato)
+NC: Klangchemie
+Nd: Klangdom
+Ne: klang edel (legato)
+NE: klang echt (legato)
+Ni: klang irisch (legato)
+Nj: Klangjahr
+@N: denkeng 
+_N: (silbischer Konsonant)
+No: klang oben (legato)
+NO: klang offen (legato)
+Nu: klang Udo (legato)
+nx: der Mann chömmt (schweizerdt.)
+Nx: der Klang chömmt (schweizerdt.)
+Ny: klang über (legato) 
+NY: klang üppig (legato)
+nZ: Angela (ital)
+NZ: Melange
+OC: Boch (ch wie in "ich")
+Oh: kohochen
+O?: ko-ochen (mit Pause)
+oN: bohngen 
+Ov: owwe
+oZ: Loge
+Oz: ozze (mit stimmhaftem s)
+OZ: halt die Gosche (mit stimmhaftem sch)
+px: der Knab chömmt (schweizerdt.) 
+pZ: Top-Genie
+rr: erraten
+s2: Masseurin
+s9: die Söngerin (stimmloses s)
+Sj: Fischjahn
+ss: Sessel
+sx: der Spaß chömmt (schweizerdt.)
+Sx: der Fisch chömmt (schweizerdt.)
+sZ: das Genie
+SZ: Fisch-Genie 
+tx: der Rat chömmt (schweizerdt.) 
+tZ: er hat Genie
+uC: Magst du Chemie?
+UC: buchunt (ch wie in "ich") 
+Uh: buhunt
+U_I: pfui
+uj: Herr Uhjahn
+Uj: bujunt
+U?: bu-unt (mit Pause)  
+U_: (als Insertion vorhanden)
+Uv: Uwwe
+U_Y: (wird durch U_I ersetzt)
+uZ: du Genie 
+Uz: Musl (mit stimmhaftem s) 
+UZ: Muschel (mit stimmhaftem sch)
+v_: Calw
+x2: das ist doch öde (legato) 
+x9: das ist doch öfter (legato)
+xC: Das ist doch Chemie
+xe: das ist doch Erich (legato)
+xE: das ist doch Ella (legato)
+xi: das ist doch irisch (legato)
+@x: der Kleine chömmt (schweizerdt)
+xO: das ist doch Otto (legato)
+xu: das ist doch Udo (legato)
+xY: ach, Ülla (legato)
+xZ: doch Genie  
+Yb: hübbeln
+yh: Mühe (mit h)
+Yh: mühher (wie "Müller")
+Yj: Müjjer (wie "Müller")
+y?: Dyade (mit Pause) 
+?Y: übben
+_Y: (als Insertion vorhanden)
+Y?: -
+Y_: (als Insertion vorhanden)
+yN: Dühnger 
+yv: Düwel
+Yv: Düwwel
+yZ: Düsche (mit stimmhaftem sch)
+Yz: Düssel (mit stimmhaftem s)
+YZ: Düschel (mit stimmhaftem sch)
+z2: Söhne 
+Z2: Gönie (wie "Genie")
+Z6: Mischer (mit stimmhaftem sch)
+Z9: Mijöller (mit stimmhaftem sch)
+z_: (silbischer Konsonant)
+@Z: das kleine Genie
+Z_: Triage
+zm: Rasm (wie "Rasen" ohne e) 
+ZO: Schommer (mit stimmhaftem sch)
+ZY: Schünde (mit stimmhaftem sch)
+?m: m-m (verneinend)
+gm: Stalagmit
