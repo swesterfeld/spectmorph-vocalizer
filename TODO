@@ -60,7 +60,7 @@ recording:
  - record insertions (vowels, diphthongs) at different pitches
  - quality of E: "etwas weiter hinten"
  - recording for syllabic consonants
-   like insertions (multiple recordings) n_n, m_m, l_l, Z_Z, v_v, r_r, N_N, z_z
+   like insertions (multiple recordings) n_n, m_m, l_l, Z_Z, v_v, r_r, R_R, N_N, z_z
    once: s, S, f
  - implement post-recording label constraint validator that checks
    - minimum length of consonants,....
