@@ -23,9 +23,13 @@ class ScriptBlockSource : public LiveDecoderSource
   array<double, 2>            block_volume_factor {};
   RTMemoryArea&               rt_memory_area;
   double                      morphing = 0;
+  double                      time_ms = 0;
+  string                      label;
+  FILE                       *frames_file{};
 public:
-  ScriptBlockSource (float mix_freq, RTMemoryArea& rt_memory_area) :
-    rt_memory_area (rt_memory_area)
+  ScriptBlockSource (float mix_freq, RTMemoryArea& rt_memory_area, FILE *frames_file) :
+    rt_memory_area (rt_memory_area),
+    frames_file (frames_file)
   {
     my_audio.frame_size_ms = 40;
     my_audio.frame_step_ms = 10;
@@ -48,10 +52,11 @@ public:
     my_audio.fundamental_freq = freq;
   }
   void
-  advance (double time_ms)
+  advance (double time_delta_ms)
   {
     for (auto& fc : formant_correction)
-      fc.advance (time_ms);
+      fc.advance (time_delta_ms);
+    time_ms += time_delta_ms;
   }
   Audio *audio()
   {
@@ -60,6 +65,9 @@ public:
   bool
   rt_audio_block (size_t index, RTAudioBlock& out_block)
   {
+    fprintf (frames_file, "%s\n", /* avoid i18n using string_printf */
+        string_printf ("%f\t%f\t%s", time_ms / 1000, time_ms / 1000, label.c_str()).c_str());
+
     if (block_volume_factor[0] == 0 && block_volume_factor[1] == 0)
       {
         /* silence */
@@ -111,6 +119,11 @@ public:
   {
     // ignore
   }
+  void
+  set_label (const string& s)
+  {
+    label = s;
+  }
 };
 
 
@@ -119,9 +132,9 @@ main (int argc, char **argv)
 {
   Main main (&argc, &argv);
 
-  if (argc != 3)
+  if (argc != 4)
     {
-      fprintf (stderr, "usage: smscript <plan> <voice_sm> <script> <out_wav>\n");
+      fprintf (stderr, "usage: smscript <script> <out_wav> <frames>\n");
       return 1;
     }
 
@@ -139,8 +152,15 @@ main (int argc, char **argv)
   const double vibrato_depth = 15;
   const double vibrato_frequency = 4;
 
+  FILE *frames_file = fopen (argv[3], "w");
+  if (!frames_file)
+    {
+      fprintf (stderr, "error opening file %s\n", argv[3]);
+      exit (1);
+    }
+
   RTMemoryArea rt_memory_area;
-  ScriptBlockSource source (mix_freq, rt_memory_area);
+  ScriptBlockSource source (mix_freq, rt_memory_area, frames_file);
   LiveDecoder live_decoder (&source, mix_freq);
 
   double freq = 440; // will be overwritten from script
@@ -217,6 +237,10 @@ main (int argc, char **argv)
 
           source.set_audio_block (blk, active_audio->contents[index], freq / active_audio->fundamental_freq, v);
         }
+      else if (script_parser.command ("label", s))
+        {
+          source.set_label (s);
+        }
       else if (script_parser.command ("morphing", d))
         {
           source.set_morphing (d * 2 - 1);
@@ -229,7 +253,8 @@ main (int argc, char **argv)
   WavData wav_data (output, 1, 48000, 24);
   if (!wav_data.save (argv[2]))
     {
-      fprintf (stderr,"export to file %s failed: %s\n", argv[4], wav_data.error_blurb());
+      fprintf (stderr,"export to file %s failed: %s\n", argv[2], wav_data.error_blurb());
       return 1;
     }
+  fclose (frames_file);
 }

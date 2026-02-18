@@ -652,6 +652,9 @@ while True:
     item_to_pos (1, item, pos_ms)
     print ("morphing", 0)
 
+  frac = pos_ms / item.ms
+  ct = item.pos1 * (1 - frac) + item.pos2 * frac
+  print ("label \"%s:%.3f\"" % (item.lyric, ct))
   print ("process 48")
 
   ms += 1 / time_stretch
