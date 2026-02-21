@@ -2,7 +2,7 @@ To update a voice:
 
  - ensure that <voice>/<segment>.sh contains a midi note
 
-   VOICE_MIDI_NOTE=52
+   VOICE_MIDI_NOTE=50
 
  - ensure that <voice>/<segment>.txt contains labels
 
