@@ -32,7 +32,7 @@ mich über: m I C y b 6
 (Kennst du) mich, Genie: m I C Z e n i
 paddeln: p a d d @ l n
 ehecht: ? E h E C t
-Hey: h E_I
+Heyt: h E_I t
 Ejakulat: e j a k u l a t
 be-ähjen: b @ ? E j @ n
 äh-äh: ? E ? E
@@ -52,21 +52,18 @@ geri-en: g @ r I ? @ n
 living: l I v I N
 Melodie-Genie: m e l o d i Z e n i
 Vision: v I Z @ n
-jöppen: j 9 p @ n
 jiepen: j i p @ n
 jippie: j I p i
 Quak-Jahn: k v a k j a n
 der Quark chömmt: d e_6 k v a_6 k x 9 m t
 Quak-Genie: k v a k Z e n i 
 Algier: ? a l Z i_6
-Schuh-e: S u ? @
 das Lamm chömmt: d a s l a m x 9 m t
 am Genie: ? a m Z e n i
 es klang öde: ? E s k l a N 2 d @
 es klang öfter: ? E s k l a N 9 f t 6
 Klangabend: k l a N a b @ n t
 Klangchemie: k l a N C e m i
-Klangdom: k l a N d o m
 klang edel: k l a N e d @ l
 klang echt: k l a N E C t
 klang irisch: k l a N i r I S
@@ -81,7 +78,6 @@ klang über: k l a N y b 6
 klang üppig: k l a N Y p I C
 Angela: ? a n Z @ l a
 Melange: m e l O N Z @
-Boch: bOC
 kohochen: k O h O x @ n
 ko-ochen: k O ? O x @ n
 bohngen: b o N g @ n
@@ -105,12 +101,12 @@ er hat Genie: ? e_6 h a t Z e n i
 Magst du Chemie: m a k s t d u C e m i
 buchunt: b U C U n t
 buhunt: b U h U n t
-pfui: p f U_I
+pfuit: p f U_I t
 Herr Uhjahn: h E_6 ? u j a n
 bujunt: b U j U n t
 bu-unt: b U ? U n t 
 Uwwe: ? U v @
-U_Y: p f U_Y
+U_Y: p f U_Y t
 du Genie: d u Z e n i
 Musl: m U z l
 Muschel: m U Z l
@@ -131,7 +127,6 @@ Mühe: m y h @
 mühher: m Y h 6
 Müjjer: m Y j 6
 Dyade: d y ? a d @ 
-übben: ? Y b b @ n
 Dühnger: d y N 6
 Düwel: d y v @ l
 Düwwel: d Y v @ l
@@ -148,4 +143,3 @@ Rasm: r a z m
 Schommer: Z O m 6
 Schünde: Z Y n d @
 m-m: ? m ? m
-Stalagmit: s t a l a g m i t
