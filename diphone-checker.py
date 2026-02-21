@@ -29,7 +29,7 @@ def load_wordlist (filename):
   wordlist = []
   with open (filename, "r") as file:
     for line in file:
-      re_match = re.match (r'''([-'.,\w ]+):[ \t]+([\w@?_ ]+)$''', line, re.UNICODE)
+      re_match = re.match (r'''([-'.,\w\(\) ]+):[ \t]+([\w@?_ ]+)$''', line, re.UNICODE)
       if not re_match:
         raise RuntimeError ("%s: line %s doesn't match" % (filename, line))
 
@@ -86,13 +86,15 @@ if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <wordlist>
     for word in wordlist:
       score = 0
       new_diphones = []
-      if len (word[1]) > 3 and len (word[1]) < 20:
+      if len (word[1]) > 2 and len (word[1]) < 20:
         for pair in word[2]:
           if not pair in have_diphones:
             if not pair in new_diphones:
               if pair in want_diphones:
                 score += 1
                 new_diphones.append (pair)
+      if len (word[1]) > 10 and new_diphones:
+        score += 10
       score -= len (word[1]) / 20
       if score > best_score:
         best_score = score
