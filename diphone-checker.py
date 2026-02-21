@@ -21,7 +21,6 @@ def load_want_diphones (filename):
   with open (filename, "r") as file:
     for line in file:
       line = line.strip()
-      print (line)
       assert validate_diphone (line)
       want_diphones.append (line)
   return want_diphones
@@ -113,10 +112,13 @@ if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <wordlist>
       print ("%s: missing." % d)
   sys.exit (0)
 
-if sys.argv[1] == "test-script": # <want-diphones> <script>
+if sys.argv[1] == "test-script": # <want-diphones> <script>...
   want_diphones = load_want_diphones (sys.argv[2])
   have_diphones = []
-  wordlist = load_wordlist (sys.argv[3])
+  wordlist = []
+  for i in range (3, len (sys.argv)):
+    wordlist_part = load_wordlist (sys.argv[i])
+    wordlist += wordlist_part
   for word in wordlist:
     print ("%-30s%s" % (word[0] + ":", word[1]))
     new_diphones = []
