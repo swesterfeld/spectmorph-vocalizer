@@ -84,6 +84,14 @@ main (int argc, char **argv)
   tune.partials = 3;
   instrument.set_auto_tune (tune);
 
+  auto enc_cfg = instrument.encoder_config();
+  enc_cfg.enabled = true;
+
+  Instrument::EncoderEntry frame_size_entry {"min-frame-size", "10" };
+  enc_cfg.entries.push_back (frame_size_entry);
+
+  instrument.set_encoder_config (enc_cfg);
+
   bool first = true;
   FILE *vol_file = fopen (argv[4], "w");
   if (!vol_file)
