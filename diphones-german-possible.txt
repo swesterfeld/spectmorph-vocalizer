@@ -302,7 +302,6 @@ O N
 6 N
 p f
 t f
-d f
 k f
 m f
 n f

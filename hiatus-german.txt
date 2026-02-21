@@ -35,9 +35,9 @@ skandaluös: s k a n d a l u 2 s
 Proömium: p r o 2 m i U m
 Requiem: r e k u i E m
 Hyäne: h y E n @
-engl. reenter: r i E n t 6
+engl. reenter: r I E n t 6
 eae: ? e E
-den Kö ärgern: d e n k 2 E_6 g 6 n
+den Kö ändern: d e n k 2 E n d 6 n
 Israel (kurz): ? i s r a E l
 Duell: d u E l
 beengen: b @ E N @ n
@@ -47,7 +47,7 @@ das Ja öffnen: d a s j a 9 f n @ n
 das Du öffnen: d a s d u 9 f n @ n
 Liane: l i a n @
 Hüa: h y a
-Milliarden: m I l I a_6 d @ n
+Millianden: m I l I a n d @ n
 Beate: b e a t @
 Homöat: h o m 2 a t
 Pangäa: p a N g E a
@@ -85,6 +85,7 @@ Homöos: h o m 2 O s
 Chaos: k a O s
 Muon: m u O n
 zoon: t s o O n
+zoon: t s O O n
 der kleine Otto: d e_6 k l a_I n @ O t o
 siehe: z i @
 Frühe: f r y @

@@ -143,3 +143,6 @@ Rasm: r a z m
 Schommer: Z O m 6
 Schünde: Z Y n d @
 m-m: ? m ? m
+das is-ja toll: d a s ? I z j a t O l
+Hü-üllen: h Y ? Y l @ n
+dm: d m
