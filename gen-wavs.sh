@@ -69,6 +69,7 @@ do
 
   download sm $VOICE_SM_HASH
   download volume $VOICE_VOLUME_HASH
+  download flac $VOICE_FLAC_HASH
 done
 
 XMLS="$@"
