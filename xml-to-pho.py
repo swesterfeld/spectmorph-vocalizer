@@ -25,7 +25,8 @@ RND_V = [ "a:", "i:", "o:" ]
 
 V = [ "i:", "i", "I", "y:", "y", "Y", "u:", "u", "U",
       "e:", "e", "E:", "E", "2:", "2", "9", "o:", "o", "O",
-      "a:", "a", "@", "6"]
+      "a:", "a", "@", "6",
+      "m=" ]
 C = [ ("p_}", 50), ("t_}", 50), ("k_}", 50),
       ("p", 50), ("b", 50), ("t", 50), ("d", 50), ("k", 50), ("g", 50), ("?", 50),
       ("m", 50), ("n", 50), ("N", 50),
@@ -58,7 +59,7 @@ def check_lyric (lyric):
   for l in lyric:
     if l == '\n' or l == '\t':
       raise RuntimeError ("failed to process lyric: lyric contains newline: lyric = '%s'" % lyric)
-    if not re.match (r'^[a-zA-Z@0-9:?_}]+$', l):
+    if not re.match (r'^[a-zA-Z@0-9=:?_}]+$', l):
       raise RuntimeError ("failed to process lyric: lyric contains invalid char: lyric = '%s', char = '%s'" % (lyric, l))
 
 def diphthong_split (d):
@@ -67,7 +68,7 @@ def diphthong_split (d):
     return Vs
   return None
 
-def canonical_v (v):
+def canonical_v (v): # FIXME m_= -> m=
   if v.endswith(':'):
     return v[:-1]
   return v
@@ -80,7 +81,7 @@ def cvc_split (s):
     has_c = False
     for c_candidate_pair in C:
       c_candidate = c_candidate_pair[0] # cut length
-      if s[0:len(c_candidate)] == c_candidate:
+      if s[0:len(c_candidate)] == c_candidate and s[len(c_candidate):len(c_candidate)+1] != "=":
         Cs.append (s[0:len(c_candidate)])
         s = s[len(c_candidate):]
         has_c = True

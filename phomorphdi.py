@@ -93,6 +93,10 @@ for segment in list_voice_segments():
 
 lines = None
 
+def volume_factor_syllabic (segment, time_stamp):
+  target_volume = 0.25
+  return target_volume / time_to_volume (segment, time_stamp)
+
 def volume_factor (segment, time_stamp, text):
   assert (is_v (text) and len (text) == 1)
   if text in [ "@", "6" ]:
@@ -178,7 +182,7 @@ class Diphone:
     self.volume_factor = 1
 
 def is_v (v):
-  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E' ]:
+  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E', 'm=' ]:
     if v == vv or v == vv + ':':
       return True
   return v == '_'
@@ -295,7 +299,12 @@ def lookup_diphone_entry (P1, P2, pho_entry):
     return None
   return possible_matches
 
+def strip_syllabic_postfix (P):
+  return P.rstrip ("=")
+
 def lookup_diphone_entry_vv (P1, P2, pho_entry, note):
+  P1 = strip_syllabic_postfix (P1)
+  P2 = strip_syllabic_postfix (P2)
   global errors
   possible_matches = []
   for segment in lines_dict:
@@ -429,7 +438,6 @@ for i in range (len (pho)):
   elif is_v (pho[i][0]) and pho[i][-1].v_time > 0:
     pho_entry = pho[i][-1]
     P1 = pho[i][0]
-    P1 = P1[0][0]
     note = freq_to_note (pho_entry.freq)
     print ("M", pho[i][0], round (freq_to_note (pho_entry.freq), 3), file=sys.stderr)
     possible_matchesv = lookup_diphone_entry_vv (P1, P1, pho[i][-1], note)
@@ -440,7 +448,10 @@ for i in range (len (pho)):
       pos1 = mv[0][0] # FIXME should be before a_a marker
       pos2 = mv[1][0]
       item = Item()
-      item.volume_factor = volume_factor (mseg, mv[0][0], P1)
+      if P1.endswith ("="):
+        item.volume_factor = volume_factor_syllabic (mseg, mv[0][0])
+      else:
+        item.volume_factor = volume_factor (mseg, mv[0][0], P1)
       item.segment = mseg
       item.pos1 = pos1
       item.pos2 = pos2
