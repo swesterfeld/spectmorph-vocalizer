@@ -42,6 +42,9 @@ if args.input_pho is not None:
 else:
   input_pho_file = sys.stderr
 
+def is_non_released (x):
+  return x in [ "p_}", "t_}", "k_}" ]
+
 def load_labels (segment):
   lines_raw = []
   ignore_labels = []
@@ -60,7 +63,12 @@ def load_labels (segment):
   i = 0
   while i < len (lines_raw):
     F = lines_raw[i]
-    if F[1][0] == '.' and i + 1 < len (lines_raw):
+    if F[1][0] == '.' and i + 1 < len (lines_raw) and is_non_released (lines_raw[i + 1][1]):
+      lines.append ((F[0], "!"))
+      i += 1
+      F = lines_raw[i]
+      lines.append ((F[0], F[1]))
+    elif F[1][0] == '.' and i + 1 < len (lines_raw):
       S = lines_raw[i + 1]
       i += 1
       lines.append ((F[0], S[1][0], S[0]))
@@ -225,6 +233,8 @@ def phone_class (p):
     return "p"
   if p in [ 'n', 'm', 'l', 's', 'Z', 'S', 'f', 'v', 'r', 'h', 'N', 'z', 'j', 'C', 'x' ]:
     return "c"
+  if is_non_released (p):
+    return "n"
   if p in [ "_" ]:
     return "_"
   raise RuntimeError ("unknown phone class: %s" % p)
@@ -281,7 +291,7 @@ def lookup_diphone_entry (P1, P2, pho_entry):
         possible_matches.append ([segment, vnorm] + x)
   if len (possible_matches) == 0:
     #print ("line %d: missing diphone %s" % (pho[i][-1], P1 + P2))
-    errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + P2, pho_entry.bar, pho_entry.beat) ]
+    errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + " " + P2, pho_entry.bar, pho_entry.beat) ]
     return None
   return possible_matches
 
@@ -490,6 +500,8 @@ for i in range (len (pho)):
       P2 = diphthong_split (P2)[0]
     if is_v (P2):
       P2 = P2[0][0]
+    if is_non_released (P2):
+      P2 = P2[0][0]
 
     print ("D", P1 + P2, file=sys.stderr)
     pho_entry = pho[i][-1]
@@ -510,6 +522,8 @@ for i in range (len (pho)):
         pos1 = m[0][2]
       elif phone_class (P1) == "v":
         pos1 = max ((m[0][0] + m[1][0]) / 2, m[1][0] - 0.150)
+      elif phone_class (P1) == "n":
+        pos1 = m[0][0]
       else:
         pos1 = (m[0][0] + m[1][0]) / 2
       if phone_class (P2) == "p":
