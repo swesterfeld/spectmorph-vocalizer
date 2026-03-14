@@ -182,7 +182,7 @@ class Diphone:
     self.volume_factor = 1
 
 def is_v (v):
-  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E', 'm=' ]:
+  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E', 'm=', 'n=', 'l=' ]:
     if v == vv or v == vv + ':':
       return True
   return v == '_'
