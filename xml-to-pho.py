@@ -26,7 +26,7 @@ RND_V = [ "a:", "i:", "o:" ]
 V = [ "i:", "i", "I", "y:", "y", "Y", "u:", "u", "U",
       "e:", "e", "E:", "E", "2:", "2", "9", "o:", "o", "O",
       "a:", "a", "@", "6",
-      "m=" ]
+      "m=", "n=", "l=" ]
 C = [ ("p_}", 50), ("t_}", 50), ("k_}", 50),
       ("p", 50), ("b", 50), ("t", 50), ("d", 50), ("k", 50), ("g", 50), ("?", 50),
       ("m", 50), ("n", 50), ("N", 50),
@@ -34,6 +34,9 @@ C = [ ("p_}", 50), ("t_}", 50), ("k_}", 50),
       ("l", 50),
       ("r", 50),
       ("w", 50), ("T", 50), ("D", 50) ]
+
+def is_syllabic_consonant (c):
+  return c.endswith ("=")
 
 random.seed (10)
 
@@ -102,6 +105,8 @@ def cvc_split (s):
     if s[0:len(v_candidate)] == v_candidate:
       v2 = canonical_v (s[0:len(v_candidate)])
       s = s[len(v_candidate):]
+      if is_syllabic_consonant (v) or is_syllabic_consonant (v2):
+        raise RuntimeError ("Syllabic consonants should not be used with a vowel in the same syllable.")
       v += "_" + v2
       break
   while len (s):
