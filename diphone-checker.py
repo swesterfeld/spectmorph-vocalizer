@@ -25,6 +25,17 @@ def load_want_diphones (filename):
       want_diphones.append (line)
   return want_diphones
 
+def load_have_diphones (filename):
+  have_diphones = {}
+  with open (filename, "r") as file:
+    for line in file:
+      line = line.strip()
+      diphone, rest = line.split(":")
+      assert validate_diphone (diphone)
+      count = int (rest.strip().split (" ")[0])
+      have_diphones[diphone] = count
+  return have_diphones
+
 def load_wordlist (filename):
   wordlist = []
   with open (filename, "r") as file:
@@ -73,11 +84,13 @@ def load_wordlist (filename):
       wordlist.append ((re_match.groups()[0], re_match.groups()[1], diphones))
   return wordlist
 
-if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <wordlist>
-  want_diphones = load_want_diphones (sys.argv[2])
-  have_diphones = []
 
-  wordlist = load_wordlist (sys.argv[3])
+if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <have-diphones> <wordlist>
+  want_diphones = load_want_diphones (sys.argv[2])
+  have_diphones = load_have_diphones (sys.argv[3])  # dict: diphone -> count
+  used_transcriptions = []
+
+  wordlist = load_wordlist (sys.argv[4])
 
   while True:
     best_word = None
@@ -86,10 +99,10 @@ if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <wordlist>
     for word in wordlist:
       score = 0
       new_diphones = []
-      if len (word[1]) > 2 and len (word[1]) < 20:
+      if not word[1] in used_transcriptions and len (word[1]) > 2 and len (word[1]) < 20:
         for pair in word[2]:
-          if not pair in have_diphones:
-            if not pair in new_diphones:
+          if have_diphones.get (pair, 0) < 2:
+            if pair not in new_diphones:
               if pair in want_diphones:
                 score += 1
                 new_diphones.append (pair)
@@ -105,18 +118,22 @@ if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <wordlist>
       break
 
     print ("%-30s%s" % (best_word[0] + ":", best_word[1]), flush = True)
+    used_transcriptions.append (best_word[1])
     #print ("%.2f" % best_score, best_new_diphones, len (have_diphones), len (want_diphones))
     #print ()
-    have_diphones += best_new_diphones
+
+    for d in best_new_diphones:
+      have_diphones[d] = have_diphones.get (d, 0) + 1
 
   for d in want_diphones:
-    if not d in have_diphones:
-      print ("%s: missing." % d)
+    if have_diphones.get (d, 0) < 2:
+      print ("%s: missing (%d/2)." % (d, have_diphones.get (d, 0)))
+
   sys.exit (0)
 
 if sys.argv[1] == "test-script": # <want-diphones> <script>...
   want_diphones = load_want_diphones (sys.argv[2])
-  have_diphones = []
+  have_diphones = {}  # dict: diphone -> count
   wordlist = []
   for i in range (3, len (sys.argv)):
     wordlist_part = load_wordlist (sys.argv[i])
@@ -125,21 +142,17 @@ if sys.argv[1] == "test-script": # <want-diphones> <script>...
     print ("%-30s%s" % (word[0] + ":", word[1]))
     new_diphones = []
     for pair in word[2]:
-      if not pair in have_diphones:
+      if have_diphones.get (pair, 0) < 2:
         if not pair in new_diphones:
           if pair in want_diphones:
             new_diphones.append (pair)
     print ("%-30s%s" % ("new diphones:", ", ".join (new_diphones)))
     print ()
-    have_diphones += new_diphones
+    for d in new_diphones:
+      have_diphones[d] = have_diphones.get (d, 0) + 1
 
   for d in want_diphones:
-    if d in have_diphones:
-      print ("%s: done." % d)
-
-  for d in want_diphones:
-    if not d in have_diphones:
-      print ("%s: missing." % d)
+    print ("%s: %d # have" % (d, have_diphones.get (d, 0)))
 
 def diphthong_split (d):
   Vs = d.split ('_')
