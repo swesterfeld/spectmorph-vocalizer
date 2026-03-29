@@ -85,12 +85,26 @@ def load_wordlist (filename):
   return wordlist
 
 
+def add_alternative_r (wordlist):
+  result = []
+  for word in wordlist:
+    result.append (word)
+    word_R = (
+      word[0],
+      word[1].replace('r', 'R'),              # replace r -> R in string
+      [x.replace('r', 'R') for x in word[2]]  # replace r -> R in list elements
+    )
+    if (word_R != word):
+      result.append (word_R)
+  return result
+
 if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <have-diphones> <wordlist>
   want_diphones = load_want_diphones (sys.argv[2])
   have_diphones = load_have_diphones (sys.argv[3])  # dict: diphone -> count
   used_transcriptions = []
 
   wordlist = load_wordlist (sys.argv[4])
+  wordlist = add_alternative_r (wordlist)
 
   while True:
     best_word = None
