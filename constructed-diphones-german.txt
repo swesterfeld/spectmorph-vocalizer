@@ -146,3 +146,5 @@ m-m: ? m ? m
 das is-ja toll: d a s ? I z j a t O l
 Hü-üllen: h Y ? Y l @ n
 dm: d m
+erregen: ? E R R e g @ n
+verregnen: f E R R e g n @ n
