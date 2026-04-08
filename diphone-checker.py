@@ -145,18 +145,19 @@ if sys.argv[1] == "gen-script":  # gen-script <want-diphones> <have-diphones> <w
 
   sys.exit (0)
 
-if sys.argv[1] == "test-script": # <want-diphones> <script>...
+if sys.argv[1] == "test-script": # <want-diphones> <nmax> <script>...
   want_diphones = load_want_diphones (sys.argv[2])
   have_diphones = {}  # dict: diphone -> count
   wordlist = []
-  for i in range (3, len (sys.argv)):
+  nmax = int (sys.argv[3])
+  for i in range (4, len (sys.argv)):
     wordlist_part = load_wordlist (sys.argv[i])
     wordlist += wordlist_part
   for word in wordlist:
     print ("%-30s%s" % (word[0] + ":", word[1]))
     new_diphones = []
     for pair in word[2]:
-      if have_diphones.get (pair, 0) < 2:
+      if have_diphones.get (pair, 0) < nmax:
         if not pair in new_diphones:
           if pair in want_diphones:
             new_diphones.append (pair)
