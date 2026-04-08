@@ -65,6 +65,7 @@ recording:
  - implement post-recording label constraint validator that checks
    - minimum length of consonants,....
    - maximum length check for l,..., should be labelled l=
+ - recording of single consonants _ p _, _ t _, _ k _, _ d _, _ b _, _ g _
 
 Notes Recording for Insertions:
  - sven: 40 45 (50) 55          pp p mf f ff
