@@ -1,4 +1,4 @@
-variieren: v a r i i_6 r @ n
+variieren: v a r i i 6 r @ n
 Myiasis: m y i a z I s
 Dei: d e i
 Almöhi: a l m ? 2 i
@@ -65,7 +65,7 @@ Amöus: a m 2 U s
 Trochäus: t r O x E U s
 Emmaus: ? E m a U s
 tuum: t u U m
-Verdauung: f E_6 d a_U U N
+Verdauung: f E_6 d a U U N
 Drohung: d r o U N
 buchte um: b u x t @ U m
 grandios: g r a n d i o s
@@ -89,28 +89,28 @@ zoon: t s O O n
 der kleine Otto: d e_6 k l a_I n @ O t o
 siehe: z i @
 Frühe: f r y @
-schneien: S n a_I @ n
+schneien: S n a I @ n
 Ehe: ? e @
 Höhe: h 2 @
 Krähe: k r E @
 Rahe: r a @
 Schuhe: S u @
-verdauen: f E_6 d a_U @ n
+verdauen: f E_6 d a U @ n
 Lohe: l o @
 Erzieher: ? E_6 t s i 6
 früher: f r y 6
-Feier: f a_I 6
-Feuer: f O_I 6
+Feier: f a I 6
+Feuer: f O Y 6
 eher: ? e 6
 höher: h 2 6
 Manichäer: m a n i C E 6
 Anaer: ? a n a 6
 Buher: b u 6
-Dauer: d a_U 6
+Dauer: d a U 6
 froher: f r o 6
 Herrscher im Bad: h E_6 S 6 I m b a t
 Steuerelend: S t O_I 6 e l E n t
 Lehrer-ähnlich: l e_6 r 6 E n l I C
-Kinderarzt: k I n d 6 a_6 t s t
+Kinderarzt: k I n d 6 a t s t
 Feuer und: f O_I 6 U n t
 Lehrer Otto: l e_6 r 6 O t o
