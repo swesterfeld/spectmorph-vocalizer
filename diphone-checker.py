@@ -40,7 +40,7 @@ def load_wordlist (filename):
   wordlist = []
   with open (filename, "r") as file:
     for line in file:
-      re_match = re.match (r'''([-'.,\w\(\) ]+):[ \t]+([\w@?_ ]+)$''', line, re.UNICODE)
+      re_match = re.match (r'''([-'.,\w\(\) ]+):[ \t]+([\w@?_} ]+)$''', line, re.UNICODE)
       if not re_match:
         raise RuntimeError ("%s: line %s doesn't match" % (filename, line))
 
@@ -66,7 +66,7 @@ def load_wordlist (filename):
           raise RuntimeError ("bad sampa: %s" % l)
 
       # every word starts with silence and ends with silence
-      # (irgnore word start/end for diphthongs though)
+      # (ignore word start/end for diphthongs though)
       if len (letters[0]) == 1:
         letters = [ "_" ] + letters
       if len (letters[-1]) == 1:
@@ -76,7 +76,9 @@ def load_wordlist (filename):
       for i in range (len (letters)):
         if i + 1 < len (letters) and len (letters[i]) == 1 and len (letters[i+1]) == 1:
           diphones.append (letters[i] + " " + letters[i+1])
-        if len (letters[i]) == 3 and i > 0 and i < len (letters) - 1 and letters[i] != '?':
+        if len (letters[i]) == 3 and i > 0 and i < len (letters) - 1 and letters[i][2] == '}':
+          diphones.append (letters[i] + " " + letters[i+1])
+        elif len (letters[i]) == 3 and i > 0 and i < len (letters) - 1 and letters[i] != '?':
           # diphthong, like a_U
           # only usable if in the middle of a word
           # no ? at start
