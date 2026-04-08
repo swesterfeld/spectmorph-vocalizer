@@ -201,3 +201,12 @@ if sys.argv[1] == "wordlist-diphone-impossible-check":
         printed_diphones.add (d)
         print ("##############", d)
         print (w)
+
+if sys.argv[1] == "diphone-count":  # gen-script <wordlist>
+  wordlist = load_wordlist (sys.argv[2])
+  stat = {}
+  for w in wordlist:
+    for d in w[2]:
+      stat[d] = stat.get (d, 0) + 1
+  for diphone, count in stat.items():
+    print (count, diphone)
