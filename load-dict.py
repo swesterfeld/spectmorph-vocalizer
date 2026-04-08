@@ -101,7 +101,7 @@ with lzma.open ('/home/stefan/annex/downloads/kaikki.org-dictionary-German-words
           for i in data["sounds"]:
             try:
               xipa = i["ipa"]
-              match = re.fullmatch (r"/([^/]+)/", xipa)
+              match = re.fullmatch (r"\[([^/]+)\]", xipa)
               if match:
                 ALL += 1
                 print ("ALL = %d FAIL = %d COV %f" % (ALL, FAIL, (ALL - FAIL) / ALL * 100))

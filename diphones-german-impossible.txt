@@ -1,0 +1,497 @@
+b p
+d p
+g p
+? p
+v p
+z p
+Z p
+j p
+r p
+h p
+b b
+d b
+g b
+? b
+v b
+z b
+Z b
+j b
+r b
+h b
+b t
+d t
+g t
+? t
+v t
+z t
+Z t
+j t
+r t
+h t
+b d
+g d
+? d
+v d
+z d
+Z d
+j d
+r d
+h d
+b k
+d k
+g k
+? k
+v k
+z k
+Z k
+j k
+r k
+h k
+b g
+d g
+? g
+v g
+z g
+Z g
+j g
+r g
+h g
+b ?
+d ?
+g ?
+? ?
+v ?
+z ?
+Z ?
+j ?
+r ?
+h ?
+? m
+v m
+Z m
+j m
+r m
+? n
+j n
+r n
+h n
+p N
+b N
+t N
+d N
+? N
+m N
+n N
+f N
+v N
+s N
+z N
+S N
+Z N
+C N
+j N
+r N
+h N
+r N
+R N
+l N
+_ N
+b f
+g f
+? f
+v f
+z f
+Z f
+j f
+r f
+h f
+b v
+d v
+? v
+v v
+z v
+Z v
+j v
+r v
+h v
+b s
+d s
+g s
+? s
+v s
+z s
+Z s
+j s
+r s
+h s
+b z
+d z
+g z
+? z
+v z
+z z
+Z z
+j z
+r z
+h z
+b S
+d S
+g S
+? S
+v S
+z S
+Z S
+j S
+r S
+h S
+b Z
+g Z
+? Z
+v Z
+z Z
+Z Z
+j Z
+r Z
+h Z
+b C
+d C
+g C
+? C
+v C
+z C
+Z C
+C C
+j C
+r C
+h C
+u C
+U C
+O C
+? j
+Z j
+j j
+r j
+h j
+b x
+d x
+g x
+? x
+v x
+z x
+Z x
+C x
+j x
+x x
+r x
+h x
+r x
+R x
+l x
+i x
+y x
+I x
+Y x
+e x
+2 x
+E x
+9 x
+p r
+b r
+t r
+d r
+k r
+g r
+? r
+m r
+n r
+N r
+f r
+v r
+s r
+z r
+S r
+Z r
+C r
+j r
+x r
+r r
+h r
+r r
+R r
+l r
+i r
+y r
+I r
+Y r
+e r
+2 r
+E r
+9 r
+a r
+u r
+U r
+o r
+O r
+@ r
+6 r
+_ r
+b h
+d h
+g h
+? h
+v h
+z h
+Z h
+j h
+r h
+h h
+? r
+z r
+Z r
+j r
+r r
+h r
+R r
+? R
+z R
+Z R
+j R
+r R
+h R
+r R
+? l
+Z l
+j l
+r l
+h l
+r i
+i_i
+y_i
+I_i
+Y_i
+e_i
+2_i
+E_i
+9_i
+a_i
+u_i
+U_i
+o_i
+O_i
+@_i
+6_i
+r y
+i_y
+y_y
+I_y
+Y_y
+e_y
+2_y
+E_y
+9_y
+a_y
+u_y
+U_y
+o_y
+O_y
+@_y
+6_y
+r I
+i_I
+y_I
+I_I
+Y_I
+e_I
+2_I
+9_I
+u_I
+o_I
+@_I
+6_I
+r Y
+i_Y
+y_Y
+I_Y
+Y_Y
+e_Y
+2_Y
+E_Y
+9_Y
+a_Y
+u_Y
+o_Y
+@_Y
+6_Y
+r e
+i_e
+y_e
+I_e
+Y_e
+e_e
+2_e
+E_e
+9_e
+a_e
+u_e
+U_e
+o_e
+O_e
+@_e
+6_e
+r 2
+i_2
+y_2
+I_2
+Y_2
+e_2
+2_2
+E_2
+9_2
+a_2
+u_2
+U_2
+o_2
+O_2
+@_2
+6_2
+r E
+i_E
+y_E
+I_E
+Y_E
+e_E
+2_E
+E_E
+9_E
+a_E
+u_E
+U_E
+o_E
+O_E
+@_E
+6_E
+r 9
+i_9
+y_9
+I_9
+Y_9
+e_9
+2_9
+E_9
+9_9
+a_9
+u_9
+U_9
+o_9
+O_9
+@_9
+6_9
+r a
+i_a
+y_a
+I_a
+Y_a
+e_a
+2_a
+E_a
+9_a
+a_a
+u_a
+U_a
+o_a
+O_a
+@_a
+6_a
+r u
+i_u
+y_u
+I_u
+Y_u
+e_u
+2_u
+E_u
+9_u
+a_u
+u_u
+U_u
+o_u
+O_u
+@_u
+6_u
+r U
+i_U
+y_U
+I_U
+Y_U
+e_U
+2_U
+E_U
+9_U
+u_U
+U_U
+o_U
+O_U
+@_U
+6_U
+r o
+i_o
+y_o
+I_o
+Y_o
+e_o
+2_o
+E_o
+9_o
+a_o
+u_o
+U_o
+o_o
+O_o
+@_o
+6_o
+r O
+i_O
+y_O
+I_O
+Y_O
+e_O
+2_O
+E_O
+9_O
+a_O
+u_O
+U_O
+o_O
+O_O
+@_O
+6_O
+r @
+i_@
+y_@
+I_@
+Y_@
+e_@
+2_@
+E_@
+9_@
+a_@
+u_@
+U_@
+o_@
+O_@
+@_@
+6_@
+r 6
+@_6
+6_6
+_ 6
+b _
+d _
+g _
+? _
+z _
+j _
+r _
+h _
+Y _
+_ _

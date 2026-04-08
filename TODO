@@ -15,6 +15,16 @@ High Priority H
  - ramp for volume normalization @, 6
  - input label l= (m=...) should be treated as l ! l, with consonant
    length ~= 200
+ X support non released plosives for instance t_>n or p_>m
+ - support syllabic consonants m_= synthesis via m_m
+ - rules for alternative transcriptions
+   a_u => a_U
+   a_i => a_I
+   I_o => i_o
+ - rules
+   i_e => je
+   i_E => jE
+   i_o => jo
 
 improved handling for plosives
  - merge tata.py rules into phomorphdi.py
@@ -50,11 +60,12 @@ recording:
  - record insertions (vowels, diphthongs) at different pitches
  - quality of E: "etwas weiter hinten"
  - recording for syllabic consonants
-   like insertions (multiple recordings) n_n, m_m, l_l, Z_Z, v_v, r_r, N_N, z_z
+   like insertions (multiple recordings) n_n, m_m, l_l, Z_Z, v_v, r_r, R_R, N_N, z_z
    once: s, S, f
  - implement post-recording label constraint validator that checks
    - minimum length of consonants,....
    - maximum length check for l,..., should be labelled l=
+ - recording of single consonants _ p _, _ t _, _ k _, _ d _, _ b _, _ g _
 
 Notes Recording for Insertions:
  - sven: 40 45 (50) 55          pp p mf f ff
