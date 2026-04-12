@@ -18,6 +18,12 @@ struct DivToVel
 // Event representing a note ready for playback
 struct NoteEvent
 {
+  enum EventType
+  {
+    NOTE,
+    REST
+  } event_type;
+
   std::string step;
   int octave;
   int start_divisions;
@@ -100,13 +106,16 @@ int main(int argc, char **argv)
             {
               auto noteNode = node;
 
+              // Extract duration in seconds
+              int durDivisions = std::stoi(noteNode.child("duration").child_value());
+
               // Skip rests but advance time
               if (noteNode.child("rest"))
                 {
                   auto durNode = noteNode.child("duration");
                   if (durNode)
                     {
-                      //double durSec = std::stod(durNode.child_value()) / divisions * (60.0 / tempo);
+                      events.push_back({NoteEvent::REST, "", 0, current_time_divisions, durDivisions, {}, "", false});
                       current_time_divisions += std::stoi(durNode.child_value());
                     }
                   continue;
@@ -116,9 +125,6 @@ int main(int argc, char **argv)
               std::string step = noteNode.child("pitch").child("step").child_value();
               int octave = std::stoi(noteNode.child("pitch").child("octave").child_value());
               std::string pitchKey = step + std::to_string(octave);
-
-              // Extract duration in seconds
-              int durDivisions = std::stoi(noteNode.child("duration").child_value());
 
               // Handle ties
               bool tieStart = false, tieStop = false;
@@ -154,7 +160,7 @@ int main(int argc, char **argv)
               if (tieStart)
                 {
                   if (tiedNotes.find(pitchKey) == tiedNotes.end()) {
-                      tiedNotes[pitchKey] = {step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato};
+                      tiedNotes[pitchKey] = {NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato};
                   } else {
                       tiedNotes[pitchKey].duration_divisions += durDivisions;
                       if (!lyricText.empty()) tiedNotes[pitchKey].lyric = lyricText;
@@ -169,12 +175,12 @@ int main(int argc, char **argv)
                       events.push_back(e);
                       tiedNotes.erase(pitchKey);
                   } else {
-                      events.push_back({step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato});
+                      events.push_back({NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato});
                   }
                 }
               else
                 {
-                  events.push_back({step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato});
+                  events.push_back({NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato});
                 }
 
               current_time_divisions += durDivisions;
@@ -351,21 +357,30 @@ int main(int argc, char **argv)
       assert (f);
       for (auto& e : events)
         {
-          fprintf (f, "NOTE\n");
-          if (e.lyric != "")
-            fprintf (f, " lyric: %s\n", e.lyric.c_str());
-          fprintf (f, " pitch: %s%d\n", e.step.c_str(), e.octave);
-          fprintf (f, " start: %d\n", e.start_divisions);
-          fprintf (f, " duration: %d\n", e.duration_divisions);
-          fprintf (f, " volume:");
-          for (auto d2v : e.divisions_to_velocity)
+          if (e.event_type == NoteEvent::REST)
             {
-              fprintf (f, " (%d, %d)", d2v.division, d2v.velocity);
+              fprintf (f, "REST\n");
+              fprintf (f, " duration: %d\n", e.duration_divisions);
+              fprintf (f, "\n");
             }
-          fprintf (f, "\n");
-          if (e.staccato)
-            fprintf (f, " articulation: staccato\n");
-          fprintf (f, "\n");
+          else
+            {
+              fprintf (f, "NOTE\n");
+              if (e.lyric != "")
+                fprintf (f, " lyric: %s\n", e.lyric.c_str());
+              fprintf (f, " pitch: %s%d\n", e.step.c_str(), e.octave);
+              fprintf (f, " start: %d\n", e.start_divisions);
+              fprintf (f, " duration: %d\n", e.duration_divisions);
+              fprintf (f, " volume:");
+              for (auto d2v : e.divisions_to_velocity)
+                {
+                  fprintf (f, " (%d, %d)", d2v.division, d2v.velocity);
+                }
+              fprintf (f, "\n");
+              if (e.staccato)
+                fprintf (f, " articulation: staccato\n");
+              fprintf (f, "\n");
+            }
         }
     }
   return 0;
