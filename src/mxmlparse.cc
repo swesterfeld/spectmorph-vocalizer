@@ -353,6 +353,7 @@ int main(int argc, char **argv)
     }
   if (argc == 3)
     {
+      int offset = 0;
       FILE *f = fopen (argv[2], "w");
       assert (f);
       fprintf (f, "TEMPO\n");
@@ -363,6 +364,7 @@ int main(int argc, char **argv)
         {
           if (e.event_type == NoteEvent::REST)
             {
+              // TODO: should we avoid this and insert rests automatically?
               fprintf (f, "REST\n");
               fprintf (f, " start: %d\n", e.start_divisions);
               fprintf (f, " duration: %d\n", e.duration_divisions);
@@ -370,6 +372,14 @@ int main(int argc, char **argv)
             }
           else
             {
+              if (e.start_divisions > offset)
+                {
+                  fprintf (f, "REST\n");
+                  fprintf (f, " start: %d\n", offset);
+                  fprintf (f, " duration: %d\n", e.start_divisions - offset);
+                  fprintf (f, "\n");
+                  offset = e.start_divisions;
+                }
               fprintf (f, "NOTE\n");
               if (e.lyric != "")
                 fprintf (f, " lyric: %s\n", e.lyric.c_str());
@@ -386,6 +396,7 @@ int main(int argc, char **argv)
                 fprintf (f, " articulation: staccato\n");
               fprintf (f, "\n");
             }
+          offset += e.duration_divisions;
         }
     }
   return 0;
