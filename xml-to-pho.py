@@ -355,7 +355,7 @@ for element in score:
       freq = pitch_to_frequency (element["pitch"])
       # melisma: extend last vowel over new note without lyric
       if "lyric" not in element and last_note and last_note.freq != freq:
-        element.lyric = last_note.lyric
+        element["lyric"] = last_note.lyric
         if last_note.melisma_state == MelismaState.NONE:
           last_note.melisma_state = MelismaState.START
           melisma_state = MelismaState.END
@@ -403,7 +403,7 @@ for element in score:
         note.freq = freq
         note.has_accent = has_accent
         note.has_staccato = has_staccato
-        note.volume = volume
+        note.volume = element["volume"] # FIXME: melisma
         note.volume_state = volume_state
         note.melisma_state = melisma_state
         """
@@ -548,49 +548,67 @@ def compute_cv_times (Cs, v, ms):
     CL = lambda x : c_length ([x])
   return VL, CL
 
-def print_note (note, next_note):
+def volume_to_ms (volume):
+  ms_volume = []
+  for (d, vol) in volume:
+    ms_volume += (d * ms_per_beat, vol)
+  return ms_volume
+
+syllable_counter = 0
+syllables = []
+
+def append_note (note, next_note):
+  global syllable_counter
   Cs = note.c_out + (next_note.c_in if next_note else [])
   VL, CL = compute_cv_times (Cs, note.v, note.ms)
 
-  print()
-  print ("%s %.2f %.2f" % (note.v, VL, note.freq))
+  syllables.append ((syllable_counter, note.v, VL, note))
+  # print ("%s %.2f %.2f %d %s" % (note.v, VL, note.freq, syllable_counter, volume_to_ms (note.volume)))
   for c in note.c_out:
-    print ("%s %.2f %.2f" % (c, CL (c), note.freq))
+    #print ("%s %.2f %.2f %d %s" % (c, CL (c), note.freq, syllable_counter, volume_to_ms (note.volume)))
+    syllables.append ((syllable_counter, c, CL (c), note))
+  print()
+  syllable_counter += 1
   if next_note:
     print ("meta bar_beat %d %d" % (note.measure_number, note.beat))
     for c in next_note.c_in:
-      print ("%s %.2f %.2f" % (c, CL (c), next_note.freq))
+      #print ("%s %.2f %.2f %d %s" % (c, CL (c), next_note.freq, syllable_counter, volume_to_ms (next_note.volume)))
+      syllables.append ((syllable_counter, c, CL (c), next_note))
 
-def print_note_v (note):
-  print()
-  print ("%s %.2f %.2f" % (note.v, note.ms, note.freq))
+def append_note_v (note):
+  #print ("%s %.2f %.2f %d %s" % (note.v, note.ms, note.freq, syllable_counter, volume_to_ms (note.volume)))
+  syllables.append ((syllable_counter, note.v, note.ms, note))
 
-def print_rest (rest, next_note):
+def append_rest (rest, next_note):
+  global syllable_counter
   Cs = rest.c_start + (next_note.c_in if next_note else [])
   VL, CL = compute_cv_times (Cs, "_", rest.length)
 
-  print()
   for c in rest.c_start:
-    print ("%s %.2f %.2f" % (c, CL (c), rest.start_freq))
+    #print ("%s %.2f %.2f %d" % (c, CL (c), rest.start_freq, syllable_counter))
+    syllables.append ((syllable_counter, c, CL (c), rest.start_freq))
   if rest:
-    print ("_ %.2f" % VL)
+    syllable_counter += 1
+    #print ("_ %.2f" % VL)
+    syllables.append ((syllable_counter, "_", VL))
+  syllable_counter += 1
   if next_note:
     for c in next_note.c_in:
-      print ("%s %.2f %.2f" % (c, CL (c), note.freq))
+      syllables.append ((syllable_counter, c, CL (c), note))
 
 last_note = None
 last_rest = None
 for note in notes:
   if isinstance (note, Note):
     if last_note:
-      print_note (last_note, note)
+      append_note (last_note, note)
     if last_rest:
-      print_rest (last_rest, note)
+      append_rest (last_rest, note)
       last_rest = None
     last_note = note
   else:
     if last_note:
-      print_note_v (last_note)
+      append_note_v (last_note)
       last_rest = RestSegment()
       last_rest.c_start = last_note.c_out
       last_rest.length = note.length
@@ -606,4 +624,66 @@ for note in notes:
 
 # we ensure that the last item in notes is always a rest
 assert (last_rest)
-print_rest (last_rest, None)
+append_rest (last_rest, None)
+
+def get_velocity(ms, curve):
+  """
+  Interpolate velocity from a [t0, v0, t1, v1, ...] curve.
+
+  Example curve: [0.0, 30, 1500.0, 80]
+  """
+  if len(curve) < 4:
+    raise ValueError("Curve must contain at least two points")
+
+  # Walk through segments
+  for i in range(0, len(curve) - 2, 2):
+    t0, v0 = curve[i], curve[i + 1]
+    t1, v1 = curve[i + 2], curve[i + 3]
+
+    if t0 <= ms <= t1:
+      # linear interpolation
+      ratio = (ms - t0) / (t1 - t0)
+      return v0 + ratio * (v1 - v0)
+
+  # If before or after curve range
+  if ms <= curve[0]:
+    return curve[1]
+  return curve[-1]
+
+s_len = 0
+s_nr = syllables[0][0]
+s_ms = 0
+s_volume = None
+v_length_ms = 0
+s_current = []
+for s in syllables:
+  if s[0] != s_nr:
+    print(";;; @", s_ms)
+    if s_volume:
+      volume_ms = volume_to_ms (s_volume)
+      v_length_ms = volume_ms[-2]
+      print (";;; @", volume_ms)
+
+    s_ms_elapsed = 0
+    for sc in s_current:
+      s_ms_elapsed_2 = s_ms_elapsed + sc[2]
+      if sc[1] == "_":
+        print ("%s %.2f %d" % (sc[1], sc[2], sc[0]))
+      elif isinstance (sc[3], float):
+        print ("%s %.2f %.2f %.2f%% %.2f%% %.2f %.2f %d" % (sc[1], sc[2], sc[3], s_ms_elapsed / s_ms * 100, s_ms_elapsed_2 / s_ms * 100, get_velocity (s_ms_elapsed / s_ms * v_length_ms, volume_ms), get_velocity (s_ms_elapsed_2 / s_ms * v_length_ms, volume_ms), sc[0]))
+      else:
+        print ("%s %.2f %.2f %.2f%% %.2f%% %.2f %.2f %d" % (sc[1], sc[2], sc[3].freq, s_ms_elapsed / s_ms * 100, s_ms_elapsed_2 / s_ms * 100, get_velocity (s_ms_elapsed / s_ms * v_length_ms, volume_ms), get_velocity (s_ms_elapsed_2 / s_ms * v_length_ms, volume_ms), sc[0]))
+      s_ms_elapsed += sc[2]
+
+    print()
+    s_ms = 0
+    s_nr = s[0]
+    s_volume = None
+    s_current = []
+  if (s[1] == "_"):
+    s_current.append (s)
+  else:
+    s_current.append (s)
+    if isinstance (s[3], Note):
+      s_volume = s[3].volume
+    s_ms += s[2]
