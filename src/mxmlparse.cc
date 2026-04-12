@@ -355,11 +355,16 @@ int main(int argc, char **argv)
     {
       FILE *f = fopen (argv[2], "w");
       assert (f);
+      fprintf (f, "TEMPO\n");
+      fprintf (f, " divisions: %d\n", divisions);
+      fprintf (f, " bpm: %f\n", tempo);
+      fprintf (f, "\n");
       for (auto& e : events)
         {
           if (e.event_type == NoteEvent::REST)
             {
               fprintf (f, "REST\n");
+              fprintf (f, " start: %d\n", e.start_divisions);
               fprintf (f, " duration: %d\n", e.duration_divisions);
               fprintf (f, "\n");
             }
