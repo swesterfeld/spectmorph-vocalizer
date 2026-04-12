@@ -2,7 +2,7 @@
 
 set -e
 
-mkdir -p testxml pho script wav voice items trace input_pho notes frames
+mkdir -p testxml pho script wav voice items trace input_pho notes frames mxparse
 
 make -C src
 
@@ -88,7 +88,8 @@ do
   rm -f $pho $script $wav
 
   echo "$xml..."
-  ./xml-to-pho.py xml testxml/$xml notes/$txt > pho/$pho || echo "$xml -> $pho" failed
+  src/mxmlparse testxml/$xml mxparse/$txt
+  ./xml-to-pho.py xml mxparse/$txt notes/$txt > pho/$pho || echo "$xml -> $pho" failed
   if [ "x$1" = "xmbrola" ]; then
     voice=$(grep ';;; VOICE' pho/$pho | cut -d " " -f 3)
     test -f /usr/share/mbrola/$voice/$voice || voice=de2
