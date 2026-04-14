@@ -650,40 +650,52 @@ def get_velocity(ms, curve):
     return curve[1]
   return curve[-1]
 
-s_len = 0
-s_nr = syllables[0][0]
-s_ms = 0
-s_volume = None
-v_length_ms = 0
-s_current = []
-for s in syllables:
-  if s[0] != s_nr:
-    print(";;; @", s_ms)
-    if s_volume:
-      volume_ms = volume_to_ms (s_volume)
-      v_length_ms = volume_ms[-2]
-      print (";;; @", volume_ms)
+def volume_envelope_str (volume_ms, s_ms, s_ms_elapsed, s_ms_elapsed_2):
+  v_length_ms = volume_ms[-2]
+  s = "%.2f %.2f " % (0, get_velocity (s_ms_elapsed / s_ms * v_length_ms, volume_ms))
+  for i in range (0, len (volume_ms), 2):
+    t, v = volume_ms[i], volume_ms[i + 1]
+    trans_t = t / v_length_ms * s_ms
+    if trans_t > s_ms_elapsed + 0.1 and trans_t < s_ms_elapsed_2 - 0.1:
+      s += "%.2f %.2f " % (trans_t - s_ms_elapsed, v)
+  s += "%.2f %.2f" % (s_ms_elapsed_2 - s_ms_elapsed, get_velocity (s_ms_elapsed_2 / s_ms * v_length_ms, volume_ms))
+  return s
 
-    s_ms_elapsed = 0
-    for sc in s_current:
-      s_ms_elapsed_2 = s_ms_elapsed + sc[2]
-      if sc[1] == "_":
-        print ("%s %.2f %d" % (sc[1], sc[2], sc[0]))
-      elif isinstance (sc[3], float):
-        print ("%s %.2f %.2f %.2f%% %.2f%% %.2f %.2f %d" % (sc[1], sc[2], sc[3], s_ms_elapsed / s_ms * 100, s_ms_elapsed_2 / s_ms * 100, get_velocity (s_ms_elapsed / s_ms * v_length_ms, volume_ms), get_velocity (s_ms_elapsed_2 / s_ms * v_length_ms, volume_ms), sc[0]))
-      else:
-        print ("%s %.2f %.2f %.2f%% %.2f%% %.2f %.2f %d" % (sc[1], sc[2], sc[3].freq, s_ms_elapsed / s_ms * 100, s_ms_elapsed_2 / s_ms * 100, get_velocity (s_ms_elapsed / s_ms * v_length_ms, volume_ms), get_velocity (s_ms_elapsed_2 / s_ms * v_length_ms, volume_ms), sc[0]))
-      s_ms_elapsed += sc[2]
+def syllables_to_pho():
+  s_len = 0
+  s_nr = syllables[0][0]
+  s_ms = 0
+  s_volume = None
+  s_current = []
+  for s in syllables:
+    if s[0] != s_nr:
+      print(";;; @", s_ms)
+      if s_volume:
+        volume_ms = volume_to_ms (s_volume)
+        print (";;; @", volume_ms)
 
-    print()
-    s_ms = 0
-    s_nr = s[0]
-    s_volume = None
-    s_current = []
-  if (s[1] == "_"):
-    s_current.append (s)
-  else:
-    s_current.append (s)
-    if isinstance (s[3], Note):
-      s_volume = s[3].volume
-    s_ms += s[2]
+      s_ms_elapsed = 0
+      for sc in s_current:
+        s_ms_elapsed_2 = s_ms_elapsed + sc[2]
+        if sc[1] == "_":
+          print ("%s %.2f %d" % (sc[1], sc[2], sc[0]))
+        elif isinstance (sc[3], float):
+          print ("%s %.2f %.2f %s" % (sc[1], sc[2], sc[3], volume_envelope_str (volume_ms, s_ms, s_ms_elapsed, s_ms_elapsed_2)))
+        else:
+          print ("%s %.2f %.2f %s" % (sc[1], sc[2], sc[3].freq, volume_envelope_str (volume_ms, s_ms, s_ms_elapsed, s_ms_elapsed_2)))
+        s_ms_elapsed += sc[2]
+
+      print()
+      s_ms = 0
+      s_nr = s[0]
+      s_volume = None
+      s_current = []
+    if (s[1] == "_"):
+      s_current.append (s)
+    else:
+      s_current.append (s)
+      if isinstance (s[3], Note):
+        s_volume = s[3].volume
+      s_ms += s[2]
+
+syllables_to_pho()
