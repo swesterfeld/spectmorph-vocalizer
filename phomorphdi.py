@@ -112,6 +112,8 @@ def freq_to_note (freq):
 class PhoEntry:
   pass
 
+dynamic_dict = {}
+
 def load_pho (filename):
   pho = []
   with open (filename, "r") as file:
@@ -128,6 +130,12 @@ def load_pho (filename):
             if x[1] == "bar_beat":
               bar = int (x[2])
               beat = int (x[3])
+            elif x[1] == "dynamic":
+              index = int (x[2])
+              values = list (map (float, x[3:]))
+              assert (len (values) % 2) == 0
+              points = list (zip (values[0::2], values[1::2]))
+              dynamic_dict[index] = points
           elif x[0][0] != ';':
             pho_entry = PhoEntry()
             pho_entry.bar = bar
@@ -143,7 +151,7 @@ def load_pho (filename):
       parse_line (line)
   # ensure last diphone ends in a break
   if (pho[-1][0] != "_"):
-    parse_line ("_ 50")
+    parse_line ("_ 50 %d" % (int (pho[-1][-2]) + 1))
   return pho
 
 pho = load_pho (args.pho)
@@ -338,8 +346,11 @@ def lookup_diphone_entry_vv (P1, P2, pho_entry, note):
 
 items = []
 
+syl_list = []
+
 class Item:
-  pass
+  def __init__ (self):
+    self.syllable_start = None
 
 # prepare for melisma:
 #  - merge repeated vowels into one
@@ -349,6 +360,7 @@ def prepare_melisma (pho):
   out_f = []
   last = None
   last_f = 130.81
+  total_ms = 0
   for i in range (len (pho)):
     pho_entry = pho[i][-1]
     if pho_entry.freq:
@@ -380,9 +392,11 @@ def prepare_melisma (pho):
     if last and V_last and V_current and V_last == V_current:
       out[-1][1] = str (float (out[-1][1]) + float (pho[i][1]))
       out[-1][-1].last_diph_frac_time = float (pho[i][1]) / float (out[-1][1])
+      syl_list.append ((int (pho[i][-2]), total_ms))
     else:
       pho[i][-1].last_diph_frac_time = 1
       out.append (pho[i])
+    total_ms += float (pho[i][1])
     last = pho[i]
   return out, out_f
 
@@ -548,6 +562,8 @@ for i in range (len (pho)):
       item.pos1 = pos1
       item.pos2 = pos2
       item.volume_factor = vnorm
+      if pho[i][-2] != pho[i + 1][-2]:
+        item.syllable_start = int (pho[i + 1][-2])
       items.append (item)
 
 if errors:
@@ -562,6 +578,8 @@ for item in items:
     compression = (item.pos2 - item.pos1) * 1000 / item.ms
   else:
     compression = 1
+  if item.syllable_start:
+    syl_list.append ((item.syllable_start, total_ms + item.ms))
   print ("ITEM: %-5s %-5s %7.2f %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression, item.volume_factor), file=sys.stderr)
   if item.ms > 0:
     synlist.append (item)
@@ -569,6 +587,30 @@ for item in items:
     print ("%f\t%f\t%s" % (total_ms / 1000 * time_stretch, (total_ms + item.ms) / 1000 * time_stretch, "I" + item.lyric), file=item_file)
   total_ms += item.ms
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
+
+volume_envelope = []
+syl_list.sort()
+for i in range (len (syl_list) - 1):
+  if syl_list[i][0] + 1 == syl_list[i + 1][0] and syl_list[i][0] in dynamic_dict:
+    for syl_pt in dynamic_dict[syl_list[i][0]]:
+      frac = syl_pt[0] / 100
+      volume_envelope.append (((syl_list[i][1] * (1 - frac) + syl_list[i + 1][1] * frac), syl_pt[1]))
+
+def find_volume_midi (ms):
+  for i in range (len (volume_envelope) - 1):
+    t0_ms, value0 = volume_envelope[i]
+    t1_ms, value1 = volume_envelope[i + 1]
+
+    if t0_ms <= ms <= t1_ms:
+      if t0_ms == t1_ms:
+        return value0
+      else:
+        frac = (ms - t0_ms) / (t1_ms - t0_ms)
+        return value0 + frac * (value1 - value0)
+  if ms < volume_envelope[0][0]:
+    return volume_envelope[0][1]
+  else:
+    return volume_envelope[-1][1]
 
 def find_freq (ms):
   elapsed = 0
@@ -617,7 +659,7 @@ def is_insertion (item):
     return True
   return False
 
-def item_to_pos (slot, item, pos_ms):
+def item_to_pos (slot, item, pos_ms, volume_factor):
   if is_insertion (item) and item.lyric != "_":
     # TODO: could start at random point in time
     # ping pong loop for the insertion
@@ -634,7 +676,7 @@ def item_to_pos (slot, item, pos_ms):
   else:
     frac = pos_ms / item.ms
     ct = item.pos1 * (1 - frac) + item.pos2 * frac
-  print ("seek", slot, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor)
+  print ("seek", slot, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor * volume_factor)
 
 ms = 0
 while True:
@@ -643,6 +685,9 @@ while True:
     break
 
   print ("freq", find_freq (ms))
+
+  volume_midi = find_volume_midi (ms)
+  volume_factor = (volume_midi / 127) * (volume_midi / 127)
 
   # TODO: morphing can jump from 0 to 1 or back, which is typically inaudible,
   # but should be fixed anyway
@@ -660,21 +705,21 @@ while True:
   if last_item and pos_ms < fade_in:
     # morph from last item into this item
     morphing = 0.5 + pos_ms / fade_in / 2
-    item_to_pos (0, last_item, last_item.ms + pos_ms)
-    item_to_pos (1, item, pos_ms)
+    item_to_pos (0, last_item, last_item.ms + pos_ms, volume_factor)
+    item_to_pos (1, item, pos_ms, volume_factor)
     print ("morphing", morphing)
     done = True
   if next_item and item.ms - pos_ms < fade_out:
     # morph from this item into next item
     morphing = 0.5 - (item.ms - pos_ms) / fade_out / 2
-    item_to_pos (0, item, pos_ms)
-    item_to_pos (1, next_item, pos_ms - item.ms)
+    item_to_pos (0, item, pos_ms, volume_factor)
+    item_to_pos (1, next_item, pos_ms - item.ms, volume_factor)
     print ("morphing", morphing)
     done = True
 
   if not done:
-    item_to_pos (0, item, pos_ms)
-    item_to_pos (1, item, pos_ms)
+    item_to_pos (0, item, pos_ms, volume_factor)
+    item_to_pos (1, item, pos_ms, volume_factor)
     print ("morphing", 0)
 
   frac = pos_ms / item.ms
