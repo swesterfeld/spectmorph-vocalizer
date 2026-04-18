@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import music21
 import random
 import sys
 import re
@@ -165,7 +164,112 @@ if sys.argv[1] != "xml":
   sys.exit (1)
 
 # Load the MusicXML file
-score = music21.converter.parse (sys.argv[2], format='musicxml')
+def load_mxparse (filepath):
+  """
+  Load and parse an mxparse-style text file containing NOTE and REST blocks.
+
+  Parameters:
+      filepath (str): Path to the text file.
+
+  Returns:
+      list of dict: A list of parsed NOTE and REST entries.
+  """
+  entries = []
+  current_entry = None
+  current_type = None
+
+  # Regular expression to capture volume pairs like (0, 80)
+  volume_pattern = re.compile(r"\((\d+),\s*(\d+)\)")
+
+  with open (filepath, "r", encoding="utf-8") as file:
+    for line in file:
+      line = line.strip()
+
+      # Skip empty lines
+      if not line:
+        continue
+
+      # Detect block types
+      if line in {"NOTE", "REST", "TEMPO"}:
+        # Save the previous entry
+        if current_entry is not None:
+          entries.append(current_entry)
+
+        current_type = line
+        current_entry = {"type": current_type.lower()}
+        continue
+
+      # Parse key-value pairs
+      if ":" in line and current_entry is not None:
+        key, value = line.split(":", 1)
+        key = key.strip().lower()
+        value = value.strip()
+
+        if key in {"start", "duration", "divisions"}:
+          current_entry[key] = int(value)
+
+        elif key == "volume":
+          matches = volume_pattern.findall(value)
+          current_entry[key] = [
+            (int(t), int(v)) for t, v in matches
+          ]
+
+        elif key in {"bpm"}:
+          current_entry[key] = float(value)
+
+        else:
+          # Handles fields like lyric and pitch
+          current_entry[key] = value
+
+  # Append the last parsed entry
+  if current_entry is not None:
+    entries.append(current_entry)
+
+  return entries
+
+def pitch_to_frequency(pitch: str) -> float:
+  """
+  Convert a MusicXML pitch string (e.g., 'D3', 'C#4', 'Bb5')
+  into its corresponding frequency in Hz.
+
+  Parameters:
+      pitch (str): The pitch string in scientific pitch notation.
+
+  Returns:
+      float: Frequency in Hertz.
+  """
+  # Mapping of note names to semitone offsets within an octave
+  note_map = {
+    "C": 0, "C#": 1, "Db": 1,
+    "D": 2, "D#": 3, "Eb": 3,
+    "E": 4,
+    "F": 5, "F#": 6, "Gb": 6,
+    "G": 7, "G#": 8, "Ab": 8,
+    "A": 9, "A#": 10, "Bb": 10,
+    "B": 11
+  }
+
+  # Parse the pitch string
+  match = re.fullmatch(r"([A-Ga-g])([#b]?)(-?\d+)", pitch.strip())
+  if not match:
+    raise ValueError(f"Invalid pitch format: {pitch}")
+
+  note, accidental, octave = match.groups()
+  note_name = (note.upper() + accidental)
+  octave = int(octave)
+
+  if note_name not in note_map:
+    raise ValueError(f"Invalid note: {note_name}")
+
+  # Compute MIDI note number (C4 = 60)
+  midi_number = (octave + 1) * 12 + note_map[note_name]
+
+  # Convert MIDI note to frequency
+  frequency = 440.0 * (2 ** ((midi_number - 69) / 12))
+
+  return frequency
+
+score = load_mxparse (sys.argv[2])
 
 if len (sys.argv) > 3:
   debug_notes_file = open (sys.argv[3], "w")
@@ -218,70 +322,40 @@ dim_list = []
 
 notes = []
 
-for part in score.parts:
-  for element in part.flatten():
-    if isinstance (element, music21.dynamics.Dynamic):
-      dynamic_list.append (element)
-    if isinstance (element, music21.dynamics.Crescendo):
-      cresc_list.append (element)
-    if isinstance (element, music21.dynamics.Diminuendo):
-      dim_list.append (element)
+for element in score:
+  if element["type"] == "tempo":
+    set_tempo (element["divisions"], element["bpm"])
 
 # Extract information from the score
-for part in score.parts:
-  part_name = part.partName if part.partName else "de2"
-  print (";;; VOICE", part_name)
-  for element in part.flatten():
-    print (";;;", element)
-    if isinstance (element, music21.dynamics.Dynamic):
-      volume = element.volumeScalar
-    if isinstance (element, music21.note.Rest) or isinstance (element, music21.note.Note):
-      cresc_found = False
-      if not in_cresc:
-        for cresc_candidate in cresc_list:
-          if element.id == cresc_candidate.getFirst().id:
-            print (";;; START CRESC")
-            in_cresc = True
-            volume_state = VolumeState.START
-            cresc = cresc_candidate
-      if in_cresc and element.id == cresc.getLast().id:
-        print (";;; END CRESC")
-        volume_state = VolumeState.END
-        in_cresc = False
-      dim_found = False
-      if not in_dim:
-        for dim_candidate in dim_list:
-          if element.id == dim_candidate.getFirst().id:
-            print (";;; START DIM")
-            in_dim = True
-            volume_state = VolumeState.START
-            dim = dim_candidate
-      if in_dim and element.id == dim.getLast().id:
-        print (";;; END DIM")
-        volume_state = VolumeState.END
-        in_dim = False
+for element in score:
+  print (";;;", element)
+  if element["type"] == "rest" or element["type"] == "note":
+    """
     if isinstance (element, music21.tempo.MetronomeMark):
       if element.numberSounding:
         tempo_change_sounding += [ element ]
       if (element.number):
         set_tempo (element.referent.quarterLength, element.number)
+    """
     qoffset16 = round (quarter_offset * 4)
     if len (tempo_change_sounding) and qoffset16 > round (tempo_change_sounding[0].offset * 4):
       telement = tempo_change_sounding[0]
       set_tempo (telement.referent.quarterLength, telement.numberSounding)
       tempo_change_sounding = tempo_change_sounding[1:]
     print (";;; quarter_offset: ", quarter_offset)
-    if isinstance (element, music21.note.Note):
-      if last_note_rest_offset == element.offset:
+    if element["type"] == "note":
+      """
+      if last_note_rest_offset == element:
         print ("polyphony error, bar %d" % element.measureNumber, file=sys.stderr)
         polyphony_errors += 1
-      last_note_rest_offset = element.offset
-      note_duration_ms = element.duration.quarterLength * ms_per_beat
-      quarter_offset += element.duration.quarterLength
-      freq = element.pitch.frequency
+      """
+      last_note_rest_offset = element["start"]
+      note_duration_ms = element["duration"] * ms_per_beat
+      quarter_offset += element["duration"]
+      freq = pitch_to_frequency (element["pitch"])
       # melisma: extend last vowel over new note without lyric
-      if (element.lyric is None) and last_note and last_note.freq != freq:
-        element.lyric = last_note.lyric
+      if "lyric" not in element and last_note and last_note.freq != freq:
+        element["lyric"] = last_note.lyric
         if last_note.melisma_state == MelismaState.NONE:
           last_note.melisma_state = MelismaState.START
           melisma_state = MelismaState.END
@@ -290,7 +364,7 @@ for part in score.parts:
           melisma_state = MelismaState.END
       else:
         melisma_state = MelismaState.NONE
-      if element.lyric is None:
+      if "lyric" not in element:
         if last_note:
           assert (last_note.freq == freq)
           last_note.ms += note_duration_ms
@@ -299,14 +373,17 @@ for part in score.parts:
       else:
         has_accent = False
         has_staccato = False
-        for art in element.articulations:
+        if "articulation" in element:
+          """
           if art.name == "accent":
             has_accent = True
-          if art.name == "staccato":
-            has_staccato = True
           print (";;;", art.name)
+          TODO: support other articulations
+          """
+          if element["articulation"] == "staccato":
+            has_staccato = True
         note = Note()
-        lyric = element.lyric
+        lyric = element["lyric"]
         note.lyric = lyric
         if lyric == "$":
           for i in range (cv_16_skip):
@@ -326,11 +403,16 @@ for part in score.parts:
         note.freq = freq
         note.has_accent = has_accent
         note.has_staccato = has_staccato
-        note.volume = volume
+        note.volume = element["volume"] # FIXME: melisma
         note.volume_state = volume_state
         note.melisma_state = melisma_state
+        """
         note.measure_number = element.measureNumber
         note.beat = element.beat
+        TODO: mxmlparse
+        """
+        note.measure_number = 0
+        note.beat = 0
         notes.append (note)
         last_note = note
         '''
@@ -359,12 +441,14 @@ for part in score.parts:
           volume_state = VolumeState.CONST
         '''
         last_rest = None
-    if isinstance (element, music21.note.Rest):
+    if element["type"] == "rest":
+      """
       if last_note_rest_offset == element.offset:
         print ("polyphony error, bar %d" % element.measureNumber, file=sys.stderr)
         polyphony_errors += 1
-      last_note_rest_offset = element.offset
-      length = element.duration.quarterLength * ms_per_beat
+      """
+      last_note_rest_offset = element["start"]
+      length = element["duration"] * ms_per_beat
       if not last_rest:
         new_rest = Rest()
         new_rest.length = length
@@ -372,8 +456,8 @@ for part in score.parts:
         last_rest = new_rest
       else:
         last_rest.length += length
-      quarter_offset += element.duration.quarterLength
-      cv_16_skip += round (element.duration.quarterLength * 4)
+      quarter_offset += element["duration"]
+      cv_16_skip += round (element["duration"] * 4)
       last_note = None
       '''
       if last_note:
@@ -464,49 +548,68 @@ def compute_cv_times (Cs, v, ms):
     CL = lambda x : c_length ([x])
   return VL, CL
 
-def print_note (note, next_note):
+def volume_to_percent_str (volume):
+  last_d = volume[-1][0]
+  return " ".join (
+    "%.2f %.2f" % (d / last_d * 100, vol)
+    for d, vol in volume
+  )
+
+syllable_counter = 0
+syllables = []
+
+def append_note (note, next_note):
+  global syllable_counter
   Cs = note.c_out + (next_note.c_in if next_note else [])
   VL, CL = compute_cv_times (Cs, note.v, note.ms)
 
-  print()
-  print ("%s %.2f %.2f" % (note.v, VL, note.freq))
+  syllables.append ((syllable_counter, note.v, VL, note))
+  # print ("%s %.2f %.2f %d %s" % (note.v, VL, note.freq, syllable_counter, volume_to_ms (note.volume)))
   for c in note.c_out:
-    print ("%s %.2f %.2f" % (c, CL (c), note.freq))
+    #print ("%s %.2f %.2f %d %s" % (c, CL (c), note.freq, syllable_counter, volume_to_ms (note.volume)))
+    syllables.append ((syllable_counter, c, CL (c), note))
+  print()
+  syllable_counter += 1
   if next_note:
     print ("meta bar_beat %d %d" % (note.measure_number, note.beat))
     for c in next_note.c_in:
-      print ("%s %.2f %.2f" % (c, CL (c), next_note.freq))
+      #print ("%s %.2f %.2f %d %s" % (c, CL (c), next_note.freq, syllable_counter, volume_to_ms (next_note.volume)))
+      syllables.append ((syllable_counter, c, CL (c), next_note))
 
-def print_note_v (note):
-  print()
-  print ("%s %.2f %.2f" % (note.v, note.ms, note.freq))
+def append_note_v (note):
+  #print ("%s %.2f %.2f %d %s" % (note.v, note.ms, note.freq, syllable_counter, volume_to_ms (note.volume)))
+  syllables.append ((syllable_counter, note.v, note.ms, note))
 
-def print_rest (rest, next_note):
+def append_rest (rest, next_note):
+  global syllable_counter
   Cs = rest.c_start + (next_note.c_in if next_note else [])
   VL, CL = compute_cv_times (Cs, "_", rest.length)
 
-  print()
   for c in rest.c_start:
-    print ("%s %.2f %.2f" % (c, CL (c), rest.start_freq))
+    #print ("%s %.2f %.2f %d" % (c, CL (c), rest.start_freq, syllable_counter))
+    syllables.append ((syllable_counter, c, CL (c), rest.start_freq))
   if rest:
-    print ("_ %.2f" % VL)
+    syllable_counter += 1
+    #print ("_ %.2f" % VL)
+    syllables.append ((syllable_counter, "_", VL))
+  syllable_counter += 1
   if next_note:
     for c in next_note.c_in:
-      print ("%s %.2f %.2f" % (c, CL (c), note.freq))
+      syllables.append ((syllable_counter, c, CL (c), note))
 
 last_note = None
 last_rest = None
 for note in notes:
   if isinstance (note, Note):
     if last_note:
-      print_note (last_note, note)
+      append_note (last_note, note)
     if last_rest:
-      print_rest (last_rest, note)
+      append_rest (last_rest, note)
       last_rest = None
     last_note = note
   else:
     if last_note:
-      print_note_v (last_note)
+      append_note_v (last_note)
       last_rest = RestSegment()
       last_rest.c_start = last_note.c_out
       last_rest.length = note.length
@@ -522,4 +625,43 @@ for note in notes:
 
 # we ensure that the last item in notes is always a rest
 assert (last_rest)
-print_rest (last_rest, None)
+append_rest (last_rest, None)
+
+def syllables_to_pho():
+  s_len = 0
+  s_nr = syllables[0][0]
+  s_ms = 0
+  s_volume = None
+  s_current = []
+  for s in syllables:
+    if s[0] != s_nr:
+      print(";;; @", s_ms)
+      if s_volume:
+        volume_percent_str = volume_to_percent_str (s_volume)
+        print ("meta dynamic", s_nr, volume_percent_str)
+
+      s_ms_elapsed = 0
+      for sc in s_current:
+        s_ms_elapsed_2 = s_ms_elapsed + sc[2]
+        if sc[1] == "_":
+          print ("%s %.2f %d" % (sc[1], sc[2], sc[0]))
+        elif isinstance (sc[3], float):
+          print ("%s %.2f %.2f %s" % (sc[1], sc[2], sc[3], sc[0]))
+        else:
+          print ("%s %.2f %.2f %s" % (sc[1], sc[2], sc[3].freq, sc[0]))
+        s_ms_elapsed += sc[2]
+
+      print()
+      s_ms = 0
+      s_nr = s[0]
+      s_volume = None
+      s_current = []
+    if (s[1] == "_"):
+      s_current.append (s)
+    else:
+      s_current.append (s)
+      if isinstance (s[3], Note):
+        s_volume = s[3].volume
+      s_ms += s[2]
+
+syllables_to_pho()

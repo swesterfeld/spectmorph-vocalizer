@@ -1,6 +1,9 @@
 TODO before recording: X
 High Priority H
 
+ - mxmlparse/dynamic: staccato
+ - mxmlparse/dynamic: bar/beat points
+ - mxmlparse/dynamic: tempo change
  - for short notes, both vowel and consonants need to be shortened
  - auto-detect steady vowel state (60%?...)
  - hiatus freq change before vowel change
