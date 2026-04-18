@@ -283,7 +283,6 @@ def set_tempo (quarter_length, tempo):
 
 # default
 set_tempo (1, 120)
-volume = 0.55 # mf
 
 last_note = None
 last_rest = None
@@ -293,12 +292,6 @@ class MelismaState (Enum):
   START = 2
   MIDDLE = 3
   END = 4
-
-class VolumeState (Enum):
-  CONST = 1
-  START = 2
-  END = 3
-  NONE = 4
 
 class Note:
   pass
@@ -310,15 +303,6 @@ last_note_rest_offset = -1
 polyphony_errors = 0
 tempo_change_sounding = []
 quarter_offset = 0
-cresc = None
-dim = None
-in_cresc = False
-in_dim = False
-volume_state = VolumeState.CONST
-
-dynamic_list = []
-cresc_list = []
-dim_list = []
 
 notes = []
 
@@ -404,7 +388,6 @@ for element in score:
         note.has_accent = has_accent
         note.has_staccato = has_staccato
         note.volume = element["volume"] # FIXME: melisma
-        note.volume_state = volume_state
         note.melisma_state = melisma_state
         """
         note.measure_number = element.measureNumber
@@ -415,31 +398,6 @@ for element in score:
         note.beat = 0
         notes.append (note)
         last_note = note
-        '''
-        if last_note:
-          skip = c_length (last_note.c_out + c_in)
-          print_note (last_note, skip)
-        if last_rest:
-          last_rest -= c_length (c_in)
-          while last_rest > 15000:
-            print ("_ 10000.00")
-            last_rest -= 10000
-          print ("_ %.2f\n" % last_rest)
-        last_note = Note()
-        last_note.c_in = c_in
-        last_note.v = v
-        last_note.c_out = c_out
-        last_note.ms = note_duration_ms
-        last_note.freq = freq
-        last_note.has_accent = has_accent
-        last_note.has_staccato = has_staccato
-        last_note.volume = volume
-        last_note.volume_state = volume_state
-        if volume_state == VolumeState.START:
-          volume_state = VolumeState.NONE
-        if volume_state == VolumeState.END:
-          volume_state = VolumeState.CONST
-        '''
         last_rest = None
     if element["type"] == "rest":
       """
@@ -459,17 +417,6 @@ for element in score:
       quarter_offset += element["duration"]
       cv_16_skip += round (element["duration"] * 4)
       last_note = None
-      '''
-      if last_note:
-        skip = 0
-        print_note (last_note, skip) FIXME: comment more
-        last_rest = length - c_length (last_note.c_out)
-        last_note = None
-      elif last_rest:
-        last_rest += length
-      else:
-        last_rest = length
-      '''
 
 if polyphony_errors:
   print ("%d polyphony errors" % polyphony_errors, file=sys.stderr)
