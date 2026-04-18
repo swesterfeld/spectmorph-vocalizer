@@ -548,11 +548,12 @@ def compute_cv_times (Cs, v, ms):
     CL = lambda x : c_length ([x])
   return VL, CL
 
-def volume_to_ms (volume):
-  ms_volume = []
-  for (d, vol) in volume:
-    ms_volume += (d * ms_per_beat, vol)
-  return ms_volume
+def volume_to_percent_str (volume):
+  last_d = volume[-1][0]
+  return " ".join (
+    "%.2f %.2f" % (d / last_d * 100, vol)
+    for d, vol in volume
+  )
 
 syllable_counter = 0
 syllables = []
@@ -626,41 +627,6 @@ for note in notes:
 assert (last_rest)
 append_rest (last_rest, None)
 
-def get_velocity(ms, curve):
-  """
-  Interpolate velocity from a [t0, v0, t1, v1, ...] curve.
-
-  Example curve: [0.0, 30, 1500.0, 80]
-  """
-  if len(curve) < 4:
-    raise ValueError("Curve must contain at least two points")
-
-  # Walk through segments
-  for i in range(0, len(curve) - 2, 2):
-    t0, v0 = curve[i], curve[i + 1]
-    t1, v1 = curve[i + 2], curve[i + 3]
-
-    if t0 <= ms <= t1:
-      # linear interpolation
-      ratio = (ms - t0) / (t1 - t0)
-      return v0 + ratio * (v1 - v0)
-
-  # If before or after curve range
-  if ms <= curve[0]:
-    return curve[1]
-  return curve[-1]
-
-def volume_envelope_str (volume_ms, s_ms, s_ms_elapsed, s_ms_elapsed_2):
-  v_length_ms = volume_ms[-2]
-  s = "%.2f %.2f " % (0, get_velocity (s_ms_elapsed / s_ms * v_length_ms, volume_ms))
-  for i in range (0, len (volume_ms), 2):
-    t, v = volume_ms[i], volume_ms[i + 1]
-    trans_t = t / v_length_ms * s_ms
-    if trans_t > s_ms_elapsed + 0.1 and trans_t < s_ms_elapsed_2 - 0.1:
-      s += "%.2f %.2f " % (trans_t - s_ms_elapsed, v)
-  s += "%.2f %.2f" % (s_ms_elapsed_2 - s_ms_elapsed, get_velocity (s_ms_elapsed_2 / s_ms * v_length_ms, volume_ms))
-  return s
-
 def syllables_to_pho():
   s_len = 0
   s_nr = syllables[0][0]
@@ -671,8 +637,8 @@ def syllables_to_pho():
     if s[0] != s_nr:
       print(";;; @", s_ms)
       if s_volume:
-        volume_ms = volume_to_ms (s_volume)
-        print (";;; @", volume_ms)
+        volume_percent_str = volume_to_percent_str (s_volume)
+        print ("meta dynamic", s_nr, volume_percent_str)
 
       s_ms_elapsed = 0
       for sc in s_current:
@@ -680,9 +646,9 @@ def syllables_to_pho():
         if sc[1] == "_":
           print ("%s %.2f %d" % (sc[1], sc[2], sc[0]))
         elif isinstance (sc[3], float):
-          print ("%s %.2f %.2f %s" % (sc[1], sc[2], sc[3], volume_envelope_str (volume_ms, s_ms, s_ms_elapsed, s_ms_elapsed_2)))
+          print ("%s %.2f %.2f %s" % (sc[1], sc[2], sc[3], sc[0]))
         else:
-          print ("%s %.2f %.2f %s" % (sc[1], sc[2], sc[3].freq, volume_envelope_str (volume_ms, s_ms, s_ms_elapsed, s_ms_elapsed_2)))
+          print ("%s %.2f %.2f %s" % (sc[1], sc[2], sc[3].freq, sc[0]))
         s_ms_elapsed += sc[2]
 
       print()
