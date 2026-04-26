@@ -2,6 +2,8 @@
 
 4 Sekunden
 
+Zeit: 9*4*(4+1) + 9*6*(4+1) = 7:30
+
 Silbische Konsonanten:
 
 Sven:
@@ -26,6 +28,8 @@ R_R
 
 Stimmlose Konsonanten: (mf)
 
+Zeit: 6*2*(4+1) = 1:00
+
 f_f
 s_s
 S_S
@@ -36,6 +40,8 @@ h_h
 ==========================================================
 
 5 Lautstärken: pp p mf f ff
+
+Zeit: 6*5*2 = 1:00
 
 Plosive:
 
@@ -49,6 +55,8 @@ g
 ==========================================================
 
 4 Sekunden
+
+Zeit: 4*5*(4+1)*15 + 6*3*(4+1)*15 = 47:30
 
 Sven Insertions:
  - E A d g             pp p mf f ff
@@ -73,6 +81,9 @@ lesen:                        l e z @ n
 Lesers:                       l e z 6 s
 
 ==========================================================
+
+Zeit: 1032*5*2 ~= 3:00
+
 Zerquetscher:                 ts E r k v E tS 6 
 Wadenkrampf:                  v a d n k r a m pf 
 polygonal:                    p o l i g o n a l 
@@ -1110,6 +1121,10 @@ naher:                        n a 6
 
 Vokal Anfang / Ende:
 
+3 Sekunden
+
+Zeit: 3*15*2 = 1:30
+
 _ a _
 _ E _
 _ e _
@@ -1131,6 +1146,8 @@ _ 6 _
 Whispering Vowels:
 
 3 Sekunden, mf
+
+Zeit: 3*15*2 = 1:30
 
 _ a _
 _ E _
