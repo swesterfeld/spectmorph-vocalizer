@@ -1,3 +1,42 @@
+==========================================================
+
+4 Sekunden
+
+Silbische Konsonanten:
+
+Sven:
+ - E A d g             mf
+
+Claudia:
+ - f a c1 f1 a1 c2     mf
+
+m_m
+n_n
+N_N
+v_v
+z_z
+Z_Z
+l_l
+r_r
+R_R
+
+==========================================================
+
+4 Sekunden
+
+Stimmlose Konsonanten: (mf)
+
+f_f
+s_s
+S_S
+C_C
+x_x
+h_h
+
+==========================================================
+
+4 Sekunden
+
 Sven Insertions:
  - E A d g             pp p mf f ff
 
@@ -20,9 +59,7 @@ Wut:                          v u t
 lesen:                        l e z @ n
 Lesers:                       l e z 6 s
 
-
-
-
+==========================================================
 Zerquetscher:                 ts E r k v E tS 6 
 Wadenkrampf:                  v a d n k r a m pf 
 polygonal:                    p o l i g o n a l 
@@ -1055,3 +1092,22 @@ verregnen:                    f E R R e k n @ n
 puffen:                       p U f @ n
 Asche:                        a C @
 naher:                        n a 6
+
+
+Vokal Anfang / Ende:
+
+_ a _
+_ E _
+_ e _
+_ i _
+_ I _
+_ y _
+_ Y _
+_ 2 _
+_ 9 _
+_ O _
+_ o _
+_ U _
+_ u _
+_ @ _
+_ 6 _
