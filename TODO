@@ -1,9 +1,10 @@
 TODO before recording: X
 High Priority H
 
- - mxmlparse/dynamic: staccato
- - mxmlparse/dynamic: bar/beat points
  - mxmlparse/dynamic: tempo change
+ - mxmlparse/dynamic: volume change in note
+ - dynamic: volume jumps should ramp
+ - mxmlparse/dynamic: bar/beat points
  - for short notes, both vowel and consonants need to be shortened
  - auto-detect steady vowel state (60%?...)
  - hiatus freq change before vowel change
@@ -88,3 +89,4 @@ Done:
  - support non released plosives for instance t_>n or p_>m
  - support notes without vowel center (m)
  - support syllabic consonants m_= synthesis via m_m
+ - mxmlparse/dynamic: staccato
