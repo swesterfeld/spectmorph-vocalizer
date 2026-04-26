@@ -32,6 +32,7 @@ struct NoteEvent
   vector<DivToVel> divisions_to_velocity;
   std::string lyric;     // attached lyric (if any)
   bool staccato = false;  // staccato?
+  bool accent = false;  // accent?
 };
 
 // Map symbolic dynamics to MIDI velocity
@@ -145,6 +146,7 @@ int main(int argc, char **argv)
               printf ("note pitch %s, duration %d, lyricText %s\n", pitchKey.c_str(), durDivisions, lyricText.c_str());
 
               bool staccato = false;
+              bool accent = false;
               auto notations_node = noteNode.child ("notations");
               if (notations_node)
                 {
@@ -153,6 +155,8 @@ int main(int argc, char **argv)
                     {
                       if (articulations_node.child ("staccato"))
                         staccato = true;
+                      if (articulations_node.child ("accent"))
+                        accent = true;
                     }
                 }
 
@@ -160,7 +164,7 @@ int main(int argc, char **argv)
               if (tieStart)
                 {
                   if (tiedNotes.find(pitchKey) == tiedNotes.end()) {
-                      tiedNotes[pitchKey] = {NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato};
+                      tiedNotes[pitchKey] = {NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato, accent};
                   } else {
                       tiedNotes[pitchKey].duration_divisions += durDivisions;
                       if (!lyricText.empty()) tiedNotes[pitchKey].lyric = lyricText;
@@ -175,12 +179,12 @@ int main(int argc, char **argv)
                       events.push_back(e);
                       tiedNotes.erase(pitchKey);
                   } else {
-                      events.push_back({NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato});
+                      events.push_back({NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato, accent});
                   }
                 }
               else
                 {
-                  events.push_back({NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato});
+                  events.push_back({NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato, accent});
                 }
 
               current_time_divisions += durDivisions;
@@ -336,6 +340,18 @@ int main(int argc, char **argv)
               return a.velocity == b.velocity && a.division == b.division;
             }),
         event.divisions_to_velocity.end());
+    }
+
+  for (auto& event : events)
+    {
+      auto midi_to_factor = [] (float midi) { return (midi / 127) * (midi / 127); };
+      auto factor_to_midi = [] (float factor) { return sqrt (factor) * 127; };
+
+      if (event.accent)
+        {
+          for (auto& d2v : event.divisions_to_velocity)
+            d2v.velocity = factor_to_midi (midi_to_factor (d2v.velocity) * 2);
+        }
     }
 
   // Print events
