@@ -1027,3 +1027,6 @@ Mörser:                       m 9 R z 6
 Rehchen:                      R e C @ n 
 erregen:                      ? E R R e g @ n
 verregnen:                    f E R R e k n @ n
+puffen:                       p U f @ n
+Asche:                        a C @
+naher:                        n a 6
