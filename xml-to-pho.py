@@ -214,7 +214,7 @@ def load_mxparse (filepath):
             (int(t), int(v)) for t, v in matches
           ]
 
-        elif key in {"bpm"}:
+        elif key in {"bpm", "midi_note"}:
           current_entry[key] = float(value)
 
         else:
@@ -227,45 +227,15 @@ def load_mxparse (filepath):
 
   return entries
 
-def pitch_to_frequency(pitch: str) -> float:
+def midi_note_to_frequency(midi_note: float) -> float:
   """
-  Convert a MusicXML pitch string (e.g., 'D3', 'C#4', 'Bb5')
-  into its corresponding frequency in Hz.
-
-  Parameters:
-      pitch (str): The pitch string in scientific pitch notation.
+  pitch: midi note
 
   Returns:
       float: Frequency in Hertz.
   """
-  # Mapping of note names to semitone offsets within an octave
-  note_map = {
-    "C": 0, "C#": 1, "Db": 1,
-    "D": 2, "D#": 3, "Eb": 3,
-    "E": 4,
-    "F": 5, "F#": 6, "Gb": 6,
-    "G": 7, "G#": 8, "Ab": 8,
-    "A": 9, "A#": 10, "Bb": 10,
-    "B": 11
-  }
-
-  # Parse the pitch string
-  match = re.fullmatch(r"([A-Ga-g])([#b]?)(-?\d+)", pitch.strip())
-  if not match:
-    raise ValueError(f"Invalid pitch format: {pitch}")
-
-  note, accidental, octave = match.groups()
-  note_name = (note.upper() + accidental)
-  octave = int(octave)
-
-  if note_name not in note_map:
-    raise ValueError(f"Invalid note: {note_name}")
-
-  # Compute MIDI note number (C4 = 60)
-  midi_number = (octave + 1) * 12 + note_map[note_name]
-
   # Convert MIDI note to frequency
-  frequency = 440.0 * (2 ** ((midi_number - 69) / 12))
+  frequency = 440.0 * (2 ** ((midi_note - 69) / 12))
 
   return frequency
 
@@ -336,7 +306,7 @@ for element in score:
       last_note_rest_offset = element["start"]
       note_duration_ms = element["duration"] * ms_per_beat
       quarter_offset += element["duration"]
-      freq = pitch_to_frequency (element["pitch"])
+      freq = midi_note_to_frequency (element["midi_note"])
       # melisma: extend last vowel over new note without lyric
       if "lyric" not in element and last_note and last_note.freq != freq:
         element["lyric"] = last_note.lyric
