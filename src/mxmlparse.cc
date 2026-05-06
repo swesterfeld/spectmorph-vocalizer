@@ -121,11 +121,28 @@ int main(int argc, char **argv)
   std::vector<NoteEvent> events;
   std::map<std::string, NoteEvent> tiedNotes; // active ties keyed by pitch+octave
 
+  bool first_measure = true;
+  int  first_rest = 0;
+
   for (auto measure : doc.select_nodes("//measure"))
     {
       for (auto node : measure.node().children())
         {
           std::string nodeName = node.name();
+
+          if (first_measure && nodeName == "attributes")
+            {
+              auto time_node = node.child ("time");
+              if (time_node)
+                {
+                  auto beats_node = time_node.child ("beats");
+                  auto beat_type = time_node.child ("beat-type");
+                  if (beats_node && beat_type)
+                    {
+                      first_rest = divisions * 4 * atoi (beats_node.child_value()) / atoi (beat_type.child_value());
+                    }
+                }
+            }
 
           if (nodeName == "sound")
             {
@@ -277,6 +294,7 @@ int main(int argc, char **argv)
               current_time_divisions += std::stoi(node.child("duration").child_value());
             }
         }
+      first_measure = false;
     }
   int current_velocity = 80;
   for (auto& wedge : dynamic_wedges)
@@ -415,13 +433,19 @@ int main(int argc, char **argv)
       fprintf (f, " divisions: %d\n", divisions);
       fprintf (f, " bpm: %f\n", tempo);
       fprintf (f, "\n");
+
+      fprintf (f, "REST\n");
+      fprintf (f, " start: %d\n", 0);
+      fprintf (f, " duration: %d\n", first_rest);
+      fprintf (f, "\n");
+
       for (auto& e : events)
         {
           if (e.event_type == NoteEvent::REST)
             {
               // TODO: should we avoid this and insert rests automatically?
               fprintf (f, "REST\n");
-              fprintf (f, " start: %d\n", e.start_divisions);
+              fprintf (f, " start: %d\n", e.start_divisions + first_rest);
               fprintf (f, " duration: %d\n", e.duration_divisions);
               fprintf (f, "\n");
             }
@@ -430,7 +454,7 @@ int main(int argc, char **argv)
               if (e.start_divisions > offset)
                 {
                   fprintf (f, "REST\n");
-                  fprintf (f, " start: %d\n", offset);
+                  fprintf (f, " start: %d\n", offset + first_rest);
                   fprintf (f, " duration: %d\n", e.start_divisions - offset);
                   fprintf (f, "\n");
                   offset = e.start_divisions;
@@ -439,7 +463,7 @@ int main(int argc, char **argv)
               if (e.lyric != "")
                 fprintf (f, " lyric: %s\n", e.lyric.c_str());
               fprintf (f, " midi_note: %.2f\n", e.midi_note);
-              fprintf (f, " start: %d\n", e.start_divisions);
+              fprintf (f, " start: %d\n", e.start_divisions + first_rest);
               fprintf (f, " duration: %d\n", e.duration_divisions);
               fprintf (f, " volume:");
               for (auto d2v : e.divisions_to_velocity)
