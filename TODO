@@ -5,6 +5,7 @@ High Priority H
  - mxmlparse/dynamic: volume change in note
  - dynamic: volume jumps should ramp
  - mxmlparse/dynamic: bar/beat points
+ - mxmlparse: check that accents are really beat-aligned
  - for short notes, both vowel and consonants need to be shortened
  - auto-detect steady vowel state (60%?...)
  - hiatus freq change before vowel change
@@ -14,6 +15,7 @@ High Priority H
  - try to use compression as close to 1 as possible
  X labelling: instead of labelling a a_a a, we could label a_a
  - glissando
+   m a_U s should have glissando on m a, but not a_U s
  - whispering voice
  - normalization of input material
  - ramp for volume normalization @, 6
