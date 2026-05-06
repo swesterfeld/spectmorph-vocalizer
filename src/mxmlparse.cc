@@ -24,8 +24,7 @@ struct NoteEvent
     REST
   } event_type;
 
-  std::string step;
-  int octave;
+  double midi_note;
   int start_divisions;
   int duration_divisions;
 
@@ -56,6 +55,31 @@ next_velocity_level (int velocity, int direction)
     if (velocity == vs[i] && i + direction >= 0 && i + direction < vs.size())
       return vs[i + direction];
   return velocity;
+}
+
+int
+step_to_semitone (const std::string& step)
+{
+  if (step == "C") return 0;
+  if (step == "D") return 2;
+  if (step == "E") return 4;
+  if (step == "F") return 5;
+  if (step == "G") return 7;
+  if (step == "A") return 9;
+  if (step == "B") return 11;
+  assert (false); // not reached
+  return 0; // fallback
+}
+
+double
+pitch_to_midi (const std::string& step, int octave, double alter)
+{
+  int base = step_to_semitone (step);
+
+  // MIDI: C4 = 60 → formula uses octave + 1
+  double midi = 12.0 * (octave + 1) + base + alter;
+
+  return midi;
 }
 
 int main(int argc, char **argv)
@@ -103,6 +127,10 @@ int main(int argc, char **argv)
         {
           std::string nodeName = node.name();
 
+          if (nodeName == "sound")
+            {
+              printf ("TEMPO, position %d, tempo=%f\n", current_time_divisions, atof (node.attribute ("tempo").value()));
+            }
           if (nodeName == "note")
             {
               auto noteNode = node;
@@ -116,7 +144,7 @@ int main(int argc, char **argv)
                   auto durNode = noteNode.child("duration");
                   if (durNode)
                     {
-                      events.push_back({NoteEvent::REST, "", 0, current_time_divisions, durDivisions, {}, "", false});
+                      events.push_back({NoteEvent::REST, -1, current_time_divisions, durDivisions, {}, "", false});
                       current_time_divisions += std::stoi(durNode.child_value());
                     }
                   continue;
@@ -125,7 +153,12 @@ int main(int argc, char **argv)
               // Extract pitch
               std::string step = noteNode.child("pitch").child("step").child_value();
               int octave = std::stoi(noteNode.child("pitch").child("octave").child_value());
+              double alter = 0;
+              auto alter_node = noteNode.child ("pitch").child("alter");
+              if (alter_node)
+                alter = atof (alter_node.child_value());
               std::string pitchKey = step + std::to_string(octave);
+              double midi_note = pitch_to_midi (step, octave, alter);
 
               // Handle ties
               bool tieStart = false, tieStop = false;
@@ -158,13 +191,19 @@ int main(int argc, char **argv)
                       if (articulations_node.child ("accent"))
                         accent = true;
                     }
+                  auto slide_node = notations_node.child ("slide");
+                  if (slide_node)
+                    {
+                      std::string type = slide_node.attribute("type").value();
+                      printf ("slide type %s (glissando)\n", type.c_str()); // TODO
+                    }
                 }
 
               // Handle ties
               if (tieStart)
                 {
                   if (tiedNotes.find(pitchKey) == tiedNotes.end()) {
-                      tiedNotes[pitchKey] = {NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato, accent};
+                      tiedNotes[pitchKey] = {NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent};
                   } else {
                       tiedNotes[pitchKey].duration_divisions += durDivisions;
                       if (!lyricText.empty()) tiedNotes[pitchKey].lyric = lyricText;
@@ -179,12 +218,12 @@ int main(int argc, char **argv)
                       events.push_back(e);
                       tiedNotes.erase(pitchKey);
                   } else {
-                      events.push_back({NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato, accent});
+                      events.push_back({NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent});
                   }
                 }
               else
                 {
-                  events.push_back({NoteEvent::NOTE, step, octave, current_time_divisions, durDivisions, {}, lyricText, staccato, accent});
+                  events.push_back({NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent});
                 }
 
               current_time_divisions += durDivisions;
@@ -271,7 +310,7 @@ int main(int argc, char **argv)
     }
   for (auto& event : events)
     {
-      printf ("candidate event: %s%d %d..%d - %s\n", event.step.c_str(), event.octave, event.start_divisions, event.start_divisions + event.duration_divisions, event.lyric.c_str());
+      printf ("candidate event: %.2f %d..%d - %s\n", event.midi_note, event.start_divisions, event.start_divisions + event.duration_divisions, event.lyric.c_str());
       for (auto d2v : division_to_velocity)
         {
           //printf ("current_time_divisions: %d\n", current_time_divisions);
@@ -359,7 +398,7 @@ int main(int argc, char **argv)
     {
       auto div_to_sec = [&] (int div) { return div / static_cast<double>(divisions) * (60.0 / tempo); };
 
-      std::cout << "Note: " << e.step << e.octave
+      std::cout << "Note: " << e.midi_note
                 << " Start: " << div_to_sec (e.start_divisions) << "s"
                 << " Duration: " << div_to_sec (e.duration_divisions) << "s" << "  (";
       for (auto d2v : e.divisions_to_velocity)
@@ -399,7 +438,7 @@ int main(int argc, char **argv)
               fprintf (f, "NOTE\n");
               if (e.lyric != "")
                 fprintf (f, " lyric: %s\n", e.lyric.c_str());
-              fprintf (f, " pitch: %s%d\n", e.step.c_str(), e.octave);
+              fprintf (f, " midi_note: %.2f\n", e.midi_note);
               fprintf (f, " start: %d\n", e.start_divisions);
               fprintf (f, " duration: %d\n", e.duration_divisions);
               fprintf (f, " volume:");
