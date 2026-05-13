@@ -15,6 +15,12 @@ struct DivToVel
   int velocity;
 };
 
+struct DivToTempo
+{
+  int    division;
+  double tempo;
+};
+
 // Event representing a note ready for playback
 struct NoteEvent
 {
@@ -82,6 +88,50 @@ pitch_to_midi (const std::string& step, int octave, double alter)
   return midi;
 }
 
+std::vector<NoteEvent> split_note_on_tempo_change (const NoteEvent& note, const std::vector<DivToTempo>& tempo_map)
+{
+  std::vector<NoteEvent> result;
+
+  int start = note.start_divisions;
+  int end   = note.start_divisions + note.duration_divisions;
+
+  int segment_start = start;
+
+  for (size_t i = 0; i < tempo_map.size(); i++)
+    {
+      int t_div = tempo_map[i].division;
+
+      // skip tempo changes before note
+      if (t_div <= start) continue;
+
+      // stop if beyond note
+      if (t_div >= end) break;
+
+      // split point inside note
+      NoteEvent part = note;
+      part.start_divisions = segment_start;
+      part.duration_divisions = t_div - segment_start;
+
+      result.push_back (part);
+
+      segment_start = t_div;
+    }
+
+  // final segment
+  NoteEvent last = note;
+  last.start_divisions = segment_start;
+  last.duration_divisions = end - segment_start;
+
+  result.push_back (last);
+
+  /* remove lyrics on splitted parts to force melisma */
+  for (size_t i = 0; i < result.size(); i++)
+    if (i)
+      result[i].lyric = "";
+
+  return result;
+}
+
 int main(int argc, char **argv)
 {
   pugi::xml_document doc;
@@ -96,6 +146,7 @@ int main(int argc, char **argv)
   int current_time_divisions = 0; // playback position in divisions
 
   vector<DivToVel> division_to_velocity;
+  vector<DivToTempo> division_to_tempo;
   struct DynWedge
   {
     enum { CRESCENDO, DIMINUENDO } type;
@@ -117,6 +168,7 @@ int main(int argc, char **argv)
 
   auto soundNode = doc.select_node("//sound[@tempo]").node();
   if (soundNode) tempo = std::stod(soundNode.attribute("tempo").value());
+  division_to_tempo.push_back ({0, tempo});
 
   std::vector<NoteEvent> events;
   std::map<std::string, NoteEvent> tiedNotes; // active ties keyed by pitch+octave
@@ -146,7 +198,12 @@ int main(int argc, char **argv)
 
           if (nodeName == "sound")
             {
-              printf ("TEMPO, position %d, tempo=%f\n", current_time_divisions, atof (node.attribute ("tempo").value()));
+              double tempo = atof (node.attribute ("tempo").value());
+              int offset = 0;
+              if (auto offset_node = node.child("offset"))
+                offset = atoi (offset_node.child_value());
+              printf ("TEMPO, position %d, tempo=%f\n", current_time_divisions + offset, atof (node.attribute ("tempo").value()));
+              division_to_tempo.push_back ({current_time_divisions + offset, tempo});
             }
           if (nodeName == "note")
             {
@@ -267,11 +324,13 @@ int main(int argc, char **argv)
                       printf ("wedge type %s\n", type.c_str());
                       if (type == "crescendo")
                         {
+                          current_dwedge = {};
                           current_dwedge.type = DynWedge::CRESCENDO;
                           current_dwedge.start_division = current_time_divisions;
                         }
                       if (type == "diminuendo")
                         {
+                          current_dwedge = {};
                           current_dwedge.type = DynWedge::DIMINUENDO;
                           current_dwedge.start_division = current_time_divisions;
                         }
@@ -296,6 +355,16 @@ int main(int argc, char **argv)
         }
       first_measure = false;
     }
+
+  vector<NoteEvent> split_events;
+  for (auto& event : events)
+    {
+      auto split_notes = split_note_on_tempo_change (event, division_to_tempo);
+      split_events.insert (split_events.end(), split_notes.begin(), split_notes.end());
+    }
+  events = split_events;
+
+  // loop over crescendo / diminuendo, resolve start and end velocity
   int current_velocity = 80;
   for (auto& wedge : dynamic_wedges)
     {
@@ -326,6 +395,8 @@ int main(int argc, char **argv)
     {
       printf ("division %d -> vel %d\n", d2v.division, d2v.velocity);
     }
+
+  // apply crescendo / diminuendo to notes
   for (auto& event : events)
     {
       printf ("candidate event: %.2f %d..%d - %s\n", event.midi_note, event.start_divisions, event.start_divisions + event.duration_divisions, event.lyric.c_str());
@@ -399,6 +470,7 @@ int main(int argc, char **argv)
         event.divisions_to_velocity.end());
     }
 
+  // apply accent to notes
   for (auto& event : events)
     {
       auto midi_to_factor = [] (float midi) { return (midi / 127) * (midi / 127); };
@@ -458,6 +530,16 @@ int main(int argc, char **argv)
                   fprintf (f, " duration: %d\n", e.start_divisions - offset);
                   fprintf (f, "\n");
                   offset = e.start_divisions;
+                }
+              for (auto d2t : division_to_tempo)
+                {
+                  if (d2t.division == e.start_divisions)
+                    {
+                      fprintf (f, "TEMPO\n");
+                      fprintf (f, " divisions: %d\n", divisions);
+                      fprintf (f, " bpm: %f\n", d2t.tempo);
+                      fprintf (f, "\n");
+                    }
                 }
               fprintf (f, "NOTE\n");
               if (e.lyric != "")
