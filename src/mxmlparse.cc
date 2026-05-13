@@ -511,10 +511,26 @@ int main(int argc, char **argv)
       fprintf (f, " duration: %d\n", first_rest);
       fprintf (f, "\n");
 
+      auto print_tempo_change_at = [&] (int division)
+        {
+          for (auto d2t : division_to_tempo)
+            {
+              if (d2t.division == division)
+                {
+                  fprintf (f, "TEMPO\n");
+                  fprintf (f, " divisions: %d\n", division);
+                  fprintf (f, " bpm: %f\n", d2t.tempo);
+                  fprintf (f, "\n");
+                }
+            }
+        };
+
       for (auto& e : events)
         {
           if (e.event_type == NoteEvent::REST)
             {
+              print_tempo_change_at (e.start_divisions);
+
               // TODO: should we avoid this and insert rests automatically?
               fprintf (f, "REST\n");
               fprintf (f, " start: %d\n", e.start_divisions + first_rest);
@@ -525,22 +541,16 @@ int main(int argc, char **argv)
             {
               if (e.start_divisions > offset)
                 {
+                  print_tempo_change_at (offset);
+
+                  // TODO: could cause problems if a tempo change is inside this rest
                   fprintf (f, "REST\n");
                   fprintf (f, " start: %d\n", offset + first_rest);
                   fprintf (f, " duration: %d\n", e.start_divisions - offset);
                   fprintf (f, "\n");
                   offset = e.start_divisions;
                 }
-              for (auto d2t : division_to_tempo)
-                {
-                  if (d2t.division == e.start_divisions)
-                    {
-                      fprintf (f, "TEMPO\n");
-                      fprintf (f, " divisions: %d\n", divisions);
-                      fprintf (f, " bpm: %f\n", d2t.tempo);
-                      fprintf (f, "\n");
-                    }
-                }
+              print_tempo_change_at (e.start_divisions);
               fprintf (f, "NOTE\n");
               if (e.lyric != "")
                 fprintf (f, " lyric: %s\n", e.lyric.c_str());
