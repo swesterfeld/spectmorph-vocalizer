@@ -6,6 +6,7 @@ High Priority H
  - dynamic: volume jumps should ramp
  - mxmlparse/dynamic: bar/beat points
  - mxmlparse: check that accents are really beat-aligned
+ - mxmlparse: handle polyphony errors (like before)
  - for short notes, both vowel and consonants need to be shortened
  - auto-detect steady vowel state (60%?...)
  - hiatus freq change before vowel change

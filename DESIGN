@@ -1,0 +1,65 @@
+============================================================
+mxmlparse:
+============================================================
+
+Zerlegen von musicxml in REST, NOTE, TEMPO Liste
+
+NOTE:
+ - crescendo / decrescendo / dynamik -> volume Attribut
+ - midi note von musicxml
+ - lyric
+ - Timing in Divisions
+
+============================================================
+xml-to-pho.py:
+============================================================
+
+Lese mxparse Datei
+
+(a)
+c-v-c Splitter, Silben werden in Anlaut, Kern und Auslaut zerlegt
+Division-Timing wird in Millisekunden umgerechnet
+Detektierung Melisma & Überbundene Noten
+
+(b)
+Staccato: Noten in Note/Rest mit 50% zerlegen
+
+(c)
+Melisma:
+Noten am Anfang: kein c_out
+Noten im Melisma: nur v
+Noten am Ende: kein c_in
+
+(d)
+Generierung der Millisekunden für die pho-Datei
+v ist immer auf der Zeit
+Konsonanten im Anlaut: vorige Note/Pause
+Konsonanten im Auslaut: v wird gekürzt
+
+Silben+Volume Struktur wird im pho gespeichert
+
+============================================================
+phomorphdi.py:
+============================================================
+
+Lese VOICE Dateien (Labels, Volumes)
+Lese pho Datei
+
+Frequenz-Verlauf berechnen:
+ - Melisma
+ - Zusammenfassen von wiederholten Vokalen
+
+Positionen für Insertions (Vokale, Pausen) festlegen
+
+Item-Liste für Synthese vorbereiten (Diphone, Monophone)
+ - Positionen in VOICE-Dateien als item.pos1/pos2 festlegen
+
+Lautstärke-Verlauf berechnen
+ - Silbeninformation verwenden
+ - Lautstärkesprünge sind zwischen Items
+
+Skript-Datei schreiben:
+ - Volume-Information
+ - Frequenz-Information
+ - Cross-Fading (Morphing)
+ - Positionen aus Item-Liste
