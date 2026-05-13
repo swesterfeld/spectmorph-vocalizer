@@ -511,14 +511,14 @@ int main(int argc, char **argv)
       fprintf (f, " duration: %d\n", first_rest);
       fprintf (f, "\n");
 
-      auto print_tempo_change_at = [&] (int division)
+      auto print_tempo_change_at = [&] (int pos)
         {
           for (auto d2t : division_to_tempo)
             {
-              if (d2t.division == division)
+              if (d2t.division == pos)
                 {
                   fprintf (f, "TEMPO\n");
-                  fprintf (f, " divisions: %d\n", division);
+                  fprintf (f, " divisions: %d\n", divisions);
                   fprintf (f, " bpm: %f\n", d2t.tempo);
                   fprintf (f, "\n");
                 }
