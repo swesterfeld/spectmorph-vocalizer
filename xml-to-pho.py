@@ -279,23 +279,15 @@ notes = []
 for element in score:
   if element["type"] == "tempo":
     set_tempo (element["divisions"], element["bpm"])
+    break
 
 # Extract information from the score
 for element in score:
   print (";;;", element)
+  if element["type"] == "tempo":
+    set_tempo (element["divisions"], element["bpm"])
   if element["type"] == "rest" or element["type"] == "note":
-    """
-    if isinstance (element, music21.tempo.MetronomeMark):
-      if element.numberSounding:
-        tempo_change_sounding += [ element ]
-      if (element.number):
-        set_tempo (element.referent.quarterLength, element.number)
-    """
     qoffset16 = round (quarter_offset * 4)
-    if len (tempo_change_sounding) and qoffset16 > round (tempo_change_sounding[0].offset * 4):
-      telement = tempo_change_sounding[0]
-      set_tempo (telement.referent.quarterLength, telement.numberSounding)
-      tempo_change_sounding = tempo_change_sounding[1:]
     print (";;; quarter_offset: ", quarter_offset)
     if element["type"] == "note":
       """
