@@ -3,6 +3,7 @@ High Priority H
 
  - testxml/akzent-test-gleiche-note-haltebogen-cccvcc2.musicxml
  - testxml/akzent-test-gleiche-note-haltebogen-cccvcc.musicxml
+ - testxml/test-wild.musicxml (diminuendo at end, fermata)
  - dynamic: volume jumps should ramp
  - mxmlparse/dynamic: bar/beat points
  - mxmlparse: handle polyphony errors (like before)
