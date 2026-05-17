@@ -6,6 +6,7 @@ High Priority H
  - testxml/test-wild.musicxml (diminuendo at end, fermata)
  - dynamic: volume jumps should ramp
  - mxmlparse/dynamic: bar/beat points
+ - mxmlparse: fff, ppp, fff< ppp>
  - mxmlparse: handle polyphony errors (like before)
  - mxmlparse: accent should *not just* map to overall volume (should use envelope)
  - mxmlparse: what is the relationship between accent, tempo and duration
