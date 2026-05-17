@@ -1,11 +1,10 @@
 TODO before recording: X
 High Priority H
 
- - mxmlparse/dynamic: tempo change
- - mxmlparse/dynamic: volume change in note
+ - testxml/akzent-test-gleiche-note-haltebogen-cccvcc2.musicxml
+ - testxml/akzent-test-gleiche-note-haltebogen-cccvcc.musicxml
  - dynamic: volume jumps should ramp
  - mxmlparse/dynamic: bar/beat points
- - mxmlparse: check that accents are really beat-aligned
  - mxmlparse: handle polyphony errors (like before)
  - mxmlparse: accent should *not just* map to overall volume (should use envelope)
  - mxmlparse: what is the relationship between accent, tempo and duration
@@ -95,3 +94,6 @@ Done:
  - support notes without vowel center (m)
  - support syllabic consonants m_= synthesis via m_m
  - mxmlparse/dynamic: staccato
+ - mxmlparse/dynamic: tempo change
+ - mxmlparse/dynamic: volume change in note
+ - mxmlparse: check that accents are really beat-aligned
