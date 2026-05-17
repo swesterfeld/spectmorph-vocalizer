@@ -314,6 +314,11 @@ for element in score:
         if last_note:
           assert (last_note.freq == freq)
           last_note.ms += note_duration_ms
+          last_volume_ms = last_note.volume[-1][0]
+          last_note.volume += [
+            (volume_entry[0] * ms_per_beat + last_volume_ms, volume_entry[1])
+            for volume_entry in element["volume"]
+          ]
         else:
           raise RuntimeError ("no lyric, note at measure measure %d beat %d" % (element.measureNumber, element.beat))
       else:
@@ -349,7 +354,10 @@ for element in score:
         note.freq = freq
         note.has_accent = has_accent
         note.has_staccato = has_staccato
-        note.volume = element["volume"] # FIXME: melisma
+        note.volume = [
+          (volume_entry[0] * ms_per_beat, volume_entry[1])
+          for volume_entry in element["volume"]
+        ]
         note.melisma_state = melisma_state
         """
         note.measure_number = element.measureNumber
