@@ -88,7 +88,8 @@ pitch_to_midi (const std::string& step, int octave, double alter)
   return midi;
 }
 
-std::vector<NoteEvent> split_note_on_tempo_change (const NoteEvent& note, const std::vector<DivToTempo>& tempo_map)
+std::vector<NoteEvent>
+split_note_on_changes (const NoteEvent& note, const auto& split_divs)
 {
   std::vector<NoteEvent> result;
 
@@ -97,11 +98,11 @@ std::vector<NoteEvent> split_note_on_tempo_change (const NoteEvent& note, const 
 
   int segment_start = start;
 
-  for (size_t i = 0; i < tempo_map.size(); i++)
+  for (auto s : split_divs)
     {
-      int t_div = tempo_map[i].division;
+      int t_div = s.division;
 
-      // skip tempo changes before note
+      // skip changes before note
       if (t_div <= start) continue;
 
       // stop if beyond note
@@ -130,6 +131,18 @@ std::vector<NoteEvent> split_note_on_tempo_change (const NoteEvent& note, const 
       result[i].lyric = "";
 
   return result;
+}
+
+void
+split_events (vector<NoteEvent>& events, const auto& split_divs)
+{
+  vector<NoteEvent> split_events;
+  for (auto& event : events)
+    {
+      auto split_notes = split_note_on_changes (event, split_divs);
+      split_events.insert (split_events.end(), split_notes.begin(), split_notes.end());
+    }
+  events = split_events;
 }
 
 int main(int argc, char **argv)
@@ -356,13 +369,11 @@ int main(int argc, char **argv)
       first_measure = false;
     }
 
-  vector<NoteEvent> split_events;
-  for (auto& event : events)
-    {
-      auto split_notes = split_note_on_tempo_change (event, division_to_tempo);
-      split_events.insert (split_events.end(), split_notes.begin(), split_notes.end());
-    }
-  events = split_events;
+  // split notes on tempo changes (in order to have divisions map properly to ms later)
+  split_events (events, division_to_tempo);
+
+  // split notes on volume changes (in order to get beat-aligned volume jumps later)
+  split_events (events, division_to_velocity);
 
   // loop over crescendo / diminuendo, resolve start and end velocity
   int current_velocity = 80;
