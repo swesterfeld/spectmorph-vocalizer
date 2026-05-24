@@ -1,10 +1,10 @@
 TODO before recording: X
 High Priority H
 
- - testxml/test-wild.musicxml (diminuendo at end, fermata)
  - dynamic: volume jumps should ramp
  - mxmlparse/dynamic: bar/beat points
- - mxmlparse: fff, ppp, fff< ppp>
+ - mxmlparse/dynamic: should handle fp
+ - mxmlparse: warn/error on unsupported dynamic level
  - mxmlparse: handle polyphony errors (like before)
  - mxmlparse: accent should *not just* map to overall volume (should use envelope)
  - mxmlparse: what is the relationship between accent, tempo and duration
@@ -97,3 +97,5 @@ Done:
  - mxmlparse/dynamic: tempo change
  - mxmlparse/dynamic: volume change in note
  - mxmlparse: check that accents are really beat-aligned
+ - mxmlparse: fff, ppp, fff< ppp>
+ - testxml/test-wild.musicxml (diminuendo at end, fermata)
