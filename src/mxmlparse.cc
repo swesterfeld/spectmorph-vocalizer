@@ -380,6 +380,15 @@ int main(int argc, char **argv)
   for (auto& wedge : dynamic_wedges)
     {
       int start_velocity = current_velocity, end_velocity = -1;
+
+      auto resort_division_to_velocity = [&] ()
+        {
+          std::sort (division_to_velocity.begin(), division_to_velocity.end(),
+                     [](const DivToVel& a, const DivToVel& b)
+                       {
+                         return a.division < b.division;
+                       });
+        };
       for (auto d2v : division_to_velocity)
         {
           if (wedge.start_division >= d2v.division)
@@ -391,11 +400,13 @@ int main(int argc, char **argv)
         {
           end_velocity = next_velocity_level (start_velocity, 1);
           division_to_velocity.push_back ({ wedge.end_division, end_velocity });
+          resort_division_to_velocity();
         }
       if (end_velocity == -1 && wedge.type == DynWedge::DIMINUENDO)
         {
           end_velocity = next_velocity_level (start_velocity, -1);
           division_to_velocity.push_back ({ wedge.end_division, end_velocity });
+          resort_division_to_velocity();
         }
       current_velocity = end_velocity;
       wedge.start_velocity = start_velocity;
