@@ -35,9 +35,10 @@ struct NoteEvent
   int duration_divisions;
 
   vector<DivToVel> divisions_to_velocity;
-  std::string lyric;     // attached lyric (if any)
+  std::string lyric;      // attached lyric (if any)
   bool staccato = false;  // staccato?
-  bool accent = false;  // accent?
+  bool accent = false;    // accent?
+  bool fermata = false;   // fermata?
 };
 
 // Map symbolic dynamics to MIDI velocity
@@ -225,13 +226,15 @@ int main(int argc, char **argv)
               // Extract duration in seconds
               int durDivisions = std::stoi(noteNode.child("duration").child_value());
 
+              bool fermata = noteNode.child ("notations").child ("fermata");
+
               // Skip rests but advance time
               if (noteNode.child("rest"))
                 {
                   auto durNode = noteNode.child("duration");
                   if (durNode)
                     {
-                      events.push_back({NoteEvent::REST, -1, current_time_divisions, durDivisions, {}, "", false});
+                      events.push_back({NoteEvent::REST, -1, current_time_divisions, durDivisions, {}, "", false, false, fermata});
                       current_time_divisions += std::stoi(durNode.child_value());
                     }
                   continue;
@@ -290,7 +293,7 @@ int main(int argc, char **argv)
               if (tieStart)
                 {
                   if (tiedNotes.find(pitchKey) == tiedNotes.end()) {
-                      tiedNotes[pitchKey] = {NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent};
+                      tiedNotes[pitchKey] = {NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent, fermata};
                   } else {
                       tiedNotes[pitchKey].duration_divisions += durDivisions;
                       if (!lyricText.empty()) tiedNotes[pitchKey].lyric = lyricText;
@@ -305,12 +308,12 @@ int main(int argc, char **argv)
                       events.push_back(e);
                       tiedNotes.erase(pitchKey);
                   } else {
-                      events.push_back({NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent});
+                      events.push_back({NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent, fermata});
                   }
                 }
               else
                 {
-                  events.push_back({NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent});
+                  events.push_back({NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent, fermata});
                 }
 
               current_time_divisions += durDivisions;
@@ -557,6 +560,8 @@ int main(int argc, char **argv)
               fprintf (f, "REST\n");
               fprintf (f, " start: %d\n", e.start_divisions + first_rest);
               fprintf (f, " duration: %d\n", e.duration_divisions);
+              if (e.fermata)
+                fprintf (f, " fermata: True\n");
               fprintf (f, "\n");
             }
           else
@@ -586,7 +591,9 @@ int main(int argc, char **argv)
                 }
               fprintf (f, "\n");
               if (e.staccato)
-                fprintf (f, " articulation: staccato\n");
+                fprintf (f, " staccato: True\n");
+              if (e.fermata)
+                fprintf (f, " fermata: True\n");
               fprintf (f, "\n");
             }
           offset += e.duration_divisions;
