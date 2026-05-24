@@ -110,7 +110,8 @@ def freq_to_note (freq):
   return 69 + 12 * log2 (freq/440)
 
 class PhoEntry:
-  pass
+  def __init__ (self):
+    self.syl_entries = []
 
 dynamic_dict = {}
 
@@ -326,11 +327,8 @@ def lookup_diphone_entry_vv (P1, P2, pho_entry, note):
 
 items = []
 
-syl_list = []
-
 class Item:
-  def __init__ (self):
-    self.syllable_start = None
+  pass
 
 # prepare for melisma:
 #  - merge repeated vowels into one
@@ -372,7 +370,7 @@ def prepare_melisma (pho):
     if last and V_last and V_current and V_last == V_current:
       out[-1][1] = str (float (out[-1][1]) + float (pho[i][1]))
       out[-1][-1].last_diph_frac_time = float (pho[i][1]) / float (out[-1][1])
-      syl_list.append ((int (pho[i][-2]), total_ms))
+      out[-1][-1].syl_entries.append ((int (pho[i][-2]), total_ms))
     else:
       pho[i][-1].last_diph_frac_time = 1
       out.append (pho[i])
@@ -416,6 +414,12 @@ for i in range (len (pho)):
 #for i in range (len (pho)):
 #  pho[i][1] = str (float (pho[i][1]) - pho[i][-1].v_time)
 #  print (">", pho[i][0], pho[i][1], file=sys.stderr)
+
+def get_total_ms (items):
+  total_ms = 0
+  for item in items:
+    total_ms += item.ms
+  return total_ms
 
 print ("============================================", file=sys.stderr)
 for i in range (len (pho)):
@@ -543,7 +547,10 @@ for i in range (len (pho)):
       item.pos2 = pos2
       item.volume_factor = vnorm
       if pho[i][-2] != pho[i + 1][-2]:
-        item.syllable_start = int (pho[i + 1][-2])
+        syl_entry_is_present = any (x[0] == int (pho[i + 1][-2]) for x in pho_entry.syl_entries)
+        if not syl_entry_is_present:
+          pho_entry.syl_entries.append ((int (pho[i + 1][-2]), item.ms + get_total_ms (items)))
+
       items.append (item)
 
 if errors:
@@ -558,8 +565,6 @@ for item in items:
     compression = (item.pos2 - item.pos1) * 1000 / item.ms
   else:
     compression = 1
-  if item.syllable_start:
-    syl_list.append ((item.syllable_start, total_ms + item.ms))
   print ("ITEM: %-5s %-5s %7.2f %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression, item.volume_factor), file=sys.stderr)
   if item.ms > 0:
     synlist.append (item)
@@ -568,13 +573,21 @@ for item in items:
   total_ms += item.ms
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
 
-volume_envelope = []
-syl_list.sort()
-for i in range (len (syl_list) - 1):
-  if syl_list[i][0] + 1 == syl_list[i + 1][0] and syl_list[i][0] in dynamic_dict:
-    for syl_pt in dynamic_dict[syl_list[i][0]]:
-      frac = syl_pt[0] / 100
-      volume_envelope.append (((syl_list[i][1] * (1 - frac) + syl_list[i + 1][1] * frac), syl_pt[1]))
+def build_volume_envelope():
+  syl_list = []
+  for p in pho:
+    syl_list += p[-1].syl_entries
+
+  volume_envelope = []
+  for i in range (len (syl_list) - 1):
+    if syl_list[i][0] + 1 == syl_list[i + 1][0] and syl_list[i][0] in dynamic_dict:
+      for syl_pt in dynamic_dict[syl_list[i][0]]:
+        frac = syl_pt[0] / 100
+        volume_envelope.append (((syl_list[i][1] * (1 - frac) + syl_list[i + 1][1] * frac), syl_pt[1]))
+
+  return volume_envelope
+
+volume_envelope = build_volume_envelope()
 
 def find_volume_midi (ms):
   for i in range (len (volume_envelope) - 1):
