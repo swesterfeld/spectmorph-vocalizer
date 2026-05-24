@@ -41,27 +41,60 @@ struct NoteEvent
   bool fermata = false;   // fermata?
 };
 
+struct Dynamic
+{
+  std::string name;
+  int level; // "midi"-like velocity (but allow values > 127)
+};
+
+static const std::vector<Dynamic> dynamics = {
+  {"pppp", 15},
+  {"ppp",  20},
+  {"pp",   30},
+  {"p",    45},
+  {"mp",   60},
+  {"mf",   80},
+  {"f",    100},
+  {"ff",   120},
+  {"fff",  140},
+  {"ffff", 150} // extended extreme
+};
+
 // Map symbolic dynamics to MIDI velocity
 int
-mapDynamicToVelocity (const std::string& dyn)
+map_dynamic_to_velocity (const std::string& name)
 {
-  if (dyn == "pp") return 30;
-  if (dyn == "p")  return 50;
-  if (dyn == "mp") return 60;
-  if (dyn == "mf") return 80;
-  if (dyn == "f")  return 100;
-  if (dyn == "ff") return 120;
-  return 80; // default
+  for (const auto& d : dynamics)
+    if (d.name == name)
+      return d.level;
+
+  // TODO: error for ffff, pppp, anything not in table
+  return 80; // mf fallback
 }
 
 int
-next_velocity_level (int velocity, int direction)
+next_velocity_level (int level, int direction)
 {
-  vector<int> vs = { 30, 50, 60, 80, 100, 120 }; // FIXME: add more levels
-  for (size_t i = 0; i < vs.size(); i++)
-    if (velocity == vs[i] && i + direction >= 0 && i + direction < vs.size())
-      return vs[i + direction];
-  return velocity;
+  // TODO: error handling on various cases
+
+  int idx = -1;
+
+  for (int i = 0; i < (int)dynamics.size(); i++)
+    if (dynamics[i].level == level)
+      idx = i;
+
+  if (idx == -1)
+      return level;
+
+  int ni = idx + direction;
+
+  if (ni < 0)
+    ni = 0;
+
+  if (ni >= (int)dynamics.size())
+    ni = dynamics.size() - 1;
+
+  return dynamics[ni].level;
 }
 
 int
@@ -328,7 +361,7 @@ int main(int argc, char **argv)
                       printf ("direction dynamics");
                       for (auto d : dynNode.children())
                         {
-                          division_to_velocity.push_back ({current_time_divisions, mapDynamicToVelocity(d.name())});
+                          division_to_velocity.push_back ({current_time_divisions, map_dynamic_to_velocity(d.name())});
                           printf (" %s", d.name());
                         }
                       printf ("\n");
