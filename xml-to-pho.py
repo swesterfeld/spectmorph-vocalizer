@@ -216,7 +216,8 @@ def load_mxparse (filepath):
 
         elif key in {"bpm", "midi_note"}:
           current_entry[key] = float(value)
-
+        elif key in {"staccato", "fermata"}:
+          current_entry[key] = value.strip().lower() == "true"
         else:
           # Handles fields like lyric and pitch
           current_entry[key] = value
@@ -297,6 +298,8 @@ for element in score:
       """
       last_note_rest_offset = element["start"]
       note_duration_ms = element["duration"] * ms_per_beat
+      if "fermata" in element:
+        note_duration_ms *= 1.75
       quarter_offset += element["duration"]
       freq = midi_note_to_frequency (element["midi_note"])
       # melisma: extend last vowel over new note without lyric
@@ -328,17 +331,7 @@ for element in score:
         else:
           raise RuntimeError ("no lyric, note at measure measure %d beat %d" % (element.measureNumber, element.beat))
       else:
-        has_accent = False
-        has_staccato = False
-        if "articulation" in element:
-          """
-          if art.name == "accent":
-            has_accent = True
-          print (";;;", art.name)
-          TODO: support other articulations
-          """
-          if element["articulation"] == "staccato":
-            has_staccato = True
+        has_staccato = "staccato" in element
         note = Note()
         lyric = element["lyric"]
         note.lyric = lyric
@@ -358,7 +351,6 @@ for element in score:
         note.c_out = c_out
         note.ms = note_duration_ms
         note.freq = freq
-        note.has_accent = has_accent
         note.has_staccato = has_staccato
         note.volume = [
           (volume_entry[0] * ms_per_beat, volume_entry[1])
@@ -383,6 +375,8 @@ for element in score:
       """
       last_note_rest_offset = element["start"]
       length = element["duration"] * ms_per_beat
+      if "fermata" in element:
+        length *= 1.75
       if not last_rest:
         new_rest = Rest()
         new_rest.length = length
