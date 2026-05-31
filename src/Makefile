@@ -1,4 +1,4 @@
-PROGS = smscript mkplan mxmlparse
+PROGS = smscript mkplan mxmlparse testhsh
 
 all: $(PROGS)
 
