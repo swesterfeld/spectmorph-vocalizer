@@ -225,6 +225,8 @@ int main(int argc, char **argv)
 
   for (auto measure : doc.select_nodes("//measure"))
     {
+      int bar = std::stoi (measure.node().attribute ("number").value());
+
       for (auto node : measure.node().children())
         {
           std::string nodeName = node.name();
@@ -271,6 +273,12 @@ int main(int argc, char **argv)
                       current_time_divisions += std::stoi(durNode.child_value());
                     }
                   continue;
+                }
+
+              if (noteNode.child ("chord"))
+                {
+                  fprintf (stderr, "chord unsupported, bar %d\n", bar);
+                  exit (1);
                 }
 
               // Extract pitch
