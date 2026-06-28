@@ -216,7 +216,7 @@ def load_mxparse (filepath):
 
         elif key in {"bpm", "midi_note"}:
           current_entry[key] = float(value)
-        elif key in {"staccato", "fermata"}:
+        elif key in {"staccato", "fermata", "accent"}:
           current_entry[key] = value.strip().lower() == "true"
         else:
           # Handles fields like lyric and pitch
@@ -332,6 +332,7 @@ for element in score:
           raise RuntimeError ("no lyric, note at measure measure %d beat %d" % (element.measureNumber, element.beat))
       else:
         has_staccato = "staccato" in element
+        has_accent = "accent" in element
         note = Note()
         lyric = element["lyric"]
         note.lyric = lyric
@@ -352,6 +353,7 @@ for element in score:
         note.ms = note_duration_ms
         note.freq = freq
         note.has_staccato = has_staccato
+        note.has_accent = has_accent
         note.volume = [
           (volume_entry[0] * ms_per_beat, volume_entry[1])
           for volume_entry in element["volume"]
@@ -549,6 +551,7 @@ def syllables_to_pho():
   s_nr = syllables[0][0]
   s_ms = 0
   s_volume = None
+  s_accent = False
   s_current = []
   for s in syllables:
     if s[0] != s_nr:
@@ -556,6 +559,8 @@ def syllables_to_pho():
       if s_volume:
         volume_percent_str = volume_to_percent_str (s_volume)
         print ("meta dynamic", s_nr, volume_percent_str)
+      if s_accent:
+        print ("meta accent", s_nr)
 
       s_ms_elapsed = 0
       for sc in s_current:
@@ -579,6 +584,7 @@ def syllables_to_pho():
       s_current.append (s)
       if isinstance (s[3], Note):
         s_volume = s[3].volume
+        s_accent = s[3].has_accent
       s_ms += s[2]
 
 syllables_to_pho()
