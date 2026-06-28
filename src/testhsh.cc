@@ -1,5 +1,10 @@
 #include <cmath>
 #include <cstdio>
+#include <cassert>
+#include <array>
+
+#include "svf.hh"
+
 #if 0
 class HighShelfSVF
 {
@@ -347,8 +352,9 @@ main()
 {
   int SR = 44100;
   float buffer[5*SR], buffer2[5*SR], in_freq[5*SR];
-  HighShelfBiquad high_shelf_l;
-  HighShelfBiquad high_shelf_r;
+  SVF svf;
+  //HighShelfBiquad high_shelf_l;
+  //HighShelfBiquad high_shelf_r;
   double phase = 0;
   for (int i = 0; i < 5*SR; i++)
     {
@@ -358,15 +364,20 @@ main()
       buffer2[i] = cos (phase);
       phase += freq * 2 * M_PI / 44100;
     }
-  high_shelf_l.setParams (SR, 312, 4.5, 1.5);
-  high_shelf_r.setParams (SR, 312, 4.5, 1.5);
+  //high_shelf_l.setParams (SR, 312, 4.5, 1.5);
+  //high_shelf_r.setParams (SR, 312, 4.5, 1.5);
+  svf.reset (44100);
+  svf.set_params (SVF::HSH, 312, 1 / 0.34, 4.5);
   int i = 0;
+  svf.process_block (SVF::HSH, buffer, buffer2, 5*SR);
+#if 0
   while (i < 5 * SR)
     {
       buffer[i] = high_shelf_l.process (buffer[i]);
       buffer2[i] = high_shelf_r.process (buffer2[i]);
       i++;
     }
+#endif
   for (int i = 0; i < 5*SR; i++)
     printf ("%f %.8f\n", in_freq[i], sqrt (buffer[i] * buffer[i] + buffer2[i] * buffer2[i]));
 }

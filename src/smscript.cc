@@ -8,82 +8,14 @@
 #include "smwavdata.hh"
 #include "smformantcorrection.hh"
 #include "smmorphutils.hh"
+#include "svf.hh"
+#include "paramsmoother.hh"
 
 using namespace SpectMorph;
 
 using std::vector;
 using std::string;
 using std::array;
-
-class HighShelfBiquad
-{
-public:
-  HighShelfBiquad() { reset(); }
-
-  void reset()
-  {
-    z1 = z2 = 0.0f;
-  }
-
-  // fs: sample rate
-  // freq: shelf frequency (Hz)
-  // gainDB: gain in dB
-  // Q: interpreted as "sharpness" control (mapped to slope)
-  void setParams(float fs, float freq, float gainDB, float Q)
-  {
-    const float A = std::pow(10.0f, gainDB / 40.0f);
-    const float omega = 2.0f * float(M_PI) * freq / fs;
-    const float cosw = std::cos(omega);
-    const float sinw = std::sin(omega);
-
-    // ---- Q -> S (heuristic mapping) ----
-    // RBJ uses S (slope). We map Q -> S in a smooth, usable way.
-    // Q ~ 0.5 (gentle)  -> S small
-    // Q ~ 1.0 (medium)  -> S medium
-    // Q > 1.0 (sharp)   -> S larger
-    float S = 1.0f / (2.0f * Q * Q);
-
-    // clamp for stability / usability
-    if (S < 0.1f) S = 0.1f;
-    if (S > 5.0f) S = 5.0f;
-
-    const float alpha =
-        sinw * 0.5f *
-        std::sqrt((A + 1.0f / A) * (1.0f / S - 1.0f) + 2.0f);
-
-    const float twoSqrtAAlpha = 2.0f * std::sqrt(A) * alpha;
-
-    // RBJ high-shelf coefficients
-    b0 =    A * ((A + 1.0f) + (A - 1.0f) * cosw + twoSqrtAAlpha);
-    b1 = -2.0f * A * ((A - 1.0f) + (A + 1.0f) * cosw);
-    b2 =    A * ((A + 1.0f) + (A - 1.0f) * cosw - twoSqrtAAlpha);
-
-    a0 =        (A + 1.0f) - (A - 1.0f) * cosw + twoSqrtAAlpha;
-    a1 =  2.0f * ((A - 1.0f) - (A + 1.0f) * cosw);
-    a2 =        (A + 1.0f) - (A - 1.0f) * cosw - twoSqrtAAlpha;
-
-    // normalize
-    b0 /= a0;
-    b1 /= a0;
-    b2 /= a0;
-    a1 /= a0;
-    a2 /= a0;
-  }
-
-  float process(float x)
-  {
-    // Direct Form II Transposed
-    float y = b0 * x + z1;
-    z1 = b1 * x - a1 * y + z2;
-    z2 = b2 * x - a2 * y;
-    return y;
-  }
-
-private:
-  float b0{}, b1{}, b2{};
-  float a0{}, a1{}, a2{};
-  float z1{}, z2{};
-};
 
 class ScriptBlockSource : public LiveDecoderSource
 {
@@ -229,9 +161,11 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  HighShelfBiquad high_shelf;
+  SVF high_shelf;
   double hsh_freq = 312;
-  double hsh_gain = 9;
+  ParamSmoother<SmootherType::linear> hsh_gain_smoother { 0 };
+  high_shelf.reset (mix_freq);
+  hsh_gain_smoother.reset (mix_freq, 0.001);
 
   RTMemoryArea rt_memory_area;
   ScriptBlockSource source (mix_freq, rt_memory_area, frames_file);
@@ -281,8 +215,9 @@ main (int argc, char **argv)
           live_decoder.process (rt_memory_area, i, freq_in.data(), output.data() + offset);
           for (size_t s = offset; s < offset + i; s++)
             {
-              high_shelf.setParams (mix_freq, hsh_freq, hsh_gain, /* Q */ 1.5);
-              output[s] = high_shelf.process (output[s]);
+              float dummy = 0;
+              high_shelf.set_params (SVF::HSH, hsh_freq, /* Q_inv */ 1 / 0.34, hsh_gain_smoother.get_next());
+              high_shelf.process_s<SVF::HSH> (&output[s], &dummy);
             }
 
           double time_ms = i / 48000. * 1000;
@@ -326,7 +261,7 @@ main (int argc, char **argv)
         }
       else if (script_parser.command ("high-shelf-gain", d))
         {
-          hsh_gain = d;
+          hsh_gain_smoother.set_target (d);
         }
       else
         {
