@@ -536,19 +536,6 @@ int main(int argc, char **argv)
         event.divisions_to_velocity.end());
     }
 
-  // apply accent to notes
-  for (auto& event : events)
-    {
-      auto midi_to_factor = [] (float midi) { return (midi / 127) * (midi / 127); };
-      auto factor_to_midi = [] (float factor) { return sqrt (factor) * 127; };
-
-      if (event.accent)
-        {
-          for (auto& d2v : event.divisions_to_velocity)
-            d2v.velocity = factor_to_midi (midi_to_factor (d2v.velocity) * 2);
-        }
-    }
-
   // Print events
   for (auto& e : events)
     {
@@ -635,6 +622,9 @@ int main(int argc, char **argv)
                 fprintf (f, " staccato: True\n");
               if (e.fermata)
                 fprintf (f, " fermata: True\n");
+              if (e.accent)
+                fprintf (f, " accent: True\n");
+
               fprintf (f, "\n");
             }
           offset += e.duration_divisions;

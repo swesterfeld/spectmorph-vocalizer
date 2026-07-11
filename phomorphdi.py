@@ -113,7 +113,9 @@ class PhoEntry:
   def __init__ (self):
     self.syl_entries = []
 
+# TODO: could merge
 dynamic_dict = {}
+accent_dict = {}
 
 def load_pho (filename):
   pho = []
@@ -137,6 +139,9 @@ def load_pho (filename):
               assert (len (values) % 2) == 0
               points = list (zip (values[0::2], values[1::2]))
               dynamic_dict[index] = points
+            elif x[1] == "accent":
+              index = int (x[2])
+              accent_dict[index] = True
           elif x[0][0] != ';':
             pho_entry = PhoEntry()
             pho_entry.bar = bar
@@ -589,6 +594,33 @@ def build_volume_envelope():
 
 volume_envelope = build_volume_envelope()
 
+def build_accent_envelope():
+  syl_list = []
+  for p in pho:
+    syl_list += p[-1].syl_entries
+
+  accent_envelope = []
+  for i in range (len (syl_list) - 1):
+    if syl_list[i][0] + 1 == syl_list[i + 1][0] and syl_list[i][0] in accent_dict:
+      len_ms = syl_list[i + 1][1] - syl_list[i][1]
+      # TODO: may want to have more sophisticated length for note length > 250 and length < 1000
+      # TODO: ramp into accent
+      max_len = min (500, len_ms)
+      end_ms = min (syl_list[i][1] + max_len, syl_list[i + 1][1])
+      accent_envelope.append ((syl_list[i][1], end_ms))
+
+  return accent_envelope
+
+accent_envelope = build_accent_envelope()
+
+def find_accent (ms):
+  for ae in accent_envelope:
+    t0_ms = ae[0]
+    t1_ms = ae[1]
+    if t0_ms <= ms <= t1_ms:
+      return min (24 - 24 * (ms - t0_ms) / (t1_ms - t0_ms), 12)
+  return 0
+
 def find_volume_midi (ms):
   for i in range (len (volume_envelope) - 1):
     t0_ms, value0 = volume_envelope[i]
@@ -676,6 +708,8 @@ while True:
   pos_ms, item, last_item, next_item = find_synlist_pos (ms)
   if pos_ms is None:
     break
+
+  print ("high-shelf-gain ", find_accent (ms))
 
   print ("freq", find_freq (ms))
 
