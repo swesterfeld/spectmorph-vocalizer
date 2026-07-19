@@ -57,7 +57,6 @@ def random_cv():
             return c + v
 
 def check_lyric (lyric):
-  print (lyric, file=sys.stderr)
   for l in lyric:
     if l == '\n' or l == '\t':
       raise RuntimeError ("failed to process lyric: lyric contains newline: lyric = '%s'" % lyric)
@@ -179,7 +178,7 @@ def load_mxparse (filepath):
   current_type = None
 
   # Regular expression to capture volume pairs like (0, 80)
-  volume_pattern = re.compile(r"\((\d+),\s*(\d+)\)")
+  volume_pattern = re.compile(r"\((\d+(?:\.\d+)?),\s*(\d+)\)")
 
   with open (filepath, "r", encoding="utf-8") as file:
     for line in file:
@@ -205,16 +204,12 @@ def load_mxparse (filepath):
         key = key.strip().lower()
         value = value.strip()
 
-        if key in {"start", "duration", "divisions"}:
-          current_entry[key] = int(value)
-
-        elif key == "volume":
+        if key == "volume":
           matches = volume_pattern.findall(value)
           current_entry[key] = [
-            (int(t), int(v)) for t, v in matches
+            (float(t), int(v)) for t, v in matches
           ]
-
-        elif key in {"bpm", "midi_note"}:
+        elif key in {"bpm", "midi_note", "start", "duration"}:
           current_entry[key] = float(value)
         elif key in {"staccato", "fermata", "accent"}:
           current_entry[key] = value.strip().lower() == "true"
@@ -247,13 +242,13 @@ if len (sys.argv) > 3:
 else:
   debug_notes_file = sys.stderr
 
-def set_tempo (quarter_length, tempo):
+def set_tempo (tempo):
   global ms_per_beat
   print (";;; SET TEMPO %s" % tempo)
-  ms_per_beat = 60000.0 / tempo / quarter_length
+  ms_per_beat = 60000.0 / tempo
 
 # default
-set_tempo (1, 120)
+set_tempo (120)
 
 last_note = None
 last_rest = None
@@ -279,14 +274,14 @@ notes = []
 
 for element in score:
   if element["type"] == "tempo":
-    set_tempo (element["divisions"], element["bpm"])
+    set_tempo (element["bpm"])
     break
 
 # Extract information from the score
 for element in score:
   print (";;;", element)
   if element["type"] == "tempo":
-    set_tempo (element["divisions"], element["bpm"])
+    set_tempo (element["bpm"])
   if element["type"] == "rest" or element["type"] == "note":
     qoffset16 = round (quarter_offset * 4)
     print (";;; quarter_offset: ", quarter_offset)
