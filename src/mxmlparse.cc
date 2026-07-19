@@ -6,19 +6,20 @@
 #include <map>
 #include <cmath>
 #include "pugixml.hpp"
+#include "fraction.hh"
 
 using std::vector;
 
 struct DivToVel
 {
-  int division;
-  int velocity;
+  Fraction division;
+  int      velocity;
 };
 
 struct DivToTempo
 {
-  int    division;
-  double tempo;
+  Fraction division;
+  double   tempo;
 };
 
 // Event representing a note ready for playback
@@ -31,8 +32,8 @@ struct NoteEvent
   } event_type;
 
   double midi_note;
-  int start_divisions;
-  int duration_divisions;
+  Fraction start_divisions;
+  Fraction duration_divisions;
 
   vector<DivToVel> divisions_to_velocity;
   std::string lyric;      // attached lyric (if any)
@@ -127,14 +128,14 @@ split_note_on_changes (const NoteEvent& note, const auto& split_divs)
 {
   std::vector<NoteEvent> result;
 
-  int start = note.start_divisions;
-  int end   = note.start_divisions + note.duration_divisions;
+  Fraction start = note.start_divisions;
+  Fraction end   = note.start_divisions + note.duration_divisions;
 
-  int segment_start = start;
+  Fraction segment_start = start;
 
   for (auto s : split_divs)
     {
-      int t_div = s.division;
+      Fraction t_div = s.division;
 
       // skip changes before note
       if (t_div <= start) continue;
@@ -190,15 +191,15 @@ int main(int argc, char **argv)
 
   double tempo = 120.0;      // default BPM
   int divisions = 1;          // default
-  int current_time_divisions = 0; // playback position in divisions
+  Fraction current_time_divisions = 0; // playback position in divisions
 
   vector<DivToVel> division_to_velocity;
   vector<DivToTempo> division_to_tempo;
   struct DynWedge
   {
     enum { CRESCENDO, DIMINUENDO } type;
-    int start_division = 0;
-    int end_division = 0;
+    Fraction start_division = 0;
+    Fraction end_division = 0;
     int start_velocity = 0;
     int end_velocity = 0;
   };
@@ -221,7 +222,7 @@ int main(int argc, char **argv)
   std::map<std::string, NoteEvent> tiedNotes; // active ties keyed by pitch+octave
 
   bool first_measure = true;
-  int  first_rest = 0;
+  Fraction first_rest = 0;
 
   for (auto measure : doc.select_nodes("//measure"))
     {
@@ -231,35 +232,61 @@ int main(int argc, char **argv)
         {
           std::string nodeName = node.name();
 
-          if (first_measure && nodeName == "attributes")
+          if (nodeName == "attributes")
             {
-              auto time_node = node.child ("time");
-              if (time_node)
+              if (first_measure)
                 {
-                  auto beats_node = time_node.child ("beats");
-                  auto beat_type = time_node.child ("beat-type");
-                  if (beats_node && beat_type)
+                  auto time_node = node.child ("time");
+                  if (time_node)
                     {
-                      first_rest = divisions * 4 * atoi (beats_node.child_value()) / atoi (beat_type.child_value());
+                      auto beats_node = time_node.child ("beats");
+                      auto beat_type = time_node.child ("beat-type");
+                      if (beats_node && beat_type)
+                        {
+                          first_rest = Fraction (4 * atoi (beats_node.child_value()), atoi (beat_type.child_value()));
+                        }
                     }
+                }
+              auto divisions_node = node.child ("divisions");
+              if (divisions_node)
+                {
+                  printf ("divisions=%d\n", atoi (divisions_node.child_value()));
+                  divisions = atoi (divisions_node.child_value());
                 }
             }
 
           if (nodeName == "sound")
             {
               double tempo = atof (node.attribute ("tempo").value());
-              int offset = 0;
+              Fraction offset = 0;
               if (auto offset_node = node.child("offset"))
                 offset = atoi (offset_node.child_value());
-              printf ("TEMPO, position %d, tempo=%f\n", current_time_divisions + offset, atof (node.attribute ("tempo").value()));
+              offset *= Fraction (1, divisions);
+              printf ("TEMPO, position %s, tempo=%f\n", (current_time_divisions + offset).to_string().c_str(), atof (node.attribute ("tempo").value()));
               division_to_tempo.push_back ({current_time_divisions + offset, tempo});
             }
           if (nodeName == "note")
             {
               auto noteNode = node;
+#if 0
+              Fraction time_modification = 1;
+              auto time_modification_node = noteNode.child ("time-modification");
+              if (time_modification_node)
+                {
+                  int actual = atoi (time_modification_node.child ("actual-notes").child_value());
+                  int normal = atoi (time_modification_node.child ("normal-notes").child_value());
+                  time_modification = Fraction (actual, normal);
+                }
+#endif
 
               // Extract duration in seconds
-              int durDivisions = std::stoi(noteNode.child("duration").child_value());
+              Fraction durDivisions = std::stoi(noteNode.child("duration").child_value());
+              printf ("durDivisions=%s\n", durDivisions.to_string().c_str());
+              durDivisions *= Fraction (1, divisions);
+              //XXXdurDivisions *= Fraction (8, divisions);
+              //XXXdurDivisions *= Fraction (4, divisions);
+              printf ("durDivisions=%s (scaled)\n", durDivisions.to_string().c_str());
+              // durDivisions *= time_modification;
 
               bool fermata = noteNode.child ("notations").child ("fermata");
 
@@ -270,7 +297,7 @@ int main(int argc, char **argv)
                   if (durNode)
                     {
                       events.push_back({NoteEvent::REST, -1, current_time_divisions, durDivisions, {}, "", false, false, fermata});
-                      current_time_divisions += std::stoi(durNode.child_value());
+                      current_time_divisions += durDivisions;
                     }
                   continue;
                 }
@@ -307,7 +334,7 @@ int main(int argc, char **argv)
                 {
                   lyricText = lyricNode.child("text") ? lyricNode.child("text").child_value() : "";
                 }
-              printf ("note pitch %s, duration %d, lyricText %s\n", pitchKey.c_str(), durDivisions, lyricText.c_str());
+              printf ("note pitch %s, duration %s, lyricText %s\n", pitchKey.c_str(), durDivisions.to_string().c_str(), lyricText.c_str());
 
               bool staccato = false;
               bool accent = false;
@@ -401,13 +428,15 @@ int main(int argc, char **argv)
             }
           if (nodeName == "backup")
             {
-              printf ("backup %d\n", std::stoi(node.child("duration").child_value()));
-              current_time_divisions -= std::stoi(node.child("duration").child_value());
+              Fraction time (std::stoi(node.child("duration").child_value()), divisions);
+              printf ("backup %s\n", time.to_string().c_str());
+              current_time_divisions -= time;
             }
           if (nodeName == "forward")
             {
-              printf ("forward %d\n", std::stoi(node.child("duration").child_value()));
-              current_time_divisions += std::stoi(node.child("duration").child_value());
+              Fraction time (std::stoi(node.child("duration").child_value()), divisions);
+              printf ("forward %s\n", time.to_string().c_str());
+              current_time_divisions += time;
             }
         }
       first_measure = false;
@@ -455,17 +484,17 @@ int main(int argc, char **argv)
       current_velocity = end_velocity;
       wedge.start_velocity = start_velocity;
       wedge.end_velocity = end_velocity;
-      printf ("%d..%d %d->%d\n", wedge.start_division, wedge.end_division, wedge.start_velocity, wedge.end_velocity);
+      printf ("%s..%s %d->%d\n", wedge.start_division.to_string().c_str(), wedge.end_division.to_string().c_str(), wedge.start_velocity, wedge.end_velocity);
     }
   for (auto d2v : division_to_velocity)
     {
-      printf ("division %d -> vel %d\n", d2v.division, d2v.velocity);
+      printf ("division %s -> vel %d\n", d2v.division.to_string().c_str(), d2v.velocity);
     }
 
   // apply crescendo / diminuendo to notes
   for (auto& event : events)
     {
-      printf ("candidate event: %.2f %d..%d - %s\n", event.midi_note, event.start_divisions, event.start_divisions + event.duration_divisions, event.lyric.c_str());
+      printf ("candidate event: %.2f %s..%s - %s\n", event.midi_note, event.start_divisions.to_string().c_str(), (event.start_divisions + event.duration_divisions).to_string().c_str(), event.lyric.c_str());
       for (auto d2v : division_to_velocity)
         {
           //printf ("current_time_divisions: %d\n", current_time_divisions);
@@ -480,12 +509,12 @@ int main(int argc, char **argv)
       vector<DynWedge> inside_wedges;
       for (auto wedge : dynamic_wedges)
         {
-          int tr_start = wedge.start_division - event.start_divisions;
-          int tr_end = wedge.end_division - event.start_divisions;
+          Fraction tr_start = wedge.start_division - event.start_divisions;
+          Fraction tr_end = wedge.end_division - event.start_divisions;
 
           if (tr_start < 0 && tr_end > 0)
             {
-              double frac = (event.start_divisions - wedge.start_division) / double (wedge.end_division - wedge.start_division);
+              double frac = ((event.start_divisions - wedge.start_division) / (wedge.end_division - wedge.start_division)).to_double();
               start_velocity = wedge.start_velocity * (1 - frac) + wedge.end_velocity * frac;
               if (tr_end < event.duration_divisions)
                 {
@@ -501,8 +530,8 @@ int main(int argc, char **argv)
             }
           if (tr_start < event.duration_divisions && tr_end >= event.duration_divisions)
             {
-              int end_divisions = event.start_divisions + event.duration_divisions;
-              double frac = (end_divisions - wedge.start_division) / double (wedge.end_division - wedge.start_division);
+              Fraction end_divisions = event.start_divisions + event.duration_divisions;
+              double frac = ((end_divisions - wedge.start_division) / (wedge.end_division - wedge.start_division)).to_double();
               end_velocity = wedge.start_velocity * (1 - frac) + wedge.end_velocity * frac;
 
               if (inside_wedges.size() && inside_wedges.back().end_division < wedge.start_division)
@@ -517,8 +546,8 @@ int main(int argc, char **argv)
       event.divisions_to_velocity.push_back ({0, start_velocity});
       for (auto& wedge : inside_wedges)
         {
-          int tr_start = wedge.start_division - event.start_divisions;
-          int tr_end = wedge.end_division - event.start_divisions;
+          Fraction tr_start = wedge.start_division - event.start_divisions;
+          Fraction tr_end = wedge.end_division - event.start_divisions;
           event.divisions_to_velocity.push_back ({ tr_start, wedge.start_velocity });
           event.divisions_to_velocity.push_back ({ tr_end, wedge.end_velocity });
         }
@@ -539,7 +568,7 @@ int main(int argc, char **argv)
   // Print events
   for (auto& e : events)
     {
-      auto div_to_sec = [&] (int div) { return div / static_cast<double>(divisions) * (60.0 / tempo); };
+      auto div_to_sec = [&] (Fraction div) { return div.to_double() / static_cast<double>(divisions) * (60.0 / tempo); };
 
       std::cout << "Note: " << e.midi_note
                 << " Start: " << div_to_sec (e.start_divisions) << "s"
@@ -551,7 +580,7 @@ int main(int argc, char **argv)
     }
   if (argc == 3)
     {
-      int offset = 0;
+      Fraction offset = 0;
       FILE *f = fopen (argv[2], "w");
       assert (f);
       fprintf (f, "TEMPO\n");
@@ -561,10 +590,10 @@ int main(int argc, char **argv)
 
       fprintf (f, "REST\n");
       fprintf (f, " start: %d\n", 0);
-      fprintf (f, " duration: %d\n", first_rest);
+      fprintf (f, " duration: %s\n", first_rest.to_decimal_string().c_str());
       fprintf (f, "\n");
 
-      auto print_tempo_change_at = [&] (int pos)
+      auto print_tempo_change_at = [&] (Fraction pos)
         {
           for (auto d2t : division_to_tempo)
             {
@@ -586,8 +615,8 @@ int main(int argc, char **argv)
 
               // TODO: should we avoid this and insert rests automatically?
               fprintf (f, "REST\n");
-              fprintf (f, " start: %d\n", e.start_divisions + first_rest);
-              fprintf (f, " duration: %d\n", e.duration_divisions);
+              fprintf (f, " start: %s\n", (e.start_divisions + first_rest).to_decimal_string().c_str());
+              fprintf (f, " duration: %s\n", e.duration_divisions.to_decimal_string().c_str());
               if (e.fermata)
                 fprintf (f, " fermata: True\n");
               fprintf (f, "\n");
@@ -600,8 +629,8 @@ int main(int argc, char **argv)
 
                   // TODO: could cause problems if a tempo change is inside this rest
                   fprintf (f, "REST\n");
-                  fprintf (f, " start: %d\n", offset + first_rest);
-                  fprintf (f, " duration: %d\n", e.start_divisions - offset);
+                  fprintf (f, " start: %s\n", (offset + first_rest).to_decimal_string().c_str());
+                  fprintf (f, " duration: %s\n", (e.start_divisions - offset).to_decimal_string().c_str());
                   fprintf (f, "\n");
                   offset = e.start_divisions;
                 }
@@ -610,12 +639,12 @@ int main(int argc, char **argv)
               if (e.lyric != "")
                 fprintf (f, " lyric: %s\n", e.lyric.c_str());
               fprintf (f, " midi_note: %.2f\n", e.midi_note);
-              fprintf (f, " start: %d\n", e.start_divisions + first_rest);
-              fprintf (f, " duration: %d\n", e.duration_divisions);
+              fprintf (f, " start: %s\n", (e.start_divisions + first_rest).to_decimal_string().c_str());
+              fprintf (f, " duration: %s\n", e.duration_divisions.to_decimal_string().c_str());
               fprintf (f, " volume:");
               for (auto d2v : e.divisions_to_velocity)
                 {
-                  fprintf (f, " (%d, %d)", d2v.division, d2v.velocity);
+                  fprintf (f, " (%s, %d)", d2v.division.to_decimal_string().c_str(), d2v.velocity);
                 }
               fprintf (f, "\n");
               if (e.staccato)
