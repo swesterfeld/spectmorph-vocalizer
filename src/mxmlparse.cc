@@ -29,6 +29,11 @@ struct BeatsToMeasure
   int      measure;
 };
 
+struct BeatsToSfz
+{
+  Fraction beats;
+};
+
 // Event representing a note ready for playback
 struct NoteEvent
 {
@@ -47,6 +52,7 @@ struct NoteEvent
   bool staccato = false;  // staccato?
   bool accent = false;    // accent?
   bool fermata = false;   // fermata?
+  bool sfz = false;
 };
 
 struct Dynamic
@@ -223,6 +229,7 @@ int main(int argc, char **argv)
   Fraction current_time_beats = 0; // playback position in beats
 
   vector<BeatsToVel> beats_to_velocity;
+  vector<BeatsToSfz> beats_to_sfz;
   vector<BeatsToTempo> beats_to_tempo;
   struct DynWedge
   {
@@ -413,12 +420,19 @@ int main(int argc, char **argv)
                     {
                       for (auto d : dynNode.children())
                         {
-                          int velocity = map_dynamic_to_velocity(d.name());
-                          if (!velocity)
-                            die (current_time_beats, string ("unsupported dynamics ") + d.name());
-
-                          beats_to_velocity.push_back ({current_time_beats, velocity});
                           printf ("direction dynamics %s", d.name());
+                          if (string (d.name()) == "sfz")
+                            {
+                              beats_to_sfz.push_back ({current_time_beats});
+                            }
+                          else
+                            {
+                              int velocity = map_dynamic_to_velocity(d.name());
+                              if (!velocity)
+                                die (current_time_beats, string ("unsupported dynamics ") + d.name());
+
+                              beats_to_velocity.push_back ({current_time_beats, velocity});
+                            }
                         }
                       printf ("\n");
                     }
@@ -468,6 +482,20 @@ int main(int argc, char **argv)
 
   // split notes on volume changes (in order to get beat-aligned volume jumps later)
   split_events (events, beats_to_velocity);
+
+  // split notes on sfz
+  split_events (events, beats_to_sfz);
+
+  for (auto& event: events)
+    {
+      for (auto& sfz: beats_to_sfz)
+        {
+          if (event.start_beats == sfz.beats)
+            {
+              event.sfz = true;
+            }
+        }
+    }
 
   // loop over crescendo / diminuendo, resolve start and end velocity
   int current_velocity = 80;
@@ -659,6 +687,8 @@ int main(int argc, char **argv)
                 fprintf (f, " fermata: True\n");
               if (e.accent)
                 fprintf (f, " accent: True\n");
+              if (e.sfz)
+                fprintf (f, " sfz: True\n");
 
               fprintf (f, "\n");
             }
