@@ -57,7 +57,6 @@ def random_cv():
             return c + v
 
 def check_lyric (lyric):
-  print (lyric, file=sys.stderr)
   for l in lyric:
     if l == '\n' or l == '\t':
       raise RuntimeError ("failed to process lyric: lyric contains newline: lyric = '%s'" % lyric)
