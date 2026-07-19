@@ -205,15 +205,11 @@ def load_mxparse (filepath):
         key = key.strip().lower()
         value = value.strip()
 
-        if key in {"divisions"}:
-          current_entry[key] = int(value)
-
-        elif key == "volume":
+        if key == "volume":
           matches = volume_pattern.findall(value)
           current_entry[key] = [
             (float(t), int(v)) for t, v in matches
           ]
-
         elif key in {"bpm", "midi_note", "start", "duration"}:
           current_entry[key] = float(value)
         elif key in {"staccato", "fermata", "accent"}:
@@ -247,13 +243,13 @@ if len (sys.argv) > 3:
 else:
   debug_notes_file = sys.stderr
 
-def set_tempo (quarter_length, tempo):
+def set_tempo (tempo):
   global ms_per_beat
   print (";;; SET TEMPO %s" % tempo)
   ms_per_beat = 60000.0 / tempo
 
 # default
-set_tempo (1, 120)
+set_tempo (120)
 
 last_note = None
 last_rest = None
@@ -279,14 +275,14 @@ notes = []
 
 for element in score:
   if element["type"] == "tempo":
-    set_tempo (element["divisions"], element["bpm"])
+    set_tempo (element["bpm"])
     break
 
 # Extract information from the score
 for element in score:
   print (";;;", element)
   if element["type"] == "tempo":
-    set_tempo (element["divisions"], element["bpm"])
+    set_tempo (element["bpm"])
   if element["type"] == "rest" or element["type"] == "note":
     qoffset16 = round (quarter_offset * 4)
     print (";;; quarter_offset: ", quarter_offset)

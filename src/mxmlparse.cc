@@ -584,7 +584,6 @@ int main(int argc, char **argv)
       FILE *f = fopen (argv[2], "w");
       assert (f);
       fprintf (f, "TEMPO\n");
-      fprintf (f, " divisions: %d\n", divisions);
       fprintf (f, " bpm: %f\n", tempo);
       fprintf (f, "\n");
 
@@ -600,7 +599,6 @@ int main(int argc, char **argv)
               if (d2t.division == pos)
                 {
                   fprintf (f, "TEMPO\n");
-                  fprintf (f, " divisions: %d\n", divisions);
                   fprintf (f, " bpm: %f\n", d2t.tempo);
                   fprintf (f, "\n");
                 }
