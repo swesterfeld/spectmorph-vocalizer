@@ -9,6 +9,7 @@
 #include "fraction.hh"
 
 using std::vector;
+using std::string;
 
 struct BeatsToVel
 {
@@ -20,6 +21,12 @@ struct BeatsToTempo
 {
   Fraction beats;
   double   tempo;
+};
+
+struct BeatsToMeasure
+{
+  Fraction beats;
+  int      measure;
 };
 
 // Event representing a note ready for playback
@@ -65,12 +72,15 @@ static const std::vector<Dynamic> dynamics = {
 int
 map_dynamic_to_velocity (const std::string& name)
 {
+  // levels exist for crescendo/diminuendo on ppp/fff but cannot be used alone
+  if (name == "pppp" || name == "ffff")
+    return 0;
+
   for (const auto& d : dynamics)
     if (d.name == name)
       return d.level;
 
-  // TODO: error for ffff, pppp, anything not in table
-  return 80; // mf fallback
+  return 0; // error, unsupported dynamics
 }
 
 int
@@ -180,6 +190,25 @@ split_events (vector<NoteEvent>& events, const auto& split_beats)
   events = split_events;
 }
 
+vector<BeatsToMeasure> beats_to_measure;
+
+void
+die (Fraction current_time_beats, const string& msg)
+{
+  Fraction beat = 0;
+  int measure = 0;
+  for (auto b2m : beats_to_measure)
+    {
+      if (b2m.beats <= current_time_beats)
+        {
+          measure = b2m.measure;
+          beat = current_time_beats - b2m.beats + 1;
+        }
+    }
+  fprintf (stderr, "*** ERROR: %s at measure %d, beat %d\n", msg.c_str(), measure, int (floor (beat.to_double())));
+  exit (1);
+}
+
 int main(int argc, char **argv)
 {
   pugi::xml_document doc;
@@ -227,6 +256,7 @@ int main(int argc, char **argv)
   for (auto measure : doc.select_nodes("//measure"))
     {
       int bar = std::stoi (measure.node().attribute ("number").value());
+      beats_to_measure.push_back ({ current_time_beats, bar });
 
       for (auto node : measure.node().children())
         {
@@ -381,11 +411,14 @@ int main(int argc, char **argv)
                   auto dynNode = dtype.child("dynamics");
                   if (dynNode)
                     {
-                      printf ("direction dynamics");
                       for (auto d : dynNode.children())
                         {
-                          beats_to_velocity.push_back ({current_time_beats, map_dynamic_to_velocity(d.name())});
-                          printf (" %s", d.name());
+                          int velocity = map_dynamic_to_velocity(d.name());
+                          if (!velocity)
+                            die (current_time_beats, string ("unsupported dynamics ") + d.name());
+
+                          beats_to_velocity.push_back ({current_time_beats, velocity});
+                          printf ("direction dynamics %s", d.name());
                         }
                       printf ("\n");
                     }
