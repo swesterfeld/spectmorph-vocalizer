@@ -10,15 +10,15 @@
 
 using std::vector;
 
-struct DivToVel
+struct BeatsToVel
 {
-  Fraction division;
+  Fraction beats;
   int      velocity;
 };
 
-struct DivToTempo
+struct BeatsToTempo
 {
-  Fraction division;
+  Fraction beats;
   double   tempo;
 };
 
@@ -32,10 +32,10 @@ struct NoteEvent
   } event_type;
 
   double midi_note;
-  Fraction start_divisions;
-  Fraction duration_divisions;
+  Fraction start_beats;
+  Fraction duration_beats;
 
-  vector<DivToVel> divisions_to_velocity;
+  vector<BeatsToVel> beats_to_velocity;
   std::string lyric;      // attached lyric (if any)
   bool staccato = false;  // staccato?
   bool accent = false;    // accent?
@@ -124,39 +124,39 @@ pitch_to_midi (const std::string& step, int octave, double alter)
 }
 
 std::vector<NoteEvent>
-split_note_on_changes (const NoteEvent& note, const auto& split_divs)
+split_note_on_changes (const NoteEvent& note, const auto& split_beats)
 {
   std::vector<NoteEvent> result;
 
-  Fraction start = note.start_divisions;
-  Fraction end   = note.start_divisions + note.duration_divisions;
+  Fraction start = note.start_beats;
+  Fraction end   = note.start_beats + note.duration_beats;
 
   Fraction segment_start = start;
 
-  for (auto s : split_divs)
+  for (auto s : split_beats)
     {
-      Fraction t_div = s.division;
+      Fraction t_beats = s.beats;
 
       // skip changes before note
-      if (t_div <= start) continue;
+      if (t_beats <= start) continue;
 
       // stop if beyond note
-      if (t_div >= end) break;
+      if (t_beats >= end) break;
 
       // split point inside note
       NoteEvent part = note;
-      part.start_divisions = segment_start;
-      part.duration_divisions = t_div - segment_start;
+      part.start_beats = segment_start;
+      part.duration_beats = t_beats - segment_start;
 
       result.push_back (part);
 
-      segment_start = t_div;
+      segment_start = t_beats;
     }
 
   // final segment
   NoteEvent last = note;
-  last.start_divisions = segment_start;
-  last.duration_divisions = end - segment_start;
+  last.start_beats = segment_start;
+  last.duration_beats = end - segment_start;
 
   result.push_back (last);
 
@@ -169,12 +169,12 @@ split_note_on_changes (const NoteEvent& note, const auto& split_divs)
 }
 
 void
-split_events (vector<NoteEvent>& events, const auto& split_divs)
+split_events (vector<NoteEvent>& events, const auto& split_beats)
 {
   vector<NoteEvent> split_events;
   for (auto& event : events)
     {
-      auto split_notes = split_note_on_changes (event, split_divs);
+      auto split_notes = split_note_on_changes (event, split_beats);
       split_events.insert (split_events.end(), split_notes.begin(), split_notes.end());
     }
   events = split_events;
@@ -191,15 +191,15 @@ int main(int argc, char **argv)
 
   double tempo = 120.0;      // default BPM
   int divisions = 1;          // default
-  Fraction current_time_divisions = 0; // playback position in divisions
+  Fraction current_time_beats = 0; // playback position in beats
 
-  vector<DivToVel> division_to_velocity;
-  vector<DivToTempo> division_to_tempo;
+  vector<BeatsToVel> beats_to_velocity;
+  vector<BeatsToTempo> beats_to_tempo;
   struct DynWedge
   {
     enum { CRESCENDO, DIMINUENDO } type;
-    Fraction start_division = 0;
-    Fraction end_division = 0;
+    Fraction start_beats = 0;
+    Fraction end_beats = 0;
     int start_velocity = 0;
     int end_velocity = 0;
   };
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
 
   auto soundNode = doc.select_node("//sound[@tempo]").node();
   if (soundNode) tempo = std::stod(soundNode.attribute("tempo").value());
-  division_to_tempo.push_back ({0, tempo});
+  beats_to_tempo.push_back ({0, tempo});
 
   std::vector<NoteEvent> events;
   std::map<std::string, NoteEvent> tiedNotes; // active ties keyed by pitch+octave
@@ -256,30 +256,30 @@ int main(int argc, char **argv)
             {
               double tempo = atof (node.attribute ("tempo").value());
               Fraction offset = 0;
-              if (auto offset_node = node.child("offset"))
+              if (auto offset_node = node.child ("offset"))
                 offset = atoi (offset_node.child_value());
               offset *= Fraction (1, divisions);
-              printf ("TEMPO, position %s, tempo=%f\n", (current_time_divisions + offset).to_string().c_str(), atof (node.attribute ("tempo").value()));
-              division_to_tempo.push_back ({current_time_divisions + offset, tempo});
+              printf ("TEMPO, position %s, tempo=%f\n", (current_time_beats + offset).to_string().c_str(), atof (node.attribute ("tempo").value()));
+              beats_to_tempo.push_back ({current_time_beats + offset, tempo});
             }
           if (nodeName == "note")
             {
               auto noteNode = node;
 
               // Extract duration in seconds
-              Fraction durDivisions = std::stoi(noteNode.child("duration").child_value());
-              durDivisions *= Fraction (1, divisions);
+              Fraction duration_beats = std::stoi (noteNode.child("duration").child_value());
+              duration_beats *= Fraction (1, divisions);
 
               bool fermata = noteNode.child ("notations").child ("fermata");
 
               // Skip rests but advance time
               if (noteNode.child("rest"))
                 {
-                  auto durNode = noteNode.child("duration");
+                  auto durNode = noteNode.child ("duration");
                   if (durNode)
                     {
-                      events.push_back({NoteEvent::REST, -1, current_time_divisions, durDivisions, {}, "", false, false, fermata});
-                      current_time_divisions += durDivisions;
+                      events.push_back({NoteEvent::REST, -1, current_time_beats, duration_beats, {}, "", false, false, fermata});
+                      current_time_beats += duration_beats;
                     }
                   continue;
                 }
@@ -316,7 +316,7 @@ int main(int argc, char **argv)
                 {
                   lyricText = lyricNode.child("text") ? lyricNode.child("text").child_value() : "";
                 }
-              printf ("note pitch %s, duration %s, lyricText %s\n", pitchKey.c_str(), durDivisions.to_string().c_str(), lyricText.c_str());
+              printf ("note pitch %s, duration %s, lyricText %s\n", pitchKey.c_str(), duration_beats.to_string().c_str(), lyricText.c_str());
 
               bool staccato = false;
               bool accent = false;
@@ -342,31 +342,37 @@ int main(int argc, char **argv)
               // Handle ties
               if (tieStart)
                 {
-                  if (tiedNotes.find(pitchKey) == tiedNotes.end()) {
-                      tiedNotes[pitchKey] = {NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent, fermata};
-                  } else {
-                      tiedNotes[pitchKey].duration_divisions += durDivisions;
+                  if (tiedNotes.find(pitchKey) == tiedNotes.end())
+                    {
+                      tiedNotes[pitchKey] = {NoteEvent::NOTE, midi_note, current_time_beats, duration_beats, {}, lyricText, staccato, accent, fermata};
+                    }
+                  else
+                    {
+                      tiedNotes[pitchKey].duration_beats += duration_beats;
                       if (!lyricText.empty()) tiedNotes[pitchKey].lyric = lyricText;
-                  }
+                    }
                 }
               else if (tieStop)
                 {
-                  if (tiedNotes.find(pitchKey) != tiedNotes.end()) {
+                  if (tiedNotes.find(pitchKey) != tiedNotes.end())
+                    {
                       auto e = tiedNotes[pitchKey];
-                      e.duration_divisions += durDivisions;
+                      e.duration_beats += duration_beats;
                       if (!lyricText.empty()) e.lyric = lyricText;
                       events.push_back(e);
                       tiedNotes.erase(pitchKey);
-                  } else {
-                      events.push_back({NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent, fermata});
-                  }
+                    }
+                  else
+                    {
+                      events.push_back({NoteEvent::NOTE, midi_note, current_time_beats, duration_beats, {}, lyricText, staccato, accent, fermata});
+                    }
                 }
               else
                 {
-                  events.push_back({NoteEvent::NOTE, midi_note, current_time_divisions, durDivisions, {}, lyricText, staccato, accent, fermata});
+                  events.push_back({NoteEvent::NOTE, midi_note, current_time_beats, duration_beats, {}, lyricText, staccato, accent, fermata});
                 }
 
-              current_time_divisions += durDivisions;
+              current_time_beats += duration_beats;
             }
           if (nodeName == "direction")
             {
@@ -378,7 +384,7 @@ int main(int argc, char **argv)
                       printf ("direction dynamics");
                       for (auto d : dynNode.children())
                         {
-                          division_to_velocity.push_back ({current_time_divisions, map_dynamic_to_velocity(d.name())});
+                          beats_to_velocity.push_back ({current_time_beats, map_dynamic_to_velocity(d.name())});
                           printf (" %s", d.name());
                         }
                       printf ("\n");
@@ -392,17 +398,17 @@ int main(int argc, char **argv)
                         {
                           current_dwedge = {};
                           current_dwedge.type = DynWedge::CRESCENDO;
-                          current_dwedge.start_division = current_time_divisions;
+                          current_dwedge.start_beats = current_time_beats;
                         }
                       if (type == "diminuendo")
                         {
                           current_dwedge = {};
                           current_dwedge.type = DynWedge::DIMINUENDO;
-                          current_dwedge.start_division = current_time_divisions;
+                          current_dwedge.start_beats = current_time_beats;
                         }
                       if (type == "stop")
                         {
-                          current_dwedge.end_division = current_time_divisions;
+                          current_dwedge.end_beats = current_time_beats;
                           dynamic_wedges.push_back (current_dwedge);
                         }
                     }
@@ -412,23 +418,23 @@ int main(int argc, char **argv)
             {
               Fraction time (std::stoi(node.child("duration").child_value()), divisions);
               printf ("backup %s\n", time.to_string().c_str());
-              current_time_divisions -= time;
+              current_time_beats -= time;
             }
           if (nodeName == "forward")
             {
               Fraction time (std::stoi(node.child("duration").child_value()), divisions);
               printf ("forward %s\n", time.to_string().c_str());
-              current_time_divisions += time;
+              current_time_beats += time;
             }
         }
       first_measure = false;
     }
 
   // split notes on tempo changes (in order to have divisions map properly to ms later)
-  split_events (events, division_to_tempo);
+  split_events (events, beats_to_tempo);
 
   // split notes on volume changes (in order to get beat-aligned volume jumps later)
-  split_events (events, division_to_velocity);
+  split_events (events, beats_to_velocity);
 
   // loop over crescendo / diminuendo, resolve start and end velocity
   int current_velocity = 80;
@@ -436,53 +442,53 @@ int main(int argc, char **argv)
     {
       int start_velocity = current_velocity, end_velocity = -1;
 
-      auto resort_division_to_velocity = [&] ()
+      auto resort_beats_to_velocity = [&] ()
         {
-          std::sort (division_to_velocity.begin(), division_to_velocity.end(),
-                     [](const DivToVel& a, const DivToVel& b)
+          std::sort (beats_to_velocity.begin(), beats_to_velocity.end(),
+                     [](const BeatsToVel& a, const BeatsToVel& b)
                        {
-                         return a.division < b.division;
+                         return a.beats < b.beats;
                        });
         };
-      for (auto d2v : division_to_velocity)
+      for (auto b2v : beats_to_velocity)
         {
-          if (wedge.start_division >= d2v.division)
-            start_velocity = d2v.velocity;
-          if (wedge.end_division == d2v.division)
-            end_velocity = d2v.velocity;
+          if (wedge.start_beats >= b2v.beats)
+            start_velocity = b2v.velocity;
+          if (wedge.end_beats == b2v.beats)
+            end_velocity = b2v.velocity;
         }
       if (end_velocity == -1 && wedge.type == DynWedge::CRESCENDO)
         {
           end_velocity = next_velocity_level (start_velocity, 1);
-          division_to_velocity.push_back ({ wedge.end_division, end_velocity });
-          resort_division_to_velocity();
+          beats_to_velocity.push_back ({ wedge.end_beats, end_velocity });
+          resort_beats_to_velocity();
         }
       if (end_velocity == -1 && wedge.type == DynWedge::DIMINUENDO)
         {
           end_velocity = next_velocity_level (start_velocity, -1);
-          division_to_velocity.push_back ({ wedge.end_division, end_velocity });
-          resort_division_to_velocity();
+          beats_to_velocity.push_back ({ wedge.end_beats, end_velocity });
+          resort_beats_to_velocity();
         }
       current_velocity = end_velocity;
       wedge.start_velocity = start_velocity;
       wedge.end_velocity = end_velocity;
-      printf ("%s..%s %d->%d\n", wedge.start_division.to_string().c_str(), wedge.end_division.to_string().c_str(), wedge.start_velocity, wedge.end_velocity);
+      printf ("%s..%s %d->%d\n", wedge.start_beats.to_string().c_str(), wedge.end_beats.to_string().c_str(), wedge.start_velocity, wedge.end_velocity);
     }
-  for (auto d2v : division_to_velocity)
+  for (auto b2v : beats_to_velocity)
     {
-      printf ("division %s -> vel %d\n", d2v.division.to_string().c_str(), d2v.velocity);
+      printf ("beats %s -> vel %d\n", b2v.beats.to_string().c_str(), b2v.velocity);
     }
 
   // apply crescendo / diminuendo to notes
   for (auto& event : events)
     {
-      printf ("candidate event: %.2f %s..%s - %s\n", event.midi_note, event.start_divisions.to_string().c_str(), (event.start_divisions + event.duration_divisions).to_string().c_str(), event.lyric.c_str());
-      for (auto d2v : division_to_velocity)
+      printf ("candidate event: %.2f %s..%s - %s\n", event.midi_note, event.start_beats.to_string().c_str(), (event.start_beats + event.duration_beats).to_string().c_str(), event.lyric.c_str());
+      for (auto b2v : beats_to_velocity)
         {
-          //printf ("current_time_divisions: %d\n", current_time_divisions);
-          if (d2v.division <= event.start_divisions)
+          //printf ("current_time_beats: %d\n", current_time_beats);
+          if (b2v.beats <= event.start_beats)
             {
-              current_velocity = d2v.velocity;
+              current_velocity = b2v.velocity;
             }
         }
       printf ("current velocity %d\n", current_velocity);
@@ -491,75 +497,62 @@ int main(int argc, char **argv)
       vector<DynWedge> inside_wedges;
       for (auto wedge : dynamic_wedges)
         {
-          Fraction tr_start = wedge.start_division - event.start_divisions;
-          Fraction tr_end = wedge.end_division - event.start_divisions;
+          Fraction tr_start = wedge.start_beats - event.start_beats;
+          Fraction tr_end = wedge.end_beats - event.start_beats;
 
           if (tr_start < 0 && tr_end > 0)
             {
-              double frac = ((event.start_divisions - wedge.start_division) / (wedge.end_division - wedge.start_division)).to_double();
+              double frac = ((event.start_beats - wedge.start_beats) / (wedge.end_beats - wedge.start_beats)).to_double();
               start_velocity = wedge.start_velocity * (1 - frac) + wedge.end_velocity * frac;
-              if (tr_end < event.duration_divisions)
+              if (tr_end < event.duration_beats)
                 {
                   DynWedge partial_wedge = wedge;
-                  partial_wedge.start_division = event.start_divisions;
+                  partial_wedge.start_beats = event.start_beats;
                   partial_wedge.start_velocity = start_velocity;
                   inside_wedges.push_back (partial_wedge);
                 }
             }
-          if (tr_start >= 0 && tr_end <= event.duration_divisions)
+          if (tr_start >= 0 && tr_end <= event.duration_beats)
             {
               inside_wedges.push_back (wedge);
             }
-          if (tr_start < event.duration_divisions && tr_end >= event.duration_divisions)
+          if (tr_start < event.duration_beats && tr_end >= event.duration_beats)
             {
-              Fraction end_divisions = event.start_divisions + event.duration_divisions;
-              double frac = ((end_divisions - wedge.start_division) / (wedge.end_division - wedge.start_division)).to_double();
+              Fraction end_beats = event.start_beats + event.duration_beats;
+              double frac = ((end_beats - wedge.start_beats) / (wedge.end_beats - wedge.start_beats)).to_double();
               end_velocity = wedge.start_velocity * (1 - frac) + wedge.end_velocity * frac;
 
-              if (inside_wedges.size() && inside_wedges.back().end_division < wedge.start_division)
+              if (inside_wedges.size() && inside_wedges.back().end_beats < wedge.start_beats)
                 {
                   DynWedge partial_wedge = wedge;
-                  partial_wedge.end_division = end_divisions;
+                  partial_wedge.end_beats = end_beats;
                   partial_wedge.end_velocity = end_velocity;
                   inside_wedges.push_back (partial_wedge);
                 }
             }
         }
-      event.divisions_to_velocity.push_back ({0, start_velocity});
+      event.beats_to_velocity.push_back ({0, start_velocity});
       for (auto& wedge : inside_wedges)
         {
-          Fraction tr_start = wedge.start_division - event.start_divisions;
-          Fraction tr_end = wedge.end_division - event.start_divisions;
-          event.divisions_to_velocity.push_back ({ tr_start, wedge.start_velocity });
-          event.divisions_to_velocity.push_back ({ tr_end, wedge.end_velocity });
+          Fraction tr_start = wedge.start_beats - event.start_beats;
+          Fraction tr_end = wedge.end_beats - event.start_beats;
+          event.beats_to_velocity.push_back ({ tr_start, wedge.start_velocity });
+          event.beats_to_velocity.push_back ({ tr_end, wedge.end_velocity });
         }
       if (end_velocity == -1)
-        end_velocity = event.divisions_to_velocity.back().velocity;
+        end_velocity = event.beats_to_velocity.back().velocity;
 
-      event.divisions_to_velocity.push_back ({event.duration_divisions, end_velocity});
+      event.beats_to_velocity.push_back ({event.duration_beats, end_velocity});
 
-      event.divisions_to_velocity.erase (
-        std::unique (event.divisions_to_velocity.begin(), event.divisions_to_velocity.end(),
-          [](const DivToVel& a, const DivToVel& b)
+      event.beats_to_velocity.erase (
+        std::unique (event.beats_to_velocity.begin(), event.beats_to_velocity.end(),
+          [](const BeatsToVel& a, const BeatsToVel& b)
             {
-              return a.velocity == b.velocity && a.division == b.division;
+              return a.velocity == b.velocity && a.beats == b.beats;
             }),
-        event.divisions_to_velocity.end());
+        event.beats_to_velocity.end());
     }
 
-  // Print events
-  for (auto& e : events)
-    {
-      auto div_to_sec = [&] (Fraction div) { return div.to_double() / static_cast<double>(divisions) * (60.0 / tempo); };
-
-      std::cout << "Note: " << e.midi_note
-                << " Start: " << div_to_sec (e.start_divisions) << "s"
-                << " Duration: " << div_to_sec (e.duration_divisions) << "s" << "  (";
-      for (auto d2v : e.divisions_to_velocity)
-        std::cout << "[" << div_to_sec (d2v.division) << "," << d2v.velocity << "] ";
-      std::cout
-                << ") Lyric: " << e.lyric << "\n";
-    }
   if (argc == 3)
     {
       Fraction offset = 0;
@@ -576,9 +569,9 @@ int main(int argc, char **argv)
 
       auto print_tempo_change_at = [&] (Fraction pos)
         {
-          for (auto d2t : division_to_tempo)
+          for (auto d2t : beats_to_tempo)
             {
-              if (d2t.division == pos)
+              if (d2t.beats == pos)
                 {
                   fprintf (f, "TEMPO\n");
                   fprintf (f, " bpm: %f\n", d2t.tempo);
@@ -591,40 +584,40 @@ int main(int argc, char **argv)
         {
           if (e.event_type == NoteEvent::REST)
             {
-              print_tempo_change_at (e.start_divisions);
+              print_tempo_change_at (e.start_beats);
 
               // TODO: should we avoid this and insert rests automatically?
               fprintf (f, "REST\n");
-              fprintf (f, " start: %s\n", (e.start_divisions + first_rest).to_decimal_string().c_str());
-              fprintf (f, " duration: %s\n", e.duration_divisions.to_decimal_string().c_str());
+              fprintf (f, " start: %s\n", (e.start_beats + first_rest).to_decimal_string().c_str());
+              fprintf (f, " duration: %s\n", e.duration_beats.to_decimal_string().c_str());
               if (e.fermata)
                 fprintf (f, " fermata: True\n");
               fprintf (f, "\n");
             }
           else
             {
-              if (e.start_divisions > offset)
+              if (e.start_beats > offset)
                 {
                   print_tempo_change_at (offset);
 
                   // TODO: could cause problems if a tempo change is inside this rest
                   fprintf (f, "REST\n");
                   fprintf (f, " start: %s\n", (offset + first_rest).to_decimal_string().c_str());
-                  fprintf (f, " duration: %s\n", (e.start_divisions - offset).to_decimal_string().c_str());
+                  fprintf (f, " duration: %s\n", (e.start_beats - offset).to_decimal_string().c_str());
                   fprintf (f, "\n");
-                  offset = e.start_divisions;
+                  offset = e.start_beats;
                 }
-              print_tempo_change_at (e.start_divisions);
+              print_tempo_change_at (e.start_beats);
               fprintf (f, "NOTE\n");
               if (e.lyric != "")
                 fprintf (f, " lyric: %s\n", e.lyric.c_str());
               fprintf (f, " midi_note: %.2f\n", e.midi_note);
-              fprintf (f, " start: %s\n", (e.start_divisions + first_rest).to_decimal_string().c_str());
-              fprintf (f, " duration: %s\n", e.duration_divisions.to_decimal_string().c_str());
+              fprintf (f, " start: %s\n", (e.start_beats + first_rest).to_decimal_string().c_str());
+              fprintf (f, " duration: %s\n", e.duration_beats.to_decimal_string().c_str());
               fprintf (f, " volume:");
-              for (auto d2v : e.divisions_to_velocity)
+              for (auto b2v : e.beats_to_velocity)
                 {
-                  fprintf (f, " (%s, %d)", d2v.division.to_decimal_string().c_str(), d2v.velocity);
+                  fprintf (f, " (%s, %d)", b2v.beats.to_decimal_string().c_str(), b2v.velocity);
                 }
               fprintf (f, "\n");
               if (e.staccato)
@@ -636,7 +629,7 @@ int main(int argc, char **argv)
 
               fprintf (f, "\n");
             }
-          offset += e.duration_divisions;
+          offset += e.duration_beats;
         }
     }
   return 0;
