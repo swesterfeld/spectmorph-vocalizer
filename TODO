@@ -1,7 +1,6 @@
 TODO before recording: X
 High Priority H
 
- - mxmlparse: handle tuplets
  - dynamic: volume jumps should ramp
  - mxmlparse/dynamic: bar/beat points
  - mxmlparse/dynamic: should handle fp
