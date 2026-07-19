@@ -249,10 +249,7 @@ int main(int argc, char **argv)
                 }
               auto divisions_node = node.child ("divisions");
               if (divisions_node)
-                {
-                  printf ("divisions=%d\n", atoi (divisions_node.child_value()));
-                  divisions = atoi (divisions_node.child_value());
-                }
+                divisions = atoi (divisions_node.child_value());
             }
 
           if (nodeName == "sound")
@@ -268,25 +265,10 @@ int main(int argc, char **argv)
           if (nodeName == "note")
             {
               auto noteNode = node;
-#if 0
-              Fraction time_modification = 1;
-              auto time_modification_node = noteNode.child ("time-modification");
-              if (time_modification_node)
-                {
-                  int actual = atoi (time_modification_node.child ("actual-notes").child_value());
-                  int normal = atoi (time_modification_node.child ("normal-notes").child_value());
-                  time_modification = Fraction (actual, normal);
-                }
-#endif
 
               // Extract duration in seconds
               Fraction durDivisions = std::stoi(noteNode.child("duration").child_value());
-              printf ("durDivisions=%s\n", durDivisions.to_string().c_str());
               durDivisions *= Fraction (1, divisions);
-              //XXXdurDivisions *= Fraction (8, divisions);
-              //XXXdurDivisions *= Fraction (4, divisions);
-              printf ("durDivisions=%s (scaled)\n", durDivisions.to_string().c_str());
-              // durDivisions *= time_modification;
 
               bool fermata = noteNode.child ("notations").child ("fermata");
 
