@@ -198,20 +198,28 @@ split_events (vector<NoteEvent>& events, const auto& split_beats)
 
 vector<BeatsToMeasure> beats_to_measure;
 
-void
-die (Fraction current_time_beats, const string& msg)
+std::pair<int, int>
+lookup_measure (Fraction time_beats)
 {
+  // TODO: beats are currently quarter notes, should depend on time signature
   Fraction beat = 0;
   int measure = 0;
   for (auto b2m : beats_to_measure)
     {
-      if (b2m.beats <= current_time_beats)
+      if (b2m.beats <= time_beats)
         {
           measure = b2m.measure;
-          beat = current_time_beats - b2m.beats + 1;
+          beat = time_beats - b2m.beats + 1;
         }
     }
-  fprintf (stderr, "*** ERROR: %s at measure %d, beat %d\n", msg.c_str(), measure, int (floor (beat.to_double())));
+  return std::make_pair (measure, int (floor (beat.to_double())));
+}
+
+void
+die (Fraction current_time_beats, const string& msg)
+{
+  auto [ measure, bar ] = lookup_measure (current_time_beats);
+  fprintf (stderr, "*** ERROR: %s at measure %d, beat %d\n", msg.c_str(), measure, bar);
   exit (1);
 }
 
@@ -420,7 +428,7 @@ int main(int argc, char **argv)
                     {
                       for (auto d : dynNode.children())
                         {
-                          printf ("direction dynamics %s", d.name());
+                          printf ("direction dynamics %s\n", d.name());
                           if (string (d.name()) == "sfz")
                             {
                               beats_to_sfz.push_back ({current_time_beats});
@@ -669,12 +677,15 @@ int main(int argc, char **argv)
                   offset = e.start_beats;
                 }
               print_tempo_change_at (e.start_beats);
+              auto [ measure, beat ] = lookup_measure (e.start_beats);
               fprintf (f, "NOTE\n");
               if (e.lyric != "")
                 fprintf (f, " lyric: %s\n", e.lyric.c_str());
               fprintf (f, " midi_note: %.2f\n", e.midi_note);
               fprintf (f, " start: %s\n", (e.start_beats + first_rest).to_decimal_string().c_str());
               fprintf (f, " duration: %s\n", e.duration_beats.to_decimal_string().c_str());
+              fprintf (f, " measure: %d\n", measure);
+              fprintf (f, " beat: %d\n", beat);
               fprintf (f, " volume:");
               for (auto b2v : e.beats_to_velocity)
                 {
