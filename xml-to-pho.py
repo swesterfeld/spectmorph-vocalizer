@@ -211,6 +211,8 @@ def load_mxparse (filepath):
           ]
         elif key in {"bpm", "midi_note", "start", "duration"}:
           current_entry[key] = float(value)
+        elif key in {"measure", "beat"}:
+          current_entry[key] = int (value)
         elif key in {"staccato", "fermata", "accent"}:
           current_entry[key] = value.strip().lower() == "true"
         else:
@@ -359,8 +361,8 @@ for element in score:
         note.beat = element.beat
         TODO: mxmlparse
         """
-        note.measure_number = 0
-        note.beat = 0
+        note.measure_number = element["measure"]
+        note.beat = element["beat"]
         notes.append (note)
         last_note = note
         last_rest = None
@@ -556,6 +558,8 @@ def syllables_to_pho():
         print ("meta dynamic", s_nr, volume_percent_str)
       if s_accent:
         print ("meta accent", s_nr)
+      if s[1] != "_" and isinstance (s[3], Note):
+        print ("meta bar_beat %d %d" % (s[3].measure_number, s[3].beat))
 
       s_ms_elapsed = 0
       for sc in s_current:
