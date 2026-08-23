@@ -162,6 +162,11 @@ if sys.argv[1] != "xml":
   print ("use xml-to-pho.py txt or xml-to-pho.py xml <musicxml> [ <debug_notes> ]")
   sys.exit (1)
 
+class SfzState (Enum):
+  NONE = 1
+  START = 2
+  CONTINUE = 3
+
 # Load the MusicXML file
 def load_mxparse (filepath):
   """
@@ -215,6 +220,15 @@ def load_mxparse (filepath):
           current_entry[key] = int (value)
         elif key in {"staccato", "fermata", "accent"}:
           current_entry[key] = value.strip().lower() == "true"
+        elif key == "sfz":
+          if (value == "None"):
+            current_entry[key] = SfzState.NONE
+          elif (value == "Start"):
+            current_entry[key] = SfzState.START
+          elif (value == "Continue"):
+            current_entry[key] = SfzState.CONTINUE
+          else:
+            raise RuntimeError ("bad sfz state %s" % value)
         else:
           # Handles fields like lyric and pitch
           current_entry[key] = value
@@ -306,7 +320,8 @@ for element in score:
         volume_diff = abs (last_note_end_volume - note_start_volume)
       else:
         volume_diff = 0
-      if "lyric" not in element and last_note and (last_note.freq != freq or volume_diff > 2):
+        sfz_changed = False
+      if "lyric" not in element and last_note and (last_note.freq != freq or volume_diff > 2 or element["sfz"] == SfzState.START):
         element["lyric"] = last_note.lyric
         if last_note.melisma_state == MelismaState.NONE:
           last_note.melisma_state = MelismaState.START
@@ -330,6 +345,7 @@ for element in score:
       else:
         has_staccato = "staccato" in element
         has_accent = "accent" in element
+        has_sfz = element["sfz"] != SfzState.NONE
         note = Note()
         lyric = element["lyric"]
         note.lyric = lyric
@@ -351,6 +367,7 @@ for element in score:
         note.freq = freq
         note.has_staccato = has_staccato
         note.has_accent = has_accent
+        note.has_sfz = has_sfz
         note.volume = [
           (volume_entry[0] * ms_per_beat, volume_entry[1])
           for volume_entry in element["volume"]
@@ -549,6 +566,7 @@ def syllables_to_pho():
   s_ms = 0
   s_volume = None
   s_accent = False
+  s_sfz    = False
   s_current = []
   for s in syllables:
     if s[0] != s_nr:
@@ -558,6 +576,8 @@ def syllables_to_pho():
         print ("meta dynamic", s_nr, volume_percent_str)
       if s_accent:
         print ("meta accent", s_nr)
+      if s_sfz:
+        print ("meta sfz", s_nr)
       if s[1] != "_" and isinstance (s[3], Note):
         print ("meta bar_beat %d %d" % (s[3].measure_number, s[3].beat))
 
@@ -584,6 +604,7 @@ def syllables_to_pho():
       if isinstance (s[3], Note):
         s_volume = s[3].volume
         s_accent = s[3].has_accent
+        s_sfz    = s[3].has_sfz
       s_ms += s[2]
 
 syllables_to_pho()
