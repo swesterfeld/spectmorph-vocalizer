@@ -34,6 +34,13 @@ struct BeatsToSfz
   Fraction beats;
 };
 
+enum class SfzState
+{
+  NONE,
+  START,
+  CONTINUE
+};
+
 // Event representing a note ready for playback
 struct NoteEvent
 {
@@ -52,7 +59,8 @@ struct NoteEvent
   bool staccato = false;  // staccato?
   bool accent = false;    // accent?
   bool fermata = false;   // fermata?
-  bool sfz = false;
+
+  SfzState sfz = SfzState::NONE;
 };
 
 struct Dynamic
@@ -180,6 +188,12 @@ split_note_on_changes (const NoteEvent& note, const auto& split_beats)
   for (size_t i = 0; i < result.size(); i++)
     if (i)
       result[i].lyric = "";
+
+  /* properly set sfz state */
+  auto first_sfz = result[0].sfz;
+  for (size_t i = 1; i < result.size(); i++)
+    if (first_sfz != SfzState::NONE)
+      result[i].sfz = SfzState::CONTINUE;
 
   return result;
 }
@@ -345,15 +359,6 @@ int main(int argc, char **argv)
               std::string pitchKey = step + std::to_string(octave);
               double midi_note = pitch_to_midi (step, octave, alter);
 
-              // Handle ties
-              bool tieStart = false, tieStop = false;
-              for (auto tieNode : noteNode.children("tie"))
-                {
-                  std::string type = tieNode.attribute("type").value();
-                  if (type == "start") tieStart = true;
-                  if (type == "stop")  tieStop = true;
-                }
-
               // Extract lyric if present
               std::string lyricText;
               auto lyricNode = noteNode.child("lyric");
@@ -384,38 +389,7 @@ int main(int argc, char **argv)
                     }
                 }
 
-              // Handle ties
-              if (tieStart)
-                {
-                  if (tiedNotes.find(pitchKey) == tiedNotes.end())
-                    {
-                      tiedNotes[pitchKey] = {NoteEvent::NOTE, midi_note, current_time_beats, duration_beats, {}, lyricText, staccato, accent, fermata};
-                    }
-                  else
-                    {
-                      tiedNotes[pitchKey].duration_beats += duration_beats;
-                      if (!lyricText.empty()) tiedNotes[pitchKey].lyric = lyricText;
-                    }
-                }
-              else if (tieStop)
-                {
-                  if (tiedNotes.find(pitchKey) != tiedNotes.end())
-                    {
-                      auto e = tiedNotes[pitchKey];
-                      e.duration_beats += duration_beats;
-                      if (!lyricText.empty()) e.lyric = lyricText;
-                      events.push_back(e);
-                      tiedNotes.erase(pitchKey);
-                    }
-                  else
-                    {
-                      events.push_back({NoteEvent::NOTE, midi_note, current_time_beats, duration_beats, {}, lyricText, staccato, accent, fermata});
-                    }
-                }
-              else
-                {
-                  events.push_back({NoteEvent::NOTE, midi_note, current_time_beats, duration_beats, {}, lyricText, staccato, accent, fermata});
-                }
+              events.push_back({NoteEvent::NOTE, midi_note, current_time_beats, duration_beats, {}, lyricText, staccato, accent, fermata});
 
               current_time_beats += duration_beats;
             }
@@ -485,13 +459,7 @@ int main(int argc, char **argv)
       first_measure = false;
     }
 
-  // split notes on tempo changes (in order to have divisions map properly to ms later)
-  split_events (events, beats_to_tempo);
-
-  // split notes on volume changes (in order to get beat-aligned volume jumps later)
-  split_events (events, beats_to_velocity);
-
-  // split notes on sfz
+  // split notes on sfz (TODO: do we need this at all?)
   split_events (events, beats_to_sfz);
 
   for (auto& event: events)
@@ -500,10 +468,16 @@ int main(int argc, char **argv)
         {
           if (event.start_beats == sfz.beats)
             {
-              event.sfz = true;
+              event.sfz = SfzState::START;
             }
         }
     }
+
+  // split notes on tempo changes (in order to have divisions map properly to ms later)
+  split_events (events, beats_to_tempo);
+
+  // split notes on volume changes (in order to get beat-aligned volume jumps later)
+  split_events (events, beats_to_velocity);
 
   // loop over crescendo / diminuendo, resolve start and end velocity
   int current_velocity = 80;
@@ -698,8 +672,15 @@ int main(int argc, char **argv)
                 fprintf (f, " fermata: True\n");
               if (e.accent)
                 fprintf (f, " accent: True\n");
-              if (e.sfz)
-                fprintf (f, " sfz: True\n");
+              switch (e.sfz)
+              {
+                case SfzState::NONE:     fprintf (f, " sfz: None\n");
+                                         break;
+                case SfzState::START:    fprintf (f, " sfz: Start\n");
+                                         break;
+                case SfzState::CONTINUE: fprintf (f, " sfz: Continue\n");
+                                         break;
+              }
 
               fprintf (f, "\n");
             }
