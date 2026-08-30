@@ -314,14 +314,20 @@ for element in score:
       quarter_offset += element["duration"]
       freq = midi_note_to_frequency (element["midi_note"])
       # melisma: extend last vowel over new note without lyric
+      sfz_changed = False
       if last_note:
         last_note_end_volume = last_note.volume[-1][1]
         note_start_volume = element["volume"][0][1]
         volume_diff = abs (last_note_end_volume - note_start_volume)
+        if last_note.has_sfz and not element["sfz"]:
+          # end of SFZ
+          sfz_changed = True
+        if element["sfz"]:
+          # start of new SFZ
+          sfz_changed = True
       else:
         volume_diff = 0
-        sfz_changed = False
-      if "lyric" not in element and last_note and (last_note.freq != freq or volume_diff > 2 or element["sfz"] == SfzState.START):
+      if "lyric" not in element and last_note and (last_note.freq != freq or volume_diff > 2 or sfz_changed):
         element["lyric"] = last_note.lyric
         if last_note.melisma_state == MelismaState.NONE:
           last_note.melisma_state = MelismaState.START

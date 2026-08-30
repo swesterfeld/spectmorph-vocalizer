@@ -116,6 +116,7 @@ class PhoEntry:
 # TODO: could merge
 dynamic_dict = {}
 accent_dict = {}
+sfz_dict = {}
 
 def load_pho (filename):
   pho = []
@@ -142,6 +143,9 @@ def load_pho (filename):
             elif x[1] == "accent":
               index = int (x[2])
               accent_dict[index] = True
+            elif x[1] == "sfz":
+              index = int (x[2])
+              sfz_dict[index] = True
           elif x[0][0] != ';':
             pho_entry = PhoEntry()
             pho_entry.bar = bar
@@ -594,6 +598,20 @@ def build_volume_envelope():
 
 volume_envelope = build_volume_envelope()
 
+def build_sfz_envelope():
+  syl_list = []
+  for p in pho:
+    syl_list += p[-1].syl_entries
+
+  sfz_envelope = []
+  for i in range (len (syl_list) - 1):
+    if syl_list[i][0] + 1 == syl_list[i + 1][0] and syl_list[i][0] in sfz_dict:
+      sfz_envelope.append ((syl_list[i][1], syl_list[i + 1][1]))
+
+  return sfz_envelope
+
+sfz_envelope = build_sfz_envelope()
+
 def build_accent_envelope():
   syl_list = []
   for p in pho:
@@ -620,6 +638,29 @@ def find_accent (ms):
     if t0_ms <= ms <= t1_ms:
       return min (24 - 24 * (ms - t0_ms) / (t1_ms - t0_ms), 12)
   return 0
+
+def find_sfz_factor (ms):
+  def ramp (start, stop, frac):
+    print ("ramp", start, stop, frac, start * (1 - frac) + stop * frac, file=sys.stderr)
+    return start * (1 - frac) + stop * frac
+  sfz_factor = 3
+  for sfz in sfz_envelope:
+    t0_ms = sfz[0]
+    t1_ms = sfz[1]
+    duration_ms = sfz[1] - sfz[0]
+    if duration_ms > 200:
+      attack_ms = 100
+      decay_ms = min (500, duration_ms - attack_ms)
+    else:
+      attack_ms = duration_ms / 2
+      decay_ms = duration_ms / 2
+    if t0_ms <= ms <= t0_ms + attack_ms:
+      frac = (ms - t0_ms) / attack_ms
+      return ramp (1, sfz_factor, frac)
+    if t0_ms + attack_ms <= ms <= t0_ms + attack_ms + decay_ms:
+      frac = (ms - attack_ms - t0_ms) / decay_ms
+      return ramp (sfz_factor, 1, frac)
+  return 1
 
 def find_volume_midi (ms):
   for i in range (len (volume_envelope) - 1):
@@ -714,7 +755,7 @@ while True:
   print ("freq", find_freq (ms))
 
   volume_midi = find_volume_midi (ms)
-  volume_factor = (volume_midi / 127) * (volume_midi / 127)
+  volume_factor = (volume_midi / 127) * (volume_midi / 127) * find_sfz_factor (ms)
 
   # TODO: morphing can jump from 0 to 1 or back, which is typically inaudible,
   # but should be fixed anyway
