@@ -4,6 +4,7 @@ High Priority H
  - dynamic: volume jumps should ramp
  - mxmlparse/dynamic: bar/beat points
  - mxmlparse/dynamic: should handle sfz
+   * for Stra (or kla) attack should be longer/earlier to allow vowel with full volume ramp
  - mxmlparse: handle polyphony errors (like before)
  - mxmlparse: accent should *not just* map to overall volume (should use envelope)
  - mxmlparse: what is the relationship between accent, tempo and duration
