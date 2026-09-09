@@ -602,6 +602,8 @@ def syllables_to_pho():
       s_ms = 0
       s_nr = s[0]
       s_volume = None
+      s_accent = False
+      s_sfz = False
       s_current = []
     if (s[1] == "_"):
       s_current.append (s)
