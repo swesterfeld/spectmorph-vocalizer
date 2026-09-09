@@ -10,6 +10,7 @@ import sys
 import os
 import random
 import argparse
+import json
 from math import log2
 from dataclasses import dataclass
 from utils import time_to_volume, time_to_pos, list_voice_segments
@@ -21,7 +22,11 @@ parser.add_argument("-s", type=int, help="Optional seed")
 parser.add_argument("--items", type=str, help="Item file")
 parser.add_argument("--trace", type=str, help="Trace file")
 parser.add_argument("--input-pho", type=str, help="Input pho file")
+parser.add_argument("--debug", type=str, help="Write self-contained plot data (JSON)")
 args = parser.parse_args()
+
+debug_items = []
+debug_samples = []
 
 if args.s is not None:
   print (f"seeding RNG with {args.s}", file=sys.stderr)
@@ -577,6 +582,10 @@ for item in items:
   print ("ITEM: %-5s %-5s %7.2f %7.2f %7.2f" % (item.type, item.lyric, item.ms, compression, item.volume_factor), file=sys.stderr)
   if item.ms > 0:
     synlist.append (item)
+    if args.debug:
+      debug_items.append ({"start_ms": total_ms * time_stretch,
+                           "end_ms": (total_ms + item.ms) * time_stretch,
+                           "label": item.lyric, "type": item.type})
     print ("%f\t%f\t%s" % (item.pos1, item.pos2, "trace_" + item.lyric), file=trace_file)
     print ("%f\t%f\t%s" % (total_ms / 1000 * time_stretch, (total_ms + item.ms) / 1000 * time_stretch, "I" + item.lyric), file=item_file)
   total_ms += item.ms
@@ -641,7 +650,6 @@ def find_accent (ms):
 
 def find_sfz_factor (ms):
   def ramp (start, stop, frac):
-    print ("ramp", start, stop, frac, start * (1 - frac) + stop * frac, file=sys.stderr)
     return start * (1 - frac) + stop * frac
   sfz_factor = 3
   for sfz in sfz_envelope:
@@ -752,10 +760,14 @@ while True:
 
   print ("high-shelf-gain ", find_accent (ms))
 
-  print ("freq", find_freq (ms))
+  freq = find_freq (ms)
+  print ("freq", freq)
 
   volume_midi = find_volume_midi (ms)
-  volume_factor = (volume_midi / 127) * (volume_midi / 127) * find_sfz_factor (ms)
+  sfz_factor = find_sfz_factor (ms)
+  volume_factor = (volume_midi / 127) * (volume_midi / 127) * sfz_factor
+  if args.debug:
+    debug_samples.append ([ms * time_stretch, volume_factor, sfz_factor, volume_midi, freq])
 
   # TODO: morphing can jump from 0 to 1 or back, which is typically inaudible,
   # but should be fixed anyway
@@ -796,3 +808,14 @@ while True:
   print ("process 48")
 
   ms += 1 / time_stretch
+
+if args.debug:
+  with open (args.debug, "w") as debug_file:
+    json.dump ({"version": 1, "items": debug_items,
+                "columns": ["time_ms", "volume", "sfz", "volume_midi", "freq"],
+                "curves": {"volume": {"label": "Volume factor", "unit": "factor"},
+                           "sfz": {"label": "SFZ factor", "unit": "factor"},
+                           "volume_midi": {"label": "MIDI volume", "unit": "MIDI"},
+                           "freq": {"label": "Frequency", "unit": "Hz"}},
+                "samples": debug_samples}, debug_file)
+    debug_file.write ("\n")

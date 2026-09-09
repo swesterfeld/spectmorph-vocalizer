@@ -2,7 +2,7 @@
 
 set -e
 
-mkdir -p testxml pho script wav voice items trace input_pho notes frames mxparse
+mkdir -p testxml pho script wav voice items trace input_pho notes frames mxparse debug
 
 make -C src
 
@@ -95,7 +95,7 @@ do
     test -f /usr/share/mbrola/$voice/$voice || voice=de2
     mbrola /usr/share/mbrola/$voice/$voice pho/$pho wav/$wav
   else
-    phomorphdi.py pho/$pho $seed_param --items items/$txt --trace trace/$txt --input-pho input_pho/$txt > script/$script || echo "$pho -> $script" failed
+    ./phomorphdi.py pho/$pho $seed_param --items items/$txt --trace trace/$txt --input-pho input_pho/$txt --debug "debug/${filename_noext}.json" > script/$script || echo "$pho -> $script" failed
     src/smscript script/$script wav/$wav frames/$txt
   fi
   #./volume-normalize.py wav/$wav
