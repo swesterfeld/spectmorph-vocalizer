@@ -117,6 +117,7 @@ def freq_to_note (freq):
 class PhoEntry:
   def __init__ (self):
     self.syl_entries = []
+    self.freq_span_index: int = -1
 
 # TODO: could merge
 dynamic_dict = {}
@@ -347,12 +348,31 @@ sfz_nucleus_starts = {}
 class Item:
   pass
 
+@dataclass
+class FrequencySpan:
+  duration_ms: float
+  frequency_hz: float
+
+@dataclass
+class PitchBoundary:
+  time_ms: float
+  plosive: bool
+
+@dataclass
+class FrequencyTransition:
+  start_ms: float
+  end_ms: float
+  from_hz: float
+  to_hz: float
+
+pitch_boundaries: dict[int, PitchBoundary] = {}
+
 # prepare for melisma:
 #  - merge repeated vowels into one
 #  - build a list to be able to find the frequency for a given time
 def prepare_melisma (pho):
   out = []
-  out_f = []
+  out_f: list[FrequencySpan] = []
   last = None
   last_f = 130.81
   total_ms = 0
@@ -365,11 +385,12 @@ def prepare_melisma (pho):
       # have the old frequency, and the start of the new note have the new
       # frequency, so we put the frequency jump into the middle of the rest,
       # which usually should be inaudible
-      out_f.append ((float (pho[i][1]) / 2, last_f))
+      out_f.append (FrequencySpan (duration_ms=float (pho[i][1]) / 2, frequency_hz=last_f))
       next_f = pho[i + 1][-1].freq
-      out_f.append ((float (pho[i][1]) / 2, next_f))
+      out_f.append (FrequencySpan (duration_ms=float (pho[i][1]) / 2, frequency_hz=next_f))
     else:
-      out_f.append ((float (pho[i][1]), last_f))
+      pho_entry.freq_span_index = len (out_f)
+      out_f.append (FrequencySpan (duration_ms=float (pho[i][1]), frequency_hz=last_f))
 
     V_last = V_current = None
     if last and is_v (last[0]):
@@ -577,6 +598,12 @@ for i in range (len (pho)):
       item.pos1 = pos1
       item.pos2 = pos2
       item.volume_factor = vnorm
+      if P1 != "_" and P2 != "_":
+        # At this boundary the next diphone begins, including the burst
+        # for plosives. Keep rest changes at their original silent midpoint.
+        pitch_boundaries[next_pho_entry.freq_span_index] = PitchBoundary (
+          time_ms=get_total_ms (items) + item.ms,
+          plosive=phone_class (P2) == "p")
       if i + 1 in syllable_nuclei:
         # The vowel segment starts after the incoming consonant-vowel
         # diphone, not at the recording marker inside that diphone.
@@ -741,14 +768,37 @@ def find_volume_midi (ms):
   else:
     return volume_envelope[-1][1]
 
-def find_freq (ms):
+def build_frequency_transitions() -> list[FrequencyTransition]:
+  transitions: list[FrequencyTransition] = []
   elapsed = 0
-  for duration, freq in m_freqs:
-    last_freq = freq
-    if ms < elapsed + duration:
-      return freq
-    elapsed += duration
-  return last_freq
+  previous_hz = m_freqs[0].frequency_hz
+  for index, span in enumerate (m_freqs):
+    if span.frequency_hz != previous_hz:
+      boundary = pitch_boundaries.get (index, PitchBoundary (time_ms=elapsed, plosive=False))
+      # Diphone and melisma ramps both reach the new pitch on the note.
+      # Shorten ramps for short preceding spans; plosives change instantly.
+      ramp_ms = 0 if boundary.plosive else min (40, m_freqs[index - 1].duration_ms / 2)
+      transitions.append (FrequencyTransition (
+        start_ms=boundary.time_ms - ramp_ms,
+        end_ms=boundary.time_ms,
+        from_hz=previous_hz,
+        to_hz=span.frequency_hz))
+    previous_hz = span.frequency_hz
+    elapsed += span.duration_ms
+  return transitions
+
+frequency_transitions = build_frequency_transitions()
+
+def find_freq (ms: float) -> float:
+  frequency_hz = m_freqs[0].frequency_hz
+  for transition in frequency_transitions:
+    if ms < transition.start_ms:
+      return frequency_hz
+    if ms < transition.end_ms:
+      frac = (ms - transition.start_ms) / (transition.end_ms - transition.start_ms)
+      return transition.from_hz + frac * (transition.to_hz - transition.from_hz)
+    frequency_hz = transition.to_hz
+  return frequency_hz
 
 def find_synlist_pos (ms):
   elapsed = 0
