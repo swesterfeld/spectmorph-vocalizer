@@ -319,10 +319,10 @@ for element in score:
         last_note_end_volume = last_note.volume[-1][1]
         note_start_volume = element["volume"][0][1]
         volume_diff = abs (last_note_end_volume - note_start_volume)
-        if last_note.has_sfz and not element["sfz"]:
+        if last_note.has_sfz and element["sfz"] != SfzState.NONE:
           # end of SFZ
           sfz_changed = True
-        if element["sfz"]:
+        if element["sfz"] == SfzState.START:
           # start of new SFZ
           sfz_changed = True
       else:
