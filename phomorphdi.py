@@ -11,7 +11,7 @@ import os
 import random
 import argparse
 import json
-from math import log2
+from math import cos, log2, pi
 from dataclasses import dataclass
 from utils import time_to_volume, time_to_pos, list_voice_segments
 
@@ -340,6 +340,9 @@ def lookup_diphone_entry_vv (P1, P2, pho_entry, note):
   return possible_matches
 
 items = []
+sfz_plosive_onsets = set()
+sfz_attack_starts = {}
+sfz_nucleus_starts = {}
 
 class Item:
   pass
@@ -393,6 +396,20 @@ def prepare_melisma (pho):
   return out, out_f
 
 pho, m_freqs = prepare_melisma (pho)
+
+def find_syllable_nuclei (pho):
+  seen_nuclei = set()
+  nuclei = {}
+  for i, p in enumerate (pho):
+    syllable = int (p[-2])
+    if p[0] == "_" or syllable in seen_nuclei:
+      continue
+    if is_v (p[0]) or is_diphthong (p[0]):
+      nuclei[i] = syllable
+      seen_nuclei.add (syllable)
+  return nuclei
+
+syllable_nuclei = find_syllable_nuclei (pho)
 
 def print_input_pho (pho):
   t = 0
@@ -560,10 +577,20 @@ for i in range (len (pho)):
       item.pos1 = pos1
       item.pos2 = pos2
       item.volume_factor = vnorm
+      if i + 1 in syllable_nuclei:
+        # The vowel segment starts after the incoming consonant-vowel
+        # diphone, not at the recording marker inside that diphone.
+        sfz_nucleus_starts[syllable_nuclei[i + 1]] = get_total_ms (items) + item.ms
       if pho[i][-2] != pho[i + 1][-2]:
         syl_entry_is_present = any (x[0] == int (pho[i + 1][-2]) for x in pho_entry.syl_entries)
         if not syl_entry_is_present:
           pho_entry.syl_entries.append ((int (pho[i + 1][-2]), item.ms + get_total_ms (items)))
+          # Plosives start at full volume after the incoming diphone.
+          # Other onsets start their attack halfway through it.
+          if phone_class (P2) == "p":
+            sfz_plosive_onsets.add (int (pho[i + 1][-2]))
+          else:
+            sfz_attack_starts[int (pho[i + 1][-2])] = get_total_ms (items) + item.ms / 2
 
       items.append (item)
 
@@ -607,15 +634,47 @@ def build_volume_envelope():
 
 volume_envelope = build_volume_envelope()
 
-def build_sfz_envelope():
+@dataclass
+class SfzEnvelope:
+  start_ms: float
+  end_ms: float
+  peak_ms: float
+  decay_start_ms: float
+
+def build_sfz_envelope() -> list[SfzEnvelope]:
   syl_list = []
   for p in pho:
     syl_list += p[-1].syl_entries
 
-  sfz_envelope = []
+  sfz_envelope: list[SfzEnvelope] = []
   for i in range (len (syl_list) - 1):
     if syl_list[i][0] + 1 == syl_list[i + 1][0] and syl_list[i][0] in sfz_dict:
-      sfz_envelope.append ((syl_list[i][1], syl_list[i + 1][1]))
+      peak_ms = syl_list[i][1]
+      start_ms = peak_ms
+      if syl_list[i][0] not in sfz_plosive_onsets:
+        # Keep the peak at the end of the first onset segment, but start
+        # halfway through its incoming diphone when one is available.
+        segment_end_ms = 0
+        for item in synlist:
+          segment_end_ms += item.ms
+          if segment_end_ms > start_ms:
+            peak_ms = min (segment_end_ms, syl_list[i + 1][1])
+            break
+        start_ms = sfz_attack_starts.get (syl_list[i][0], start_ms)
+      end_ms = syl_list[i + 1][1]
+      decay_start_ms = min (end_ms, sfz_nucleus_starts.get (syl_list[i][0], peak_ms))
+      peak_ms = min (peak_ms, decay_start_ms)
+      if sfz_envelope:
+        previous = sfz_envelope[-1]
+        previous_decay_end_ms = min (previous.end_ms, previous.decay_start_ms + 500)
+        # The previous envelope takes precedence during its decay. Start
+        # the next attack at base volume when that decay has finished,
+        # rather than exposing an already partly elapsed attack.
+        start_ms = max (start_ms, previous_decay_end_ms)
+      sfz_envelope.append (SfzEnvelope (start_ms=start_ms,
+                                       end_ms=end_ms,
+                                       peak_ms=peak_ms,
+                                       decay_start_ms=decay_start_ms))
 
   return sfz_envelope
 
@@ -648,26 +707,22 @@ def find_accent (ms):
       return min (24 - 24 * (ms - t0_ms) / (t1_ms - t0_ms), 12)
   return 0
 
-def find_sfz_factor (ms):
-  def ramp (start, stop, frac):
+def find_sfz_factor (ms: float, midi_volume: float) -> float:
+  def ramp (start: float, stop: float, frac: float) -> float:
     return start * (1 - frac) + stop * frac
-  sfz_factor = 3
+  sfz_factor = 5
   for sfz in sfz_envelope:
-    t0_ms = sfz[0]
-    t1_ms = sfz[1]
-    duration_ms = sfz[1] - sfz[0]
-    if duration_ms > 200:
-      attack_ms = 100
-      decay_ms = min (500, duration_ms - attack_ms)
-    else:
-      attack_ms = duration_ms / 2
-      decay_ms = duration_ms / 2
-    if t0_ms <= ms <= t0_ms + attack_ms:
-      frac = (ms - t0_ms) / attack_ms
+    attack_ms = sfz.peak_ms - sfz.start_ms
+    decay_ms = min (500, sfz.end_ms - sfz.decay_start_ms)
+    if attack_ms > 0 and sfz.start_ms <= ms < sfz.peak_ms:
+      frac = (ms - sfz.start_ms) / attack_ms
       return ramp (1, sfz_factor, frac)
-    if t0_ms + attack_ms <= ms <= t0_ms + attack_ms + decay_ms:
-      frac = (ms - attack_ms - t0_ms) / decay_ms
-      return ramp (sfz_factor, 1, frac)
+    if sfz.peak_ms <= ms < sfz.decay_start_ms:
+      return sfz_factor
+    if decay_ms > 0 and sfz.decay_start_ms <= ms <= sfz.decay_start_ms + decay_ms:
+      frac = (ms - sfz.decay_start_ms) / decay_ms
+      # Cosine decay has a flat slope at both the peak and base volume.
+      return 1 + (sfz_factor - 1) * (cos (pi * frac) + 1) / 2
   return 1
 
 def find_volume_midi (ms):
@@ -764,7 +819,7 @@ while True:
   print ("freq", freq)
 
   volume_midi = find_volume_midi (ms)
-  sfz_factor = find_sfz_factor (ms)
+  sfz_factor = find_sfz_factor (ms, volume_midi)
   volume_factor = (volume_midi / 127) * (volume_midi / 127) * sfz_factor
   if args.debug:
     debug_samples.append ([ms * time_stretch, volume_factor, sfz_factor, volume_midi, freq])
