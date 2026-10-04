@@ -11,10 +11,10 @@ class GlissandoTests(unittest.TestCase):
     def setUp(self):
         source = Path(__file__).resolve().parents[1] / 'phomorphdi.py'
         tree = ast.parse(source.read_text())
-        names = {'Glissando', 'build_glissandos', 'find_glissando_freq', 'find_freq'}
+        names = {'Glissando', 'build_glissandos', 'find_glissando_freq', 'find_freq', 'musical_time'}
         definitions = [n for n in tree.body
                        if isinstance(n, (ast.FunctionDef, ast.ClassDef)) and n.name in names]
-        self.env = dict(dataclass=dataclass)
+        self.env = dict(dataclass=dataclass, tempo_points=[])
         exec(compile(ast.Module(body=definitions, type_ignores=[]), str(source), 'exec'), self.env)
 
     def build(self, links, nuclei, synthesis=None, closing=None):
@@ -63,6 +63,14 @@ class GlissandoTests(unittest.TestCase):
             self.build([(1, 2)], {1: (100, 130)})
         with self.assertRaisesRegex(ValueError, 'no time'):
             self.build([(1, 2)], {1: (100, 130), 2: (100, 260)})
+
+    def test_accelerando_tracks_beats_without_pitch_steps(self):
+        self.env['tempo_points'] = [(0, 0), (1000, 1), (1500, 2), (1750, 3)]
+        self.build([(1, 2)], {1: (0, 130), 2: (1750, 260)})
+        self.assertAlmostEqual(self.frequency(1000), 130 * 2 ** (1 / 3))
+        self.assertAlmostEqual(self.frequency(1500), 130 * 2 ** (2 / 3))
+        for ms in (1000, 1500):
+            self.assertAlmostEqual(self.frequency(ms - 1e-6), self.frequency(ms + 1e-6), places=5)
 
 
 if __name__ == '__main__':

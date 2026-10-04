@@ -153,6 +153,9 @@ main (int argc, char **argv)
   const double vibrato_attack = 0;
   const double vibrato_depth = 15;
   const double vibrato_frequency = 4;
+  // Slow glides can otherwise turn into repeated pitch reversals at 4 Hz.
+  ParamSmoother<SmootherType::linear> vibrato_depth_smoother { vibrato_depth };
+  vibrato_depth_smoother.reset (mix_freq, 0.030);
 
   FILE *frames_file = fopen (argv[3], "w");
   if (!frames_file)
@@ -203,8 +206,10 @@ main (int argc, char **argv)
           size_t offset = output.size();
           output.resize (output.size() + i);
           vector<float> freq_in (i);
+          double block_vibrato_depth = vibrato_depth;
           for (auto &f : freq_in)
             {
+              block_vibrato_depth = vibrato_depth_smoother.get_next();
               if (freq_steps)
                 {
                   freq *= freq_factor;
@@ -212,6 +217,7 @@ main (int argc, char **argv)
                 }
               f = freq;
             }
+          live_decoder.set_vibrato (true, block_vibrato_depth, vibrato_frequency, vibrato_attack);
           live_decoder.process (rt_memory_area, i, freq_in.data(), output.data() + offset);
           for (size_t s = offset; s < offset + i; s++)
             {
@@ -225,6 +231,7 @@ main (int argc, char **argv)
         }
       else if (script_parser.command ("freq-glissando", f))
         {
+          vibrato_depth_smoother.set_target (0);
           if (target_freq == 0)
             freq = f;
           target_freq = f;
@@ -233,6 +240,7 @@ main (int argc, char **argv)
         }
       else if (script_parser.command ("freq", f))
         {
+          vibrato_depth_smoother.set_target (vibrato_depth);
           if (target_freq != f)
             {
               if (target_freq == 0) /* start of the audio file */
