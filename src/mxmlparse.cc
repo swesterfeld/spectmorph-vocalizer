@@ -62,6 +62,8 @@ struct NoteEvent
 
   SfzState sfz = SfzState::NONE;
   int note_id = -1;       // original MusicXML note, preserved when splitting
+  vector<int> glissando_starts;
+  vector<int> glissando_stops;
 };
 
 struct Dynamic
@@ -185,10 +187,14 @@ split_note_on_changes (const NoteEvent& note, const auto& split_beats)
 
   result.push_back (last);
 
-  /* remove lyrics on splitted parts to force melisma */
+  /* Lyrics and glissando endpoints belong to the original note's onset. */
   for (size_t i = 0; i < result.size(); i++)
     if (i)
-      result[i].lyric = "";
+      {
+        result[i].lyric = "";
+        result[i].glissando_starts.clear();
+        result[i].glissando_stops.clear();
+      }
 
   /* properly set sfz state */
   auto first_sfz = result[0].sfz;
@@ -373,8 +379,8 @@ int main(int argc, char **argv)
 
               bool staccato = false;
               bool accent = false;
-              auto notations_node = noteNode.child ("notations");
-              if (notations_node)
+              vector<int> glissando_starts, glissando_stops;
+              for (auto notations_node : noteNode.children ("notations"))
                 {
                   auto articulations_node = notations_node.child ("articulations");
                   if (articulations_node)
@@ -384,17 +390,27 @@ int main(int argc, char **argv)
                       if (articulations_node.child ("accent"))
                         accent = true;
                     }
-                  auto slide_node = notations_node.child ("slide");
-                  if (slide_node)
+                  for (auto notation : notations_node.children())
                     {
-                      std::string type = slide_node.attribute("type").value();
-                      printf ("slide type %s (glissando)\n", type.c_str()); // TODO
+                      const std::string name = notation.name();
+                      if (name != "slide" && name != "glissando")
+                        continue;
+                      const std::string type = notation.attribute ("type").value();
+                      const int number = notation.attribute ("number").as_int (1);
+                      if (type == "start")
+                        glissando_starts.push_back (number);
+                      else if (type == "stop")
+                        glissando_stops.push_back (number);
+                      else
+                        die (current_time_beats, "unsupported glissando type: " + type);
                     }
                 }
 
               const int note_id = events.size();
               events.push_back({NoteEvent::NOTE, midi_note, current_time_beats, duration_beats, {}, lyricText, staccato, accent, fermata});
               events.back().note_id = note_id;
+              events.back().glissando_starts = glissando_starts;
+              events.back().glissando_stops = glissando_stops;
 
               current_time_beats += duration_beats;
             }
@@ -678,6 +694,17 @@ int main(int argc, char **argv)
                 fprintf (f, " fermata: True\n");
               if (e.accent)
                 fprintf (f, " accent: True\n");
+              auto print_glissando = [&] (const char *key, const vector<int>& numbers)
+                {
+                  if (numbers.empty())
+                    return;
+                  fprintf (f, " %s:", key);
+                  for (int number : numbers)
+                    fprintf (f, " %d", number);
+                  fprintf (f, "\n");
+                };
+              print_glissando ("glissando_start", e.glissando_starts);
+              print_glissando ("glissando_stop", e.glissando_stops);
               switch (e.sfz)
               {
                 case SfzState::NONE:     fprintf (f, " sfz: None\n");
