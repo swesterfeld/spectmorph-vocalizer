@@ -216,7 +216,7 @@ def load_mxparse (filepath):
           ]
         elif key in {"bpm", "midi_note", "start", "duration"}:
           current_entry[key] = float(value)
-        elif key in {"measure", "beat"}:
+        elif key in {"measure", "beat", "note_id"}:
           current_entry[key] = int (value)
         elif key in {"staccato", "fermata", "accent"}:
           current_entry[key] = value.strip().lower() == "true"
@@ -251,20 +251,49 @@ def midi_note_to_frequency(midi_note: float) -> float:
 
   return frequency
 
-score = load_mxparse (sys.argv[2])
+def reconstruct_notes (score):
+  """Resolve tempo fragments to milliseconds before interpreting articulation.
+
+  Dynamics remain timed points inside the original note. New SFZ onsets keep
+  a boundary because the pho format attaches SFZ to syllable sections.
+  Older mxparse files without note IDs retain their existing boundaries.
+  """
+  ms_per_beat = 60000 / next ((e["bpm"] for e in score if e["type"] == "tempo"), 120)
+  result = []
+  for original in score:
+    if original["type"] == "tempo":
+      ms_per_beat = 60000 / original["bpm"]
+      continue
+    element = original.copy()
+    scale = ms_per_beat * (1.75 if element.get ("fermata", False) else 1)
+    element["duration_ms"] = element["duration"] * scale
+    if element["type"] == "note":
+      element["volume_ms"] = [(t * scale, volume) for t, volume in element["volume"]]
+      previous = result[-1] if result else None
+      same_note = (previous is not None and previous["type"] == "note"
+                   and "note_id" in element and previous.get ("note_id") == element["note_id"])
+      if same_note:
+        assert previous["midi_note"] == element["midi_note"], f"inconsistent pitch for note_id {element['note_id']}"
+        assert abs (previous["start"] + previous["duration"] - element["start"]) < 1e-6, \
+          f"non-contiguous fragments for note_id {element['note_id']}"
+        # A copied accent is not a new onset, even at an internal SFZ boundary.
+        element.pop ("accent", None)
+        sfz_continues = (element["sfz"] == SfzState.CONTINUE and previous["sfz"] != SfzState.NONE)
+        if sfz_continues or element["sfz"] == previous["sfz"] == SfzState.NONE:
+          offset_ms = previous["duration_ms"]
+          previous["volume_ms"].extend ((t + offset_ms, volume) for t, volume in element["volume_ms"])
+          previous["duration_ms"] += element["duration_ms"]
+          previous["duration"] += element["duration"]
+          continue
+    result.append (element)
+  return result
+
+score = reconstruct_notes (load_mxparse (sys.argv[2]))
 
 if len (sys.argv) > 3:
   debug_notes_file = open (sys.argv[3], "w")
 else:
   debug_notes_file = sys.stderr
-
-def set_tempo (tempo):
-  global ms_per_beat
-  print (";;; SET TEMPO %s" % tempo)
-  ms_per_beat = 60000.0 / tempo
-
-# default
-set_tempo (120)
 
 last_note = None
 last_rest = None
@@ -288,16 +317,9 @@ quarter_offset = 0
 
 notes = []
 
-for element in score:
-  if element["type"] == "tempo":
-    set_tempo (element["bpm"])
-    break
-
 # Extract information from the score
 for element in score:
   print (";;;", element)
-  if element["type"] == "tempo":
-    set_tempo (element["bpm"])
   if element["type"] == "rest" or element["type"] == "note":
     qoffset16 = round (quarter_offset * 4)
     print (";;; quarter_offset: ", quarter_offset)
@@ -308,16 +330,14 @@ for element in score:
         polyphony_errors += 1
       """
       last_note_rest_offset = element["start"]
-      note_duration_ms = element["duration"] * ms_per_beat
-      if "fermata" in element:
-        note_duration_ms *= 1.75
+      note_duration_ms = element["duration_ms"]
       quarter_offset += element["duration"]
       freq = midi_note_to_frequency (element["midi_note"])
       # melisma: extend last vowel over new note without lyric
       sfz_changed = False
       if last_note:
         last_note_end_volume = last_note.volume[-1][1]
-        note_start_volume = element["volume"][0][1]
+        note_start_volume = element["volume_ms"][0][1]
         volume_diff = abs (last_note_end_volume - note_start_volume)
         if last_note.has_sfz and element["sfz"] != SfzState.NONE:
           # end of SFZ
@@ -345,8 +365,8 @@ for element in score:
           last_note.ms += note_duration_ms
           last_volume_ms = last_note.volume[-1][0]
           last_note.volume += [
-            (volume_entry[0] * ms_per_beat + last_volume_ms, volume_entry[1])
-            for volume_entry in element["volume"]
+            (volume_entry[0] + last_volume_ms, volume_entry[1])
+            for volume_entry in element["volume_ms"]
           ]
         else:
           raise RuntimeError ("no lyric, note at measure measure %d beat %d" % (element.measureNumber, element.beat))
@@ -376,10 +396,7 @@ for element in score:
         note.has_staccato = has_staccato
         note.has_accent = has_accent
         note.has_sfz = has_sfz
-        note.volume = [
-          (volume_entry[0] * ms_per_beat, volume_entry[1])
-          for volume_entry in element["volume"]
-        ]
+        note.volume = element["volume_ms"]
         note.melisma_state = melisma_state
         """
         note.measure_number = element.measureNumber
@@ -398,9 +415,7 @@ for element in score:
         polyphony_errors += 1
       """
       last_note_rest_offset = element["start"]
-      length = element["duration"] * ms_per_beat
-      if "fermata" in element:
-        length *= 1.75
+      length = element["duration_ms"]
       if not last_rest:
         new_rest = Rest()
         new_rest.length = length
