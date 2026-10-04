@@ -19,6 +19,12 @@ remove_music_extension() {
   fi
 }
 
+function die {
+  echo "*** failed *** -> $@"
+  exit 1
+}
+
+
 # handle -s <seed> option
 seed_param=""
 # handle -v <voice> option
@@ -89,13 +95,13 @@ do
 
   echo "$xml..."
   src/mxmlparse testxml/$xml mxparse/$txt
-  ./xml-to-pho.py xml mxparse/$txt notes/$txt > pho/$pho || echo "$xml -> $pho" failed
+  ./xml-to-pho.py xml mxparse/$txt notes/$txt > pho/$pho || die "$xml -> $pho" failed
   if [ "x$1" = "xmbrola" ]; then
     voice=$(grep ';;; VOICE' pho/$pho | cut -d " " -f 3)
     test -f /usr/share/mbrola/$voice/$voice || voice=de2
     mbrola /usr/share/mbrola/$voice/$voice pho/$pho wav/$wav
   else
-    ./phomorphdi.py pho/$pho $seed_param --items items/$txt --trace trace/$txt --input-pho input_pho/$txt --debug "debug/${filename_noext}.json" > script/$script || echo "$pho -> $script" failed
+    ./phomorphdi.py pho/$pho $seed_param --items items/$txt --trace trace/$txt --input-pho input_pho/$txt --debug "debug/${filename_noext}.json" > script/$script || die "$pho -> $script" failed
     src/smscript script/$script wav/$wav frames/$txt
   fi
   #./volume-normalize.py wav/$wav
