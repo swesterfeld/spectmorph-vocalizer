@@ -12,6 +12,7 @@ HELP = """examples:
   %(prog)s debug/sfz-schla.json
   %(prog)s debug/sfz-schla.json --curve sfz
   %(prog)s debug/sfz-schla.json --curve freq
+  %(prog)s debug/sfz-schla.json --curve high_shelf_gain
   %(prog)s debug/sfz-schla.json --output /tmp/volume.svg
   %(prog)s debug/sfz-schla.json --gnuplot-script /tmp/volume.gp
 
@@ -22,6 +23,8 @@ curves:
   sfz         Sforzando multiplier.
   volume_midi Dynamics envelope in MIDI units.
   freq        Synthesis frequency in Hz.
+  high_shelf_gain
+              Accent high-shelf gain in dB, before synthesis smoothing.
 
 The x axis uses milliseconds. Vertical lines and labels mark synthesis items
 (diphones, inserted vowels and pauses). Samples come directly from the render

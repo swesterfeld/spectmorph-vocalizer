@@ -750,32 +750,77 @@ def build_sfz_envelope() -> list[SfzEnvelope]:
 
 sfz_envelope = build_sfz_envelope()
 
+@dataclass
+class AccentEnvelope:
+  start_ms: float
+  peak_ms: float
+  end_ms: float
+  silent_start: bool
+
 def build_accent_envelope():
   syl_list = []
   for p in pho:
     syl_list += p[-1].syl_entries
 
+  # Only the interior of a rest insertion is silent: its edges can still
+  # contain sound from the 50 ms synthesis crossfades.
+  silent_rests = []
+  elapsed = 0
+  for item_index, item in enumerate (synlist):
+    if item.lyric == "_" and item.ms > 100:
+      onset_limit = elapsed + item.ms
+      if item_index + 1 < len (synlist):
+        following = synlist[item_index + 1]
+        if following.type == "D" and following.lyric.startswith ("_"):
+          onset_limit += following.ms
+      silent_rests.append ((elapsed + 50, elapsed + item.ms - 50, onset_limit))
+    elapsed += item.ms
+
   accent_envelope = []
   for i in range (len (syl_list) - 1):
     if syl_list[i][0] + 1 == syl_list[i + 1][0] and syl_list[i][0] in accent_dict:
-      len_ms = syl_list[i + 1][1] - syl_list[i][1]
-      # TODO: may want to have more sophisticated length for note length > 250 and length < 1000
-      # TODO: ramp into accent
-      max_len = min (500, len_ms)
-      end_ms = min (syl_list[i][1] + max_len, syl_list[i + 1][1])
-      accent_envelope.append ((syl_list[i][1], end_ms))
+      syllable, onset_ms = syl_list[i]
+      # Merged melisma vowels retain their syllable boundary in syl_entries,
+      # even though they no longer have a separate incoming diphone.
+      peak_ms = sfz_nucleus_starts.get (syllable, onset_ms)
+      end_ms = min (peak_ms + 500, syl_list[i + 1][1])
+      if end_ms <= peak_ms:
+        continue
+      start_ms = max (0, min (peak_ms - 50, sfz_attack_starts.get (syllable, onset_ms)))
+      silent_start = False
+      closure_ms = volume_closure_times.get (syllable)
+      if closure_ms is not None and closure_ms <= peak_ms:
+        start_ms = closure_ms
+        silent_start = True
+      else:
+        for rest_start, rest_end, onset_limit in silent_rests:
+          if rest_start <= onset_ms <= onset_limit:
+            start_ms = (rest_start + rest_end) / 2
+            silent_start = True
+            break
+      accent_envelope.append (AccentEnvelope (start_ms=start_ms, peak_ms=peak_ms,
+                                             end_ms=end_ms, silent_start=silent_start))
 
   return accent_envelope
 
 accent_envelope = build_accent_envelope()
 
 def find_accent (ms):
+  gain = 0
   for ae in accent_envelope:
-    t0_ms = ae[0]
-    t1_ms = ae[1]
-    if t0_ms <= ms <= t1_ms:
-      return min (24 - 24 * (ms - t0_ms) / (t1_ms - t0_ms), 12)
-  return 0
+    if ae.start_ms <= ms < ae.peak_ms:
+      if ae.silent_start:
+        value = 12
+      else:
+        frac = (ms - ae.start_ms) / (ae.peak_ms - ae.start_ms)
+        value = 6 * (1 - cos (pi * frac))
+      gain = max (gain, value)
+    elif ae.peak_ms <= ms < ae.end_ms:
+      frac = (ms - ae.peak_ms) / (ae.end_ms - ae.peak_ms)
+      gain = max (gain, 6 * (1 + cos (pi * frac)))
+  # Taking the maximum preserves continuity where a new attack overlaps
+  # the previous decay, while still reaching full gain at every nucleus.
+  return gain
 
 def find_sfz_factor (ms: float, midi_volume: float) -> float:
   def ramp (start: float, stop: float, frac: float) -> float:
