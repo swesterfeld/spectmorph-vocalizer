@@ -344,6 +344,8 @@ items = []
 sfz_plosive_onsets = set()
 sfz_attack_starts = {}
 sfz_nucleus_starts = {}
+volume_closure_times: dict[int, float] = {}
+# TODO: should we use this (or similar) for sfz and melisma as well (safe jump in inaudible region)
 
 class Item:
   pass
@@ -616,6 +618,11 @@ for i in range (len (pho)):
           # Other onsets start their attack halfway through it.
           if phone_class (P2) == "p":
             sfz_plosive_onsets.add (int (pho[i + 1][-2]))
+            # The incoming diphone ends inside the closure, before the
+            # next segment's burst. Switch volume midway through its
+            # recorded closure portion, where the change is inaudible.
+            closure_frac = max (0, min (1, (m[1][0] - pos1) / (pos2 - pos1)))
+            volume_closure_times[int (pho[i + 1][-2])] = get_total_ms (items) + item.ms * (closure_frac + 1) / 2
           else:
             sfz_attack_starts[int (pho[i + 1][-2])] = get_total_ms (items) + item.ms / 2
 
@@ -645,19 +652,55 @@ for item in items:
   total_ms += item.ms
 print ("TOTAL_MS:", total_ms, file=sys.stderr)
 
-def build_volume_envelope():
+@dataclass
+class VolumePoint:
+  time_ms: float
+  midi_volume: float
+  step_time_ms: float | None = None
+
+def smooth_volume_jumps (points: list[VolumePoint]) -> list[VolumePoint]:
+  result: list[VolumePoint] = []
+  i = 0
+  while i < len (points):
+    before = points[i]
+    after = before
+    i += 1
+    while i < len (points) and abs (points[i].time_ms - before.time_ms) < 1e-7:
+      after = points[i]
+      i += 1
+    if before.midi_volume != after.midi_volume and after.step_time_ms is not None:
+      step_ms = max (result[-1].time_ms if result else 0, after.step_time_ms)
+      result.append (VolumePoint (time_ms=step_ms, midi_volume=before.midi_volume))
+      result.append (VolumePoint (time_ms=step_ms, midi_volume=after.midi_volume))
+    elif before.midi_volume != after.midi_volume:
+      # Preserve the preceding curve up to the attack. Never extend a
+      # ramp past the preceding control point (or before time zero).
+      previous = result[-1] if result else VolumePoint (time_ms=0, midi_volume=before.midi_volume)
+      start_ms = max (previous.time_ms, before.time_ms - 100)
+      if start_ms < before.time_ms:
+        frac = (start_ms - previous.time_ms) / (before.time_ms - previous.time_ms)
+        start_volume = previous.midi_volume + frac * (before.midi_volume - previous.midi_volume)
+        if not result or start_ms > previous.time_ms:
+          result.append (VolumePoint (time_ms=start_ms, midi_volume=start_volume))
+    result.append (VolumePoint (time_ms=before.time_ms, midi_volume=after.midi_volume))
+  return result
+
+def build_volume_envelope() -> list[VolumePoint]:
   syl_list = []
   for p in pho:
     syl_list += p[-1].syl_entries
 
-  volume_envelope = []
+  volume_envelope: list[VolumePoint] = []
   for i in range (len (syl_list) - 1):
     if syl_list[i][0] + 1 == syl_list[i + 1][0] and syl_list[i][0] in dynamic_dict:
       for syl_pt in dynamic_dict[syl_list[i][0]]:
         frac = syl_pt[0] / 100
-        volume_envelope.append (((syl_list[i][1] * (1 - frac) + syl_list[i + 1][1] * frac), syl_pt[1]))
+        volume_envelope.append (VolumePoint (
+          time_ms=syl_list[i][1] * (1 - frac) + syl_list[i + 1][1] * frac,
+          midi_volume=syl_pt[1],
+          step_time_ms=volume_closure_times.get (syl_list[i][0]) if frac == 0 else None))
 
-  return volume_envelope
+  return smooth_volume_jumps (volume_envelope)
 
 volume_envelope = build_volume_envelope()
 
@@ -752,21 +795,21 @@ def find_sfz_factor (ms: float, midi_volume: float) -> float:
       return 1 + (sfz_factor - 1) * (cos (pi * frac) + 1) / 2
   return 1
 
-def find_volume_midi (ms):
+def find_volume_midi (ms: float) -> float:
   for i in range (len (volume_envelope) - 1):
-    t0_ms, value0 = volume_envelope[i]
-    t1_ms, value1 = volume_envelope[i + 1]
+    start = volume_envelope[i]
+    end = volume_envelope[i + 1]
 
-    if t0_ms <= ms <= t1_ms:
-      if t0_ms == t1_ms:
-        return value0
+    if start.time_ms <= ms < end.time_ms:
+      if start.time_ms == end.time_ms:
+        return end.midi_volume
       else:
-        frac = (ms - t0_ms) / (t1_ms - t0_ms)
-        return value0 + frac * (value1 - value0)
-  if ms < volume_envelope[0][0]:
-    return volume_envelope[0][1]
+        frac = (ms - start.time_ms) / (end.time_ms - start.time_ms)
+        return start.midi_volume + frac * (end.midi_volume - start.midi_volume)
+  if ms < volume_envelope[0].time_ms:
+    return volume_envelope[0].midi_volume
   else:
-    return volume_envelope[-1][1]
+    return volume_envelope[-1].midi_volume
 
 def build_frequency_transitions() -> list[FrequencyTransition]:
   transitions: list[FrequencyTransition] = []

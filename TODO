@@ -1,7 +1,6 @@
 TODO before recording: X
 High Priority H
 
- - dynamic: volume jumps should ramp
  - mxmlparse/dynamic: bar/beat points
  - mxmlparse: handle polyphony errors (like before)
  - mxmlparse: accent should *not just* map to overall volume (should use envelope)
