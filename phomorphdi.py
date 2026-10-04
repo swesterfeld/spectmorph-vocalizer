@@ -906,7 +906,8 @@ while True:
   if pos_ms is None:
     break
 
-  print ("high-shelf-gain ", find_accent (ms))
+  high_shelf_gain = find_accent (ms)
+  print ("high-shelf-gain ", high_shelf_gain)
 
   freq = find_freq (ms)
   print ("freq", freq)
@@ -915,7 +916,7 @@ while True:
   sfz_factor = find_sfz_factor (ms, volume_midi)
   volume_factor = (volume_midi / 127) * (volume_midi / 127) * sfz_factor
   if args.debug:
-    debug_samples.append ([ms * time_stretch, volume_factor, sfz_factor, volume_midi, freq])
+    debug_samples.append ([ms * time_stretch, volume_factor, sfz_factor, volume_midi, freq, high_shelf_gain])
 
   # TODO: morphing can jump from 0 to 1 or back, which is typically inaudible,
   # but should be fixed anyway
@@ -960,10 +961,11 @@ while True:
 if args.debug:
   with open (args.debug, "w") as debug_file:
     json.dump ({"version": 1, "items": debug_items,
-                "columns": ["time_ms", "volume", "sfz", "volume_midi", "freq"],
+                "columns": ["time_ms", "volume", "sfz", "volume_midi", "freq", "high_shelf_gain"],
                 "curves": {"volume": {"label": "Volume factor", "unit": "factor"},
                            "sfz": {"label": "SFZ factor", "unit": "factor"},
                            "volume_midi": {"label": "MIDI volume", "unit": "MIDI"},
-                           "freq": {"label": "Frequency", "unit": "Hz"}},
+                           "freq": {"label": "Frequency", "unit": "Hz"},
+                           "high_shelf_gain": {"label": "High-shelf gain (accents)", "unit": "dB"}},
                 "samples": debug_samples}, debug_file)
     debug_file.write ("\n")
