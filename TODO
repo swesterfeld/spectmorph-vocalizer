@@ -3,18 +3,17 @@ High Priority H
 
  - mxmlparse/dynamic: bar/beat points
  - mxmlparse: handle polyphony errors (like before)
+ - vibrato should start later in the vowel phase
  - the onset consonants of syllables are rendered too softly
  - shelving accent doesn't accurately reproduce vowel timbre in some cases (short notes)
  - for short notes, both vowel and consonants need to be shortened
  - auto-detect steady vowel state (60%?...)
- - hiatus freq change before vowel change
- - hiatus preserve original transition time if possible
+ H hiatus freq change before vowel change
+ H hiatus preserve original transition time if possible
  - add configuration file which enables/disables insertions by note
  - rest->consonant, consonant->rest: avoid strong compression
  - try to use compression as close to 1 as possible
  X labelling: instead of labelling a a_a a, we could label a_a
- - glissando
-   m a_U s should have glissando on m a, but not a_U s
  - whispering voice
  - normalization of input material
  - ramp for volume normalization @, 6
@@ -99,3 +98,5 @@ Done:
  - (accent inside same note melismatic is ignored) -> error message?
  - mxmlparse: accent should *not just* map to overall volume (should use envelope)
  - mxmlparse: what is the relationship between accent, tempo and duration
+ - glissando
+   m a_U s should have glissando on m a, but not a_U s
