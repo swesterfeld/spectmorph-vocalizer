@@ -89,13 +89,28 @@ class TempoFragmentTests(unittest.TestCase):
         self.assertEqual(len(self.reconstruct(legacy)), 2)
 
     def test_missing_lyric_reports_bar_and_beat(self):
-        mxparse = Path(self.tmp.name) / 'glissando.mxparse'
-        subprocess.run([str(self.parser), str(ROOT / 'testxml/glissando-test.xml'), str(mxparse)],
-                       stdout=subprocess.DEVNULL, check=True)
+        mxparse = Path(self.tmp.name) / 'missing-lyric.mxparse'
+        mxparse.write_text('REST\nstart: 0\nduration: 1\n\n'
+                          'NOTE\nmidi_note: 63\nstart: 1\nduration: 1\n'
+                          'measure: 3\nbeat: 3\nvolume: (0, 80) (1, 80)\nsfz: None\n')
         result = subprocess.run([sys.executable, str(ROOT / 'xml-to-pho.py'), 'xml', str(mxparse)],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stderr.strip(), 'no lyric, note at bar 3 beat 3')
+
+    def test_glissando_preserves_lyric_after_extension(self):
+        mxparse = Path(self.tmp.name) / 'glissando.mxparse'
+        subprocess.run([str(self.parser), str(ROOT / 'testxml/glissando-test.xml'), str(mxparse)],
+                       stdout=subprocess.DEVNULL, check=True)
+        notes = self.env['load_mxparse'](mxparse)
+        note = next(n for n in notes if n.get('measure') == 3 and n.get('beat') == 3)
+        self.assertEqual(note['lyric'], 'vi:')
+        result = subprocess.run([sys.executable, str(ROOT / 'xml-to-pho.py'), 'xml', str(mxparse)],
+                                capture_output=True, text=True, check=True)
+        phones = [line.split() for line in result.stdout.splitlines()
+                  if line and not line.startswith(('meta', ';'))]
+        self.assertTrue(any(a[0] == 'v' and b[0] == 'i' and a[-1] == b[-1]
+                            for a, b in zip(phones, phones[1:])))
 
     def test_invalid_phoneme_reports_bar_and_beat(self):
         mxparse = Path(self.tmp.name) / 'invalid-lyric.mxparse'
