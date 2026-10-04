@@ -1,11 +1,13 @@
 """Regression coverage for original notes split by tempo changes."""
 
 import ast
+import json
 from enum import Enum
 import os
 from pathlib import Path
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -120,6 +122,87 @@ class TempoFragmentTests(unittest.TestCase):
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stderr.strip(), 'phoneme missing: q, note at bar 7 beat 2')
+
+    def parse_glissando(self, xml):
+        mxparse = Path(self.tmp.name) / 'glissando-markers.mxparse'
+        subprocess.run([str(self.parser), str(xml), str(mxparse)],
+                       stdout=subprocess.DEVNULL, check=True)
+        return [n for n in self.env['load_mxparse'](mxparse) if n['type'] == 'note']
+
+    def test_glissando_start_stop_and_chained_slides(self):
+        notes = self.parse_glissando(ROOT / 'testxml/glissando-test.musicxml')
+        self.assertEqual([(n.get('glissando_start'), n.get('glissando_stop')) for n in notes],
+                         [([1], None), (None, [1]), ([1], None), ([1], [1]), (None, [1])])
+
+    def test_glissando_elements_and_multiple_notations(self):
+        tree = ET.parse(ROOT / 'testxml/glissando-test.musicxml')
+        for slide in tree.findall('.//slide'):
+            slide.tag = 'glissando'
+            slide.attrib.pop('number')  # Omitted numbers default to 1.
+        for note in tree.findall('.//note'):
+            notations = note.find('notations')
+            if notations is not None:
+                # Ensure the parser does not inspect only the first block.
+                note.insert(list(note).index(notations), ET.Element('notations'))
+        xml = Path(self.tmp.name) / 'glissando-elements.musicxml'
+        tree.write(xml)
+        notes = self.parse_glissando(xml)
+        self.assertEqual([(n.get('glissando_start'), n.get('glissando_stop')) for n in notes],
+                         [([1], None), (None, [1]), ([1], None), ([1], [1]), (None, [1])])
+
+    def test_tempo_split_does_not_duplicate_glissando_endpoints(self):
+        tree = ET.parse(ROOT / 'testxml/glissando-test.musicxml')
+        measure = tree.find('.//measure')
+        sound = ET.Element('sound', tempo='90')
+        ET.SubElement(sound, 'offset').text = '-4'
+        measure.insert(list(measure).index(measure.find('forward')) + 1, sound)
+        xml = Path(self.tmp.name) / 'glissando-tempo.musicxml'
+        tree.write(xml)
+        notes = self.parse_glissando(xml)
+        self.assertEqual(notes[0]['note_id'], notes[1]['note_id'])
+        self.assertEqual(notes[0]['glissando_start'], [1])
+        self.assertNotIn('glissando_start', notes[1])
+        self.assertEqual(sum('glissando_start' in n for n in notes), 3)
+        self.assertEqual(sum('glissando_stop' in n for n in notes), 3)
+
+    def test_glissando_pipeline_generates_sampled_pitch(self):
+        self.parse_glissando(ROOT / 'testxml/glissando-test.musicxml')
+        mxparse = Path(self.tmp.name) / 'glissando-markers.mxparse'
+        result = subprocess.run([sys.executable, str(ROOT / 'xml-to-pho.py'), 'xml', str(mxparse)],
+                                capture_output=True, text=True, check=True)
+        links = [line for line in result.stdout.splitlines() if line.startswith('meta glissando ')]
+        self.assertEqual(len(links), 3)
+        pho = Path(self.tmp.name) / 'glissando.pho'
+        pho.write_text(result.stdout)
+        # Script generation needs labels and normalization values, not audio.
+        # Use real labels with constant test volumes; never modify user voices.
+        voice = Path(self.tmp.name) / 'voice/sven'
+        voice.mkdir(parents=True, exist_ok=True)
+        for source in (ROOT / 'voice/sven').iterdir():
+            if source.suffix in ('.sh', '.txt'):
+                shutil.copyfile(source, voice / source.name)
+            if source.suffix == '.txt':
+                times = [float(line.split()[0]) for line in source.read_text().splitlines() if line.strip()]
+                (voice / (source.stem + '.volume')).write_text(f'0 0.5\n{max(times) * 1000 + 1000} 0.5\n')
+        debug = Path(self.tmp.name) / 'glissando.json'
+        rendered = subprocess.run([sys.executable, '-B', str(ROOT / 'phomorphdi.py'), str(pho),
+                                   '-s', '1', '--debug', str(debug)], cwd=self.tmp.name,
+                                  env={**os.environ, 'VOICE': 'sven'}, capture_output=True, text=True)
+        self.assertEqual(rendered.returncode, 0, rendered.stderr[-3000:])
+        self.assertIn('freq-glissando ', rendered.stdout)
+        data = json.loads(debug.read_text())
+        frequency_column = data['columns'].index('freq')
+        frequencies = [row[frequency_column] for row in data['samples']]
+        # The nucleus follows the incoming ta diphone, 50 ms after the beat.
+        # The destination is a merged vowel, so its nucleus stays on the beat.
+        self.assertAlmostEqual(frequencies[2050], 130.81, places=2)
+        self.assertAlmostEqual(frequencies[2525], (130.81 * 261.63) ** 0.5, places=2)
+        self.assertAlmostEqual(frequencies[3000], 261.63, places=2)
+        self.assertAlmostEqual(frequencies[4050], 196, places=2)
+        self.assertAlmostEqual(frequencies[4525], (196 * 130.81) ** 0.5, places=2)
+        self.assertAlmostEqual(frequencies[5000], 130.81, places=2)
+        self.assertAlmostEqual(frequencies[5250], (130.81 * 196) ** 0.5, places=2)
+        self.assertAlmostEqual(frequencies[5500], 196, places=2)
 
     def test_accelerando_musicxml_to_pho(self):
         xml = ROOT / 'testxml/akzent-accel.musicxml'

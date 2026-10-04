@@ -223,6 +223,14 @@ main (int argc, char **argv)
           double time_ms = i / 48000. * 1000;
           source.advance (time_ms);
         }
+      else if (script_parser.command ("freq-glissando", f))
+        {
+          if (target_freq == 0)
+            freq = f;
+          target_freq = f;
+          freq_steps = mix_freq / 1000;
+          freq_factor = pow (target_freq / freq, 1.0 / freq_steps);
+        }
       else if (script_parser.command ("freq", f))
         {
           if (target_freq != f)

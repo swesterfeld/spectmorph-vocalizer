@@ -123,6 +123,7 @@ class PhoEntry:
 dynamic_dict = {}
 accent_dict = {}
 sfz_dict = {}
+glissando_links = []
 
 def load_pho (filename):
   pho = []
@@ -152,6 +153,8 @@ def load_pho (filename):
             elif x[1] == "sfz":
               index = int (x[2])
               sfz_dict[index] = True
+            elif x[1] == "glissando":
+              glissando_links.append ((int (x[2]), int (x[3])))
           elif x[0][0] != ';':
             pho_entry = PhoEntry()
             pho_entry.bar = bar
@@ -369,6 +372,20 @@ class FrequencyTransition:
 
 pitch_boundaries: dict[int, PitchBoundary] = {}
 
+def collect_nucleus_positions (pho):
+  nuclei = {}
+  elapsed = 0
+  for p in pho:
+    syllable = int (p[-2])
+    if p[0] != "_" and (is_v (p[0]) or is_diphthong (p[0])):
+      nuclei.setdefault (syllable, (elapsed, p[-1].freq))
+    elapsed += float (p[1])
+  return nuclei
+
+# Capture endpoints before repeated vowels are merged into one synthesis item.
+glissando_nuclei = collect_nucleus_positions (pho)
+diphthong_glide_ends = {}
+
 # prepare for melisma:
 #  - merge repeated vowels into one
 #  - build a list to be able to find the frequency for a given time
@@ -550,6 +567,7 @@ for i in range (len (pho)):
       item.type = "M"
       item.ms = time2
       item.lyric = pho[i][0]
+      diphthong_glide_ends[int (pho[i][-2])] = get_total_ms (items)
       items.append (item)
   if i + 1 < len (pho):
     P1 = pho[i][0]
@@ -856,6 +874,40 @@ def find_volume_midi (ms: float) -> float:
   else:
     return volume_envelope[-1].midi_volume
 
+@dataclass
+class Glissando:
+  start_ms: float
+  end_ms: float
+  target_ms: float
+  from_hz: float
+  to_hz: float
+
+def build_glissandos (links, nuclei, synthesis_nuclei, closing_times):
+  glissandos = []
+  for source, target in links:
+    if source not in nuclei or target not in nuclei:
+      raise ValueError ("glissando endpoint has no nucleus: %d -> %d" % (source, target))
+    start_ms, from_hz = nuclei[source]
+    target_ms, to_hz = nuclei[target]
+    start_ms = synthesis_nuclei.get (source, start_ms)
+    target_ms = synthesis_nuclei.get (target, target_ms)
+    closing_ms = closing_times.get (source, target_ms)
+    end_ms = min (target_ms, closing_ms) if closing_ms > start_ms else target_ms
+    if end_ms <= start_ms:
+      raise ValueError ("glissando has no time to change pitch: %d -> %d" % (source, target))
+    glissandos.append (Glissando (start_ms, end_ms, target_ms, from_hz, to_hz))
+  return glissandos
+
+glissandos = build_glissandos (glissando_links, glissando_nuclei, sfz_nucleus_starts, diphthong_glide_ends)
+
+def find_glissando_freq (ms):
+  for glide in glissandos:
+    if glide.start_ms <= ms <= glide.target_ms:
+      frac = min (1, (ms - glide.start_ms) / (glide.end_ms - glide.start_ms))
+      # Equal distances in semitones, rather than equal distances in Hz.
+      return glide.from_hz * (glide.to_hz / glide.from_hz) ** frac
+  return None
+
 def build_frequency_transitions() -> list[FrequencyTransition]:
   transitions: list[FrequencyTransition] = []
   elapsed = 0
@@ -878,6 +930,9 @@ def build_frequency_transitions() -> list[FrequencyTransition]:
 frequency_transitions = build_frequency_transitions()
 
 def find_freq (ms: float) -> float:
+  glissando_hz = find_glissando_freq (ms)
+  if glissando_hz is not None:
+    return glissando_hz
   frequency_hz = m_freqs[0].frequency_hz
   for transition in frequency_transitions:
     if ms < transition.start_ms:
@@ -955,7 +1010,13 @@ while True:
   print ("high-shelf-gain ", high_shelf_gain)
 
   freq = find_freq (ms)
-  print ("freq", freq)
+  next_ms = ms + 1 / time_stretch
+  if find_glissando_freq (ms) is not None or find_glissando_freq (next_ms) is not None:
+    # Interpolate over this 1 ms block; the normal 80 ms smoother would lag
+    # behind every sample and miss the destination nucleus.
+    print ("freq-glissando", find_freq (next_ms))
+  else:
+    print ("freq", freq)
 
   volume_midi = find_volume_midi (ms)
   sfz_factor = find_sfz_factor (ms, volume_midi)
