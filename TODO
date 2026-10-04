@@ -3,11 +3,8 @@ High Priority H
 
  - mxmlparse/dynamic: bar/beat points
  - mxmlparse: handle polyphony errors (like before)
- - mxmlparse: accent should *not just* map to overall volume (should use envelope)
- - mxmlparse: what is the relationship between accent, tempo and duration
  - the onset consonants of syllables are rendered too softly
  - shelving accent doesn't accurately reproduce vowel timbre in some cases (short notes)
- - (accent inside same note melismatic is ignored) -> error message?
  - for short notes, both vowel and consonants need to be shortened
  - auto-detect steady vowel state (60%?...)
  - hiatus freq change before vowel change
@@ -99,3 +96,6 @@ Done:
  - mxmlparse: check that accents are really beat-aligned
  - mxmlparse: fff, ppp, fff< ppp>
  - testxml/test-wild.musicxml (diminuendo at end, fermata)
+ - (accent inside same note melismatic is ignored) -> error message?
+ - mxmlparse: accent should *not just* map to overall volume (should use envelope)
+ - mxmlparse: what is the relationship between accent, tempo and duration
