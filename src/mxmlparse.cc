@@ -360,12 +360,14 @@ int main(int argc, char **argv)
               std::string pitchKey = step + std::to_string(octave);
               double midi_note = pitch_to_midi (step, octave, alter);
 
-              // Extract lyric if present
+              // Skip extension-only entries: an exporter may put the new
+              // syllable in a second lyric element. Only one verse is supported.
               std::string lyricText;
-              auto lyricNode = noteNode.child("lyric");
-              if (lyricNode)
+              for (auto lyricNode : noteNode.children ("lyric"))
                 {
-                  lyricText = lyricNode.child("text") ? lyricNode.child("text").child_value() : "";
+                  lyricText = lyricNode.child ("text").child_value();
+                  if (!lyricText.empty ())
+                    break;
                 }
               printf ("note pitch %s, duration %s, lyricText %s\n", pitchKey.c_str(), duration_beats.to_string().c_str(), lyricText.c_str());
 
