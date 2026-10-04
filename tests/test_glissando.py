@@ -14,7 +14,7 @@ class GlissandoTests(unittest.TestCase):
         names = {'Glissando', 'build_glissandos', 'find_glissando_freq', 'find_freq', 'musical_time'}
         definitions = [n for n in tree.body
                        if isinstance(n, (ast.FunctionDef, ast.ClassDef)) and n.name in names]
-        self.env = dict(dataclass=dataclass, tempo_points=[])
+        self.env = dict(dataclass=dataclass, tempo_points=[(0, 0), (2000, 4)])
         exec(compile(ast.Module(body=definitions, type_ignores=[]), str(source), 'exec'), self.env)
 
     def build(self, links, nuclei, synthesis=None, closing=None):

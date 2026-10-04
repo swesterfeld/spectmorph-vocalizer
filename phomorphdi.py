@@ -915,9 +915,6 @@ def find_glissando_freq (ms):
   return None
 
 def musical_time (ms):
-  # Old pho files have no time map and retain their constant-speed glides.
-  if not tempo_points:
-    return ms
   for (t0, b0), (t1, b1) in zip (tempo_points, tempo_points[1:]):
     if ms <= t1 and t1 > t0:
       return b0 + (b1 - b0) * (ms - t0) / (t1 - t0)
