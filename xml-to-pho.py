@@ -327,7 +327,9 @@ for element in score:
           sfz_changed = True
       else:
         volume_diff = 0
-      if "lyric" not in element and last_note and (last_note.freq != freq or volume_diff > 2 or sfz_changed):
+      if "lyric" not in element and last_note and (
+          last_note.freq != freq or volume_diff > 2 or sfz_changed
+          or "accent" in element or last_note.has_accent):
         element["lyric"] = last_note.lyric
         if last_note.melisma_state == MelismaState.NONE:
           last_note.melisma_state = MelismaState.START
