@@ -2,6 +2,7 @@
 
 import ast
 import json
+from math import log2
 from enum import Enum
 import os
 from pathlib import Path
@@ -50,6 +51,7 @@ class TempoFragmentTests(unittest.TestCase):
         self.assertEqual(len(notes), 1)
         self.assertEqual(notes[0]['duration_ms'], 1500)
         self.assertEqual(notes[0]['duration'], 2)
+        self.assertEqual(notes[0]['beat_time_ms'], [(0, 0), (1000, 1), (1500, 2)])
         self.assertEqual(notes[0]['volume_ms'], [(0, 80), (1000, 80), (1000, 100), (1500, 110)])
         self.assertTrue(notes[0]['accent'])
 
@@ -165,13 +167,13 @@ class TempoFragmentTests(unittest.TestCase):
         self.assertEqual(sum('glissando_start' in n for n in notes), 3)
         self.assertEqual(sum('glissando_stop' in n for n in notes), 3)
 
-    def test_glissando_pipeline_generates_sampled_pitch(self):
-        self.parse_glissando(ROOT / 'testxml/glissando-test.musicxml')
+    def render_glissando_script(self, xml, expected_links):
+        self.parse_glissando(xml)
         mxparse = Path(self.tmp.name) / 'glissando-markers.mxparse'
         result = subprocess.run([sys.executable, str(ROOT / 'xml-to-pho.py'), 'xml', str(mxparse)],
                                 capture_output=True, text=True, check=True)
         links = [line for line in result.stdout.splitlines() if line.startswith('meta glissando ')]
-        self.assertEqual(len(links), 3)
+        self.assertEqual(len(links), expected_links)
         pho = Path(self.tmp.name) / 'glissando.pho'
         pho.write_text(result.stdout)
         # Script generation needs labels and normalization values, not audio.
@@ -192,7 +194,10 @@ class TempoFragmentTests(unittest.TestCase):
         self.assertIn('freq-glissando ', rendered.stdout)
         data = json.loads(debug.read_text())
         frequency_column = data['columns'].index('freq')
-        frequencies = [row[frequency_column] for row in data['samples']]
+        return [row[frequency_column] for row in data['samples']]
+
+    def test_glissando_pipeline_generates_sampled_pitch(self):
+        frequencies = self.render_glissando_script(ROOT / 'testxml/glissando-test.musicxml', 3)
         # The nucleus follows the incoming ta diphone, 50 ms after the beat.
         # The destination is a merged vowel, so its nucleus stays on the beat.
         self.assertAlmostEqual(frequencies[2050], 130.81, places=2)
@@ -203,6 +208,20 @@ class TempoFragmentTests(unittest.TestCase):
         self.assertAlmostEqual(frequencies[5000], 130.81, places=2)
         self.assertAlmostEqual(frequencies[5250], (130.81 * 196) ** 0.5, places=2)
         self.assertAlmostEqual(frequencies[5500], 196, places=2)
+
+    def test_advanced_glissando_follows_accelerando(self):
+        frequencies = self.render_glissando_script(ROOT / 'testxml/gliss-test-advanced.musicxml', 4)
+        # A tied note postpones the first glide until beat 3.
+        self.assertAlmostEqual(frequencies[2500], 130.81, places=2)
+        self.assertAlmostEqual(frequencies[3500], (130.81 * 261.63) ** 0.5, places=2)
+        # Bar 3 starts at 6000 ms, with its nucleus at 6050 ms (0.025 beats).
+        # The first tempo change is 1.25 beats into this four-beat glissando.
+        self.assertAlmostEqual(frequencies[8500], 196 * (130.81 / 196) ** (1.225 / 3.975), places=2)
+        self.assertAlmostEqual(frequencies[10375], 130.81, places=2)
+        cents = [1200 * log2(f) for f in frequencies[6100:10375]]
+        steps = [b - a for a, b in zip(cents, cents[1:])]
+        self.assertTrue(all(-1 < step < 0 for step in steps))
+        self.assertGreater(abs(steps[-100]), 4 * abs(steps[100]))
 
     def test_accelerando_musicxml_to_pho(self):
         xml = ROOT / 'testxml/akzent-accel.musicxml'

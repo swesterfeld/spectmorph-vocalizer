@@ -124,6 +124,7 @@ dynamic_dict = {}
 accent_dict = {}
 sfz_dict = {}
 glissando_links = []
+tempo_points = []
 
 def load_pho (filename):
   pho = []
@@ -155,6 +156,9 @@ def load_pho (filename):
               sfz_dict[index] = True
             elif x[1] == "glissando":
               glissando_links.append ((int (x[2]), int (x[3])))
+            elif x[1] == "time_map":
+              values = list (map (float, x[2:]))
+              tempo_points.extend (zip (values[::2], values[1::2]))
           elif x[0][0] != ';':
             pho_entry = PhoEntry()
             pho_entry.bar = bar
@@ -903,10 +907,20 @@ glissandos = build_glissandos (glissando_links, glissando_nuclei, sfz_nucleus_st
 def find_glissando_freq (ms):
   for glide in glissandos:
     if glide.start_ms <= ms <= glide.target_ms:
-      frac = min (1, (ms - glide.start_ms) / (glide.end_ms - glide.start_ms))
+      start_beat = musical_time (glide.start_ms)
+      end_beat = musical_time (glide.end_ms)
+      frac = min (1, (musical_time (ms) - start_beat) / (end_beat - start_beat))
       # Equal distances in semitones, rather than equal distances in Hz.
       return glide.from_hz * (glide.to_hz / glide.from_hz) ** frac
   return None
+
+def musical_time (ms):
+  for (t0, b0), (t1, b1) in zip (tempo_points, tempo_points[1:]):
+    if ms <= t1 and t1 > t0:
+      return b0 + (b1 - b0) * (ms - t0) / (t1 - t0)
+  t0, b0 = tempo_points[-2]
+  t1, b1 = tempo_points[-1]
+  return b1 + (b1 - b0) * (ms - t1) / (t1 - t0)
 
 def build_frequency_transitions() -> list[FrequencyTransition]:
   transitions: list[FrequencyTransition] = []

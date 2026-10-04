@@ -269,6 +269,7 @@ def reconstruct_notes (score):
     element = original.copy()
     scale = ms_per_beat * (1.75 if element.get ("fermata", False) else 1)
     element["duration_ms"] = element["duration"] * scale
+    element["beat_time_ms"] = [(0, 0), (element["duration_ms"], element["duration"])]
     if element["type"] == "note":
       element["volume_ms"] = [(t * scale, volume) for t, volume in element["volume"]]
       previous = result[-1] if result else None
@@ -283,6 +284,9 @@ def reconstruct_notes (score):
         sfz_continues = (element["sfz"] == SfzState.CONTINUE and previous["sfz"] != SfzState.NONE)
         if sfz_continues or element["sfz"] == previous["sfz"] == SfzState.NONE:
           offset_ms = previous["duration_ms"]
+          offset_beats = previous["duration"]
+          previous["beat_time_ms"].extend ((t + offset_ms, beat + offset_beats)
+                                          for t, beat in element["beat_time_ms"][1:])
           previous["volume_ms"].extend ((t + offset_ms, volume) for t, volume in element["volume_ms"])
           previous["duration_ms"] += element["duration_ms"]
           previous["duration"] += element["duration"]
@@ -655,5 +659,16 @@ def print_glissandos():
   for number in active:
     print ("ignoring glissando %d without a stop" % number, file=sys.stderr)
 
+def print_time_map():
+  time_ms = 0
+  beat = 0
+  points = [(0, 0)]
+  for element in score:
+    points.extend ((time_ms + t, beat + b) for t, b in element["beat_time_ms"][1:])
+    time_ms += element["duration_ms"]
+    beat += element["duration"]
+  print ("meta time_map", " ".join ("%.6f %.9f" % point for point in points))
+
+print_time_map()
 print_glissandos()
 syllables_to_pho()
