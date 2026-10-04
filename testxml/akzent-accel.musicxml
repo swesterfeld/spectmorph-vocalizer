@@ -1,0 +1,1453 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work>
+    <work-title>Unbenanntes Projekt 2</work-title>
+  </work>
+  <movement-title>Partie 1</movement-title>
+  <identification>
+    <encoding>
+      <software>Dorico 6.2.0.6088</software>
+      <encoding-date>2026-10-04</encoding-date>
+      <supports type="yes" element="print" attribute="new-system" value="yes"/>
+      <supports type="yes" element="print" attribute="new-page" value="yes"/>
+      <supports type="yes" element="accidental"/>
+      <supports type="yes" element="beam"/>
+      <supports type="yes" element="stem"/>
+    </encoding>
+  </identification>
+  <defaults>
+    <scaling>
+      <millimeters>6.99911</millimeters>
+      <tenths>40</tenths>
+    </scaling>
+    <page-layout>
+      <page-height>1695.56</page-height>
+      <page-width>1197.58</page-width>
+      <page-margins type="both">
+        <left-margin>84.6774</left-margin>
+        <right-margin>84.6774</right-margin>
+        <top-margin>84.6774</top-margin>
+        <bottom-margin>84.6774</bottom-margin>
+      </page-margins>
+    </page-layout>
+    <appearance>
+      <line-width type="beam">5</line-width>
+      <line-width type="bracket">5</line-width>
+      <line-width type="enclosure">1.25</line-width>
+      <line-width type="ending">2</line-width>
+      <line-width type="extend">0.625</line-width>
+      <line-width type="heavy barline">5</line-width>
+      <line-width type="leger">1.66667</line-width>
+      <line-width type="light barline">2</line-width>
+      <line-width type="octave shift">0.833333</line-width>
+      <line-width type="pedal">1.25</line-width>
+      <line-width type="slur middle">2</line-width>
+      <line-width type="slur tip">0.833333</line-width>
+      <line-width type="staff">1.25</line-width>
+      <line-width type="stem">1.2</line-width>
+      <line-width type="tie middle">2.5</line-width>
+      <line-width type="tie tip">1.25</line-width>
+      <line-width type="tuplet bracket">1.25</line-width>
+      <line-width type="wedge">1.66667</line-width>
+      <note-size type="cue">75</note-size>
+      <note-size type="grace">60</note-size>
+      <note-size type="grace-cue">45</note-size>
+      <distance type="hyphen">75</distance>
+    </appearance>
+    <music-font font-family="Bravura" font-size="19.84"/>
+    <word-font font-family="Academico" font-weight="bold" font-size="17.856"/>
+    <lyric-font font-family="Academico" font-size="10.912" name="verse"/>
+    <lyric-font font-family="Academico" font-style="italic" font-size="10.912" name="chorus"/>
+    <lyric-font font-family="Academico" font-style="italic" font-size="10.912" name="verse-translation"/>
+    <lyric-font font-family="Academico" font-style="italic" font-size="10.912" name="chorus-translation"/>
+  </defaults>
+  <credit page="1">
+    <credit-type>part name</credit-type>
+    <credit-words font-family="Academico" font-size="14" justify="left" valign="top" enclosure="rectangle" default-x="83.75" default-y="1598.12" xml:space="preserve">Bass</credit-words>
+  </credit>
+  <credit page="1">
+    <credit-type>title</credit-type>
+    <credit-words font-family="Academico" font-size="20" justify="center" valign="middle" default-x="593.75" default-y="1522.5" xml:space="preserve">Unbenanntes Projekt 2</credit-words>
+  </credit>
+  <credit page="1">
+    <credit-words font-family="Academico" font-size="10" justify="left" valign="middle" default-x="83.75" default-y="1462.5" color="#C0C0C0" xml:space="preserve">Projekt Textdichter</credit-words>
+  </credit>
+  <credit page="1">
+    <credit-type>composer</credit-type>
+    <credit-words font-family="Academico" font-size="10" justify="right" valign="middle" default-x="1103.75" default-y="1462.5" color="#C0C0C0" xml:space="preserve">Projekt Komponist</credit-words>
+  </credit>
+  <credit page="1">
+    <credit-type>flow title</credit-type>
+    <credit-words font-family="Academico" font-size="16" justify="center" valign="middle" default-x="593.75" default-y="1414.38" xml:space="preserve">1. Partie 1</credit-words>
+  </credit>
+  <credit page="1">
+    <credit-type>rights</credit-type>
+    <credit-words font-family="Academico" font-size="8" justify="center" valign="bottom" default-x="593.75" default-y="84.375" color="#C0C0C0" xml:space="preserve">Projekt Copyright</credit-words>
+  </credit>
+  <part-list>
+    <score-part id="P1">
+      <part-name print-object="no">Bass</part-name>
+      <part-name-display print-object="no">
+        <display-text/>
+      </part-name-display>
+      <part-abbreviation print-object="no">B.</part-abbreviation>
+      <part-abbreviation-display print-object="no">
+        <display-text/>
+      </part-abbreviation-display>
+      <score-instrument id="instrument-1">
+        <instrument-name>Bass</instrument-name>
+        <instrument-sound>voice.bass</instrument-sound>
+      </score-instrument>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1" width="358.125">
+      <print>
+        <system-layout>
+          <system-margins>
+            <left-margin>60</left-margin>
+            <right-margin>0</right-margin>
+          </system-margins>
+          <top-system-distance>278.125</top-system-distance>
+        </system-layout>
+      </print>
+      <attributes>
+        <divisions>4</divisions>
+        <key number="1">
+          <fifths>0</fifths>
+          <mode>none</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <staves>1</staves>
+        <clef number="1">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <note default-x="75">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <sound tempo="60"/>
+      <direction placement="above" directive="yes" system="only-top">
+        <direction-type>
+          <metronome font-family="Bravura Text" font-style="normal" font-weight="normal" font-size="15.624" default-y="30">
+            <beat-unit>quarter</beat-unit>
+            <per-minute font-family="Academico" font-style="normal" font-weight="normal" font-size="8.928">60</per-minute>
+          </metronome>
+        </direction-type>
+        <staff>1</staff>
+      </direction>
+      <forward>
+        <duration>2</duration>
+      </forward>
+      <note default-x="110.625">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="145.625">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="181.25">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="216.875">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <sound tempo="63.75">
+        <offset>1</offset>
+      </sound>
+      <sound tempo="67.5001">
+        <offset>2</offset>
+      </sound>
+      <sound tempo="71.2501">
+        <offset>3</offset>
+      </sound>
+      <sound tempo="75">
+        <offset>4</offset>
+      </sound>
+      <sound tempo="78.7502">
+        <offset>5</offset>
+      </sound>
+      <sound tempo="82.5002">
+        <offset>6</offset>
+      </sound>
+      <sound tempo="86.2501">
+        <offset>7</offset>
+      </sound>
+      <direction placement="above" directive="yes" system="only-top">
+        <direction-type>
+          <words font-family="Academico" font-style="normal" font-weight="bold" font-size="10.912" default-y="30">accel.</words>
+        </direction-type>
+        <staff>1</staff>
+      </direction>
+      <forward>
+        <duration>2</duration>
+      </forward>
+      <note default-x="251.875">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="287.5">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="323.125">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+    </measure>
+    <measure number="2" width="300">
+      <print new-system="no" new-page="no"/>
+      <sound tempo="90"/>
+      <sound tempo="93.7503">
+        <offset>1</offset>
+      </sound>
+      <sound tempo="97.5003">
+        <offset>2</offset>
+      </sound>
+      <sound tempo="101.25">
+        <offset>3</offset>
+      </sound>
+      <sound tempo="105">
+        <offset>4</offset>
+      </sound>
+      <sound tempo="108.75">
+        <offset>5</offset>
+      </sound>
+      <sound tempo="112.5">
+        <offset>6</offset>
+      </sound>
+      <sound tempo="116.25">
+        <offset>7</offset>
+      </sound>
+      <sound tempo="120">
+        <offset>8</offset>
+      </sound>
+      <sound tempo="123.75">
+        <offset>9</offset>
+      </sound>
+      <sound tempo="127.5">
+        <offset>10</offset>
+      </sound>
+      <sound tempo="131.251">
+        <offset>11</offset>
+      </sound>
+      <sound tempo="135">
+        <offset>12</offset>
+      </sound>
+      <sound tempo="138.75">
+        <offset>13</offset>
+      </sound>
+      <sound tempo="142.501">
+        <offset>14</offset>
+      </sound>
+      <sound tempo="146.251">
+        <offset>15</offset>
+      </sound>
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
+      <note default-x="16.875">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="52.5">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="88.125">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="123.125">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="158.75">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="193.75">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="229.375">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="265">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+    </measure>
+    <measure number="3" width="300">
+      <print new-system="no" new-page="no"/>
+      <sound tempo="150"/>
+      <sound tempo="153.751">
+        <offset>1</offset>
+      </sound>
+      <sound tempo="157.501">
+        <offset>2</offset>
+      </sound>
+      <sound tempo="161.251">
+        <offset>3</offset>
+      </sound>
+      <sound tempo="165">
+        <offset>4</offset>
+      </sound>
+      <sound tempo="168.751">
+        <offset>5</offset>
+      </sound>
+      <sound tempo="172.501">
+        <offset>6</offset>
+      </sound>
+      <sound tempo="176.251">
+        <offset>7</offset>
+      </sound>
+      <sound tempo="180">
+        <offset>8</offset>
+      </sound>
+      <sound tempo="183.751">
+        <offset>9</offset>
+      </sound>
+      <sound tempo="187.501">
+        <offset>10</offset>
+      </sound>
+      <sound tempo="191.251">
+        <offset>11</offset>
+      </sound>
+      <sound tempo="195">
+        <offset>12</offset>
+      </sound>
+      <sound tempo="198.751">
+        <offset>13</offset>
+      </sound>
+      <sound tempo="202.501">
+        <offset>14</offset>
+      </sound>
+      <sound tempo="206.251">
+        <offset>15</offset>
+      </sound>
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
+      <note default-x="16.875">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="52.5">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="88.125">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="123.125">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="158.75">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="193.75">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="229.375">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="265">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+    </measure>
+    <measure number="4" width="356.875">
+      <print new-system="yes" new-page="no">
+        <system-layout>
+          <system-margins>
+            <left-margin>0</left-margin>
+            <right-margin>0</right-margin>
+          </system-margins>
+          <system-distance>118.75</system-distance>
+        </system-layout>
+      </print>
+      <sound tempo="210"/>
+      <sound tempo="213.751">
+        <offset>1</offset>
+      </sound>
+      <sound tempo="217.501">
+        <offset>2</offset>
+      </sound>
+      <sound tempo="221.251">
+        <offset>3</offset>
+      </sound>
+      <sound tempo="225.001">
+        <offset>4</offset>
+      </sound>
+      <sound tempo="228.751">
+        <offset>5</offset>
+      </sound>
+      <sound tempo="232.501">
+        <offset>6</offset>
+      </sound>
+      <sound tempo="236.251">
+        <offset>7</offset>
+      </sound>
+      <sound tempo="240">
+        <offset>8</offset>
+      </sound>
+      <sound tempo="243.752">
+        <offset>9</offset>
+      </sound>
+      <sound tempo="247.501">
+        <offset>10</offset>
+      </sound>
+      <sound tempo="251.251">
+        <offset>11</offset>
+      </sound>
+      <sound tempo="255.001">
+        <offset>12</offset>
+      </sound>
+      <sound tempo="258.751">
+        <offset>13</offset>
+      </sound>
+      <sound tempo="262.502">
+        <offset>14</offset>
+      </sound>
+      <sound tempo="266.251">
+        <offset>15</offset>
+      </sound>
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
+      <note default-x="47.5">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="86.25">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="125">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="163.75">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="202.5">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="240.625">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="279.375">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="318.125">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+    </measure>
+    <measure number="5" width="326.25">
+      <print new-system="no" new-page="no"/>
+      <sound tempo="270.001"/>
+      <sound tempo="273.751">
+        <offset>1</offset>
+      </sound>
+      <sound tempo="277.502">
+        <offset>2</offset>
+      </sound>
+      <sound tempo="281.252">
+        <offset>3</offset>
+      </sound>
+      <sound tempo="285.002">
+        <offset>4</offset>
+      </sound>
+      <sound tempo="288.752">
+        <offset>5</offset>
+      </sound>
+      <sound tempo="292.502">
+        <offset>6</offset>
+      </sound>
+      <sound tempo="296.252">
+        <offset>7</offset>
+      </sound>
+      <sound tempo="300.001">
+        <offset>8</offset>
+      </sound>
+      <sound tempo="303.751">
+        <offset>9</offset>
+      </sound>
+      <sound tempo="307.501">
+        <offset>10</offset>
+      </sound>
+      <sound tempo="311.252">
+        <offset>11</offset>
+      </sound>
+      <sound tempo="315.002">
+        <offset>12</offset>
+      </sound>
+      <sound tempo="318.752">
+        <offset>13</offset>
+      </sound>
+      <sound tempo="322.503">
+        <offset>14</offset>
+      </sound>
+      <sound tempo="326.252">
+        <offset>15</offset>
+      </sound>
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
+      <note default-x="16.875">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="55.625">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="94.375">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="133.125">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="171.25">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="210">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="248.75">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="287.5">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+    </measure>
+    <measure number="6" width="326.25">
+      <print new-system="no" new-page="no"/>
+      <sound tempo="330.002"/>
+      <sound tempo="333.752">
+        <offset>1</offset>
+      </sound>
+      <sound tempo="337.501">
+        <offset>2</offset>
+      </sound>
+      <sound tempo="341.252">
+        <offset>3</offset>
+      </sound>
+      <sound tempo="345.002">
+        <offset>4</offset>
+      </sound>
+      <sound tempo="348.752">
+        <offset>5</offset>
+      </sound>
+      <sound tempo="352.502">
+        <offset>6</offset>
+      </sound>
+      <sound tempo="356.252">
+        <offset>7</offset>
+      </sound>
+      <attributes>
+        <divisions>4</divisions>
+      </attributes>
+      <note default-x="16.875">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="55.625">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="94.375">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="133.125">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="171.25">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>2</duration>
+      </backup>
+      <sound tempo="360.001"/>
+      <direction placement="above" directive="yes" system="only-top">
+        <direction-type>
+          <metronome font-family="Bravura Text" font-style="normal" font-weight="normal" font-size="15.624" default-y="30">
+            <beat-unit>quarter</beat-unit>
+            <per-minute font-family="Academico" font-style="normal" font-weight="normal" font-size="8.928">360</per-minute>
+          </metronome>
+        </direction-type>
+        <staff>1</staff>
+      </direction>
+      <forward>
+        <duration>2</duration>
+      </forward>
+      <note default-x="210">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="248.75">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <note default-x="287.5">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem default-y="10">up</stem>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <notations>
+          <articulations>
+            <accent placement="below"/>
+          </articulations>
+        </notations>
+        <lyric number="1" placement="below" default-y="-81.25" name="verse">
+          <syllabic>single</syllabic>
+          <text>la</text>
+        </lyric>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
+    </measure>
+  </part>
+</score-partwise>

@@ -61,6 +61,7 @@ struct NoteEvent
   bool fermata = false;   // fermata?
 
   SfzState sfz = SfzState::NONE;
+  int note_id = -1;       // original MusicXML note, preserved when splitting
 };
 
 struct Dynamic
@@ -389,7 +390,9 @@ int main(int argc, char **argv)
                     }
                 }
 
+              const int note_id = events.size();
               events.push_back({NoteEvent::NOTE, midi_note, current_time_beats, duration_beats, {}, lyricText, staccato, accent, fermata});
+              events.back().note_id = note_id;
 
               current_time_beats += duration_beats;
             }
@@ -653,6 +656,7 @@ int main(int argc, char **argv)
               print_tempo_change_at (e.start_beats);
               auto [ measure, beat ] = lookup_measure (e.start_beats);
               fprintf (f, "NOTE\n");
+              fprintf (f, " note_id: %d\n", e.note_id);
               if (e.lyric != "")
                 fprintf (f, " lyric: %s\n", e.lyric.c_str());
               fprintf (f, " midi_note: %.2f\n", e.midi_note);
