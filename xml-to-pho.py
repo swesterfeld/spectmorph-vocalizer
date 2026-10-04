@@ -369,7 +369,7 @@ for element in score:
             for volume_entry in element["volume_ms"]
           ]
         else:
-          raise RuntimeError ("no lyric, note at measure measure %d beat %d" % (element.measureNumber, element.beat))
+          sys.exit ("no lyric, note at bar %d beat %d" % (element["measure"], element["beat"]))
       else:
         has_staccato = "staccato" in element
         has_accent = "accent" in element
@@ -385,8 +385,7 @@ for element in score:
         try:
           lyric = cvc_split (lyric)
         except Exception as exception:
-          print ("%s, note at measure measure %d beat %d" % (exception, element.measureNumber, element.beat), file=sys.stderr)
-          sys.exit (1)
+          sys.exit ("%s, note at bar %d beat %d" % (exception, element["measure"], element["beat"]))
         c_in, v, c_out = lyric
         note.c_in = c_in
         note.v = v

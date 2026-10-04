@@ -88,6 +88,24 @@ class TempoFragmentTests(unittest.TestCase):
             del note['note_id']
         self.assertEqual(len(self.reconstruct(legacy)), 2)
 
+    def test_missing_lyric_reports_bar_and_beat(self):
+        mxparse = Path(self.tmp.name) / 'glissando.mxparse'
+        subprocess.run([str(self.parser), str(ROOT / 'testxml/glissando-test.xml'), str(mxparse)],
+                       stdout=subprocess.DEVNULL, check=True)
+        result = subprocess.run([sys.executable, str(ROOT / 'xml-to-pho.py'), 'xml', str(mxparse)],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stderr.strip(), 'no lyric, note at bar 3 beat 3')
+
+    def test_invalid_phoneme_reports_bar_and_beat(self):
+        mxparse = Path(self.tmp.name) / 'invalid-lyric.mxparse'
+        mxparse.write_text('NOTE\nlyric: q\nmidi_note: 60\nstart: 0\nduration: 1\n'
+                          'measure: 7\nbeat: 2\nvolume: (0, 80) (1, 80)\nsfz: None\n')
+        result = subprocess.run([sys.executable, str(ROOT / 'xml-to-pho.py'), 'xml', str(mxparse)],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stderr.strip(), 'phoneme missing: q, note at bar 7 beat 2')
+
     def test_accelerando_musicxml_to_pho(self):
         xml = ROOT / 'testxml/akzent-accel.musicxml'
         expected_accents = len(ET.parse(xml).findall('.//note/notations/articulations/accent'))
