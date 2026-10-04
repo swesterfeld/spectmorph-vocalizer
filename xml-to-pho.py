@@ -218,6 +218,8 @@ def load_mxparse (filepath):
           current_entry[key] = float(value)
         elif key in {"measure", "beat", "note_id"}:
           current_entry[key] = int (value)
+        elif key in {"glissando_start", "glissando_stop"}:
+          current_entry[key] = list (map (int, value.split()))
         elif key in {"staccato", "fermata", "accent"}:
           current_entry[key] = value.strip().lower() == "true"
         elif key == "sfz":
@@ -349,7 +351,9 @@ for element in score:
         volume_diff = 0
       if "lyric" not in element and last_note and (
           last_note.freq != freq or volume_diff > 2 or sfz_changed
-          or "accent" in element or last_note.has_accent):
+          or "accent" in element or last_note.has_accent
+          or element.get ("glissando_start") or element.get ("glissando_stop")
+          or last_note.glissando_start or last_note.glissando_stop):
         element["lyric"] = last_note.lyric
         if last_note.melisma_state == MelismaState.NONE:
           last_note.melisma_state = MelismaState.START
@@ -395,6 +399,8 @@ for element in score:
         note.has_staccato = has_staccato
         note.has_accent = has_accent
         note.has_sfz = has_sfz
+        note.glissando_start = element.get ("glissando_start", [])
+        note.glissando_stop = element.get ("glissando_stop", [])
         note.volume = element["volume_ms"]
         note.melisma_state = melisma_state
         """
@@ -631,4 +637,23 @@ def syllables_to_pho():
         s_sfz    = s[3].has_sfz
       s_ms += s[2]
 
+def print_glissandos():
+  active = {}
+  seen = set()
+  for s in syllables:
+    if len (s) < 4 or not isinstance (s[3], Note) or id (s[3]) in seen:
+      continue
+    note = s[3]
+    seen.add (id (note))
+    # A chained slide closes its incoming connection before opening the next.
+    for number in note.glissando_stop:
+      if number in active:
+        print ("meta glissando", active.pop (number), s[0])
+    for number in note.glissando_start:
+      active[number] = s[0]
+  # Incomplete markings have no pitch destination and cannot produce a glide.
+  for number in active:
+    print ("ignoring glissando %d without a stop" % number, file=sys.stderr)
+
+print_glissandos()
 syllables_to_pho()
