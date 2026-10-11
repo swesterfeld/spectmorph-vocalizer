@@ -3,6 +3,8 @@ High Priority H
 
  - mxmlparse/dynamic: bar/beat points
  - mxmlparse: handle polyphony errors (like before)
+ - sfz can be: - sf - fz - sffz - rfz - fp - sfzp
+ - microtonal (+10st and similar as system text)
  - vibrato should start later in the vowel phase
  - the onset consonants of syllables are rendered too softly
  - shelving accent doesn't accurately reproduce vowel timbre in some cases (short notes)
@@ -20,7 +22,8 @@ High Priority H
  - input label l= (m=...) should be treated as l ! l, with consonant
    length ~= 200
  X support non released plosives for instance t_>n or p_>m
- - support syllabic consonants m_= synthesis via m_m
+ - support syllabic consonants m_= synthesis via m_m, l=, v=,S=,...
+ - 2d morph: vowels pitch and dynamic for insertions
  - rules for alternative transcriptions
    a_u => a_U
    a_i => a_I
