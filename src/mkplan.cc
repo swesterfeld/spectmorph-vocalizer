@@ -70,7 +70,7 @@ main (int argc, char **argv)
   WavData wav_data;
   if (!wav_data.load_mono (argv[2]))
     {
-      fprintf (stderr, "%s: error loading %s\n", argv[0], argv[1]);
+      fprintf (stderr, "%s: error loading %s\n", argv[0], argv[2]);
       return 1;
     }
 
