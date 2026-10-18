@@ -13,3 +13,9 @@ Rendering creates `debug/<piece>.json`; plot it with:
 ```
 
 See `./plot-debug.py --help` for curves, zoom controls and export options.
+
+Sung-item forced alignment
+=========================
+`singing_align.py` is an experimental Python aligner for SAMPA transcriptions
+of isolated sung items, with duration priors and Audacity label export.
+See [ALIGNMENT.md](ALIGNMENT.md) for setup, input conventions and testing.
