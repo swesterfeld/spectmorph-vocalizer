@@ -193,7 +193,7 @@ pho = out
 
 
 def is_v (v):
-  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E', 'm=', 'n=', 'l=' ]:
+  for vv in [ 'a', 'i', 'I', 'e', 'o', 'O', 'u', 'U', 'y', 'Y', '6', '2', '9', '@', 'E', 'm=', 'n=', 'N=', 'l=' ]:
     if v == vv or v == vv + ':':
       return True
   return v == '_'
