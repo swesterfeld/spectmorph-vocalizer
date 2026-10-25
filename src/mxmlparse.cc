@@ -5,6 +5,8 @@
 #include <cassert>
 #include <map>
 #include <cmath>
+#include <cstdlib>
+#include <regex>
 #include "pugixml.hpp"
 #include "fraction.hh"
 
@@ -284,6 +286,7 @@ int main(int argc, char **argv)
   beats_to_tempo.push_back ({0, tempo});
 
   std::vector<NoteEvent> events;
+  std::map<Fraction, double> cents_at_beat;
   std::map<std::string, NoteEvent> tiedNotes; // active ties keyed by pitch+octave
 
   bool first_measure = true;
@@ -418,6 +421,24 @@ int main(int argc, char **argv)
             {
               for (auto dtype : node.children ("direction-type"))
                 {
+                  // System text applies to the note at this position, even
+                  // when the exporter writes it after the note using backup.
+                  for (auto words : dtype.children ("words"))
+                    {
+                      static const std::regex cents_pattern (R"(^\s*([+-][0-9]+(?:\.[0-9]+)?)ct\s*$)");
+                      std::smatch match;
+                      const std::string text = words.child_value();
+                      if (std::regex_match (text, match, cents_pattern))
+                        {
+                          Fraction offset = 0;
+                          if (auto offset_node = node.child ("offset"))
+                            offset = Fraction (std::stoi (offset_node.child_value()), divisions);
+                          const double cents = std::strtod (match[1].str().c_str(), nullptr);
+                          if (cents < -2400 || cents > 2400)
+                            die (current_time_beats + offset, "cent alteration outside -2400..2400ct range: " + text);
+                          cents_at_beat[current_time_beats + offset] = cents;
+                        }
+                    }
                   auto dynNode = dtype.child("dynamics");
                   if (dynNode)
                     {
@@ -479,6 +500,16 @@ int main(int argc, char **argv)
         }
       first_measure = false;
     }
+
+  // Add cents to the pitch (including MusicXML alter) before splitting notes,
+  // so all tempo/dynamics fragments retain the same adjusted frequency.
+  for (auto& event : events)
+    if (event.event_type == NoteEvent::NOTE)
+      {
+        auto cents = cents_at_beat.find (event.start_beats);
+        if (cents != cents_at_beat.end())
+          event.midi_note += cents->second / 100.0;
+      }
 
   // split notes on sfz (TODO: do we need this at all?)
   split_events (events, beats_to_sfz);
@@ -677,7 +708,7 @@ int main(int argc, char **argv)
               fprintf (f, " note_id: %d\n", e.note_id);
               if (e.lyric != "")
                 fprintf (f, " lyric: %s\n", e.lyric.c_str());
-              fprintf (f, " midi_note: %.2f\n", e.midi_note);
+              fprintf (f, " midi_note: %.6f\n", e.midi_note);
               fprintf (f, " start: %s\n", (e.start_beats + first_rest).to_decimal_string().c_str());
               fprintf (f, " duration: %s\n", e.duration_beats.to_decimal_string().c_str());
               fprintf (f, " measure: %d\n", measure);

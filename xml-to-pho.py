@@ -619,9 +619,9 @@ def syllables_to_pho():
         if sc[1] == "_":
           print ("%s %.2f %d" % (sc[1], sc[2], sc[0]))
         elif isinstance (sc[3], float):
-          print ("%s %.2f %.2f %s" % (sc[1], sc[2], sc[3], sc[0]))
+          print ("%s %.2f %.6f %s" % (sc[1], sc[2], sc[3], sc[0]))
         else:
-          print ("%s %.2f %.2f %s" % (sc[1], sc[2], sc[3].freq, sc[0]))
+          print ("%s %.2f %.6f %s" % (sc[1], sc[2], sc[3].freq, sc[0]))
         s_ms_elapsed += sc[2]
 
       print()

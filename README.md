@@ -3,6 +3,13 @@ About:
 SpectMorph-Vocalizer performs musicxml to wav conversion with a synthetic 
 singing voice. It is currently in an experimental pre-alpha state.
 
+Microtonal pitch
+===============
+MusicXML direction text such as `+23ct` or `-17.5ct` adjusts the note at that
+musical position by the given number of cents. The adjustment is added to the
+ordinary and quarter-tone accidentals.  It applies only to the actual note, not
+to following notes.
+
 Debug curves
 ============
 Rendering creates `debug/<piece>.json`; plot it with:
