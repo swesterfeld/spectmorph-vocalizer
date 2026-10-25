@@ -4,7 +4,6 @@ High Priority H
  - mxmlparse/dynamic: bar/beat points
  - mxmlparse: handle polyphony errors (like before)
  - sfz can be: - sf - fz - sffz - rfz - fp - sfzp
- - microtonal (+10st and similar as system text)
  - vibrato should start later in the vowel phase
  - the onset consonants of syllables are rendered too softly
  - shelving accent doesn't accurately reproduce vowel timbre in some cases (short notes)
@@ -101,3 +100,4 @@ Done:
  - glissando
    m a_U s should have glissando on m a, but not a_U s
  - labelling: instead of labelling a a_a a, we could label a_a
+ - microtonal (+10st and similar as system text)
