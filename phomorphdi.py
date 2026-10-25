@@ -292,7 +292,10 @@ def find_volume_normalization (segment, lines, j):
       else:
         print ("   ", lines[j + i], file=sys.stderr)
     raise RuntimeError ("search for volume normalization for diphone failed")
-  return volume_factor (segment, (lines[best_match][0] + lines[best_match + 1][0]) / 2, lines[best_match][1])
+  time_stamp = (lines[best_match][0] + lines[best_match + 1][0]) / 2
+  if lines[best_match][1].endswith ("="):
+    return volume_factor_syllabic (segment, time_stamp)
+  return volume_factor (segment, time_stamp, lines[best_match][1])
 
 def lookup_diphone_entry (P1, P2, pho_entry):
   global errors
@@ -301,7 +304,7 @@ def lookup_diphone_entry (P1, P2, pho_entry):
     lines = lines_dict[segment].lines
     for j in range (len (lines) - 2):
       x = lines[j:j+3]
-      if x[0][1] == P1 and x[1][1] == P2:
+      if strip_syllabic_postfix (x[0][1]) == P1 and strip_syllabic_postfix (x[1][1]) == P2:
         vnorm = find_volume_normalization (segment, lines, j)
         possible_matches.append ([segment, vnorm] + x)
   if len (possible_matches) == 0:
@@ -309,6 +312,26 @@ def lookup_diphone_entry (P1, P2, pho_entry):
     errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + " " + P2, pho_entry.bar, pho_entry.beat) ]
     return None
   return possible_matches
+
+def diphone_bounds (P1, P2, m):
+  # Limit sustained vowels and syllabic consonants near the transition.
+  if phone_class (P1) == "p":
+    pos1 = m[0][2]
+  elif phone_class (P1) == "v" or m[0][1].endswith ("="):
+    pos1 = max ((m[0][0] + m[1][0]) / 2, m[1][0] - 0.150)
+  elif phone_class (P1) == "n":
+    pos1 = m[0][0]
+  else:
+    pos1 = (m[0][0] + m[1][0]) / 2
+  if phone_class (P2) == "p":
+    pos2 = (m[1][0] + m[1][2]) / 2
+  elif phone_class (P2) == "v" or m[1][1].endswith ("="):
+    pos2 = min ((m[1][0] + m[2][0]) / 2, m[1][0] + 0.150)
+  elif phone_class (P2) == "_":
+    pos2 = min ((m[1][0] + m[2][0]) / 2, m[1][0] + 0.025)
+  else:
+    pos2 = (m[1][0] + m[2][0]) / 2
+  return pos1, pos2
 
 def strip_syllabic_postfix (P):
   return P.rstrip ("=")
@@ -603,22 +626,7 @@ for i in range (len (pho)):
       item.lyric = P1 + P2
       item.type = "D"
       item.ms = (float (pho[i][1]) + float (pho[i + 1][1])) / 2
-      if phone_class (P1) == "p":
-        pos1 = m[0][2]
-      elif phone_class (P1) == "v":
-        pos1 = max ((m[0][0] + m[1][0]) / 2, m[1][0] - 0.150)
-      elif phone_class (P1) == "n":
-        pos1 = m[0][0]
-      else:
-        pos1 = (m[0][0] + m[1][0]) / 2
-      if phone_class (P2) == "p":
-        pos2 = (m[1][0] + m[1][2]) / 2
-      elif phone_class (P2) == "v":
-        pos2 = min ((m[1][0] + m[2][0]) / 2, m[1][0] + 0.150)
-      elif phone_class (P2) == "_":
-        pos2 = min ((m[1][0] + m[2][0]) / 2, m[1][0] + 0.025)
-      else:
-        pos2 = (m[1][0] + m[2][0]) / 2
+      pos1, pos2 = diphone_bounds (P1, P2, m)
       item.pos1 = pos1
       item.pos2 = pos2
       item.volume_factor = vnorm
