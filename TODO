@@ -20,14 +20,6 @@ High Priority H
  X support non released plosives for instance t_>n or p_>m
  - support syllabic consonants m_= synthesis via m_m, l=, v=,S=,...
  - 2d morph: vowels pitch and dynamic for insertions
- - rules for alternative transcriptions
-   a_u => a_U
-   a_i => a_I
-   I_o => i_o
- - rules
-   i_e => je
-   i_E => jE
-   i_o => jo
 
 improved handling for plosives
  - merge tata.py rules into phomorphdi.py
@@ -101,3 +93,12 @@ Done:
    m a_U s should have glissando on m a, but not a_U s
  - labelling: instead of labelling a a_a a, we could label a_a
  - microtonal (+10st and similar as system text)
+ - rules for alternative transcriptions
+   a_u => a_U
+   a_i => a_I
+   I_o => i_o
+ - rules
+   i_e => je
+   i_E => jE
+   i_o => jo
+

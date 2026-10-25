@@ -124,6 +124,11 @@ def cvc_split (s):
         continue
     if not has_cv:
       raise RuntimeError ("phoneme missing: %s" % s)
+  # Normalize alternative transcriptions before assigning phoneme durations.
+  v = { "a_u": "a_U", "a_i": "a_I", "I_o": "i_o" }.get (v, v)
+  if v in [ "i_e", "i_E", "i_o" ]:
+    Cs.append ("j")
+    v = v.split ("_")[1]
   return Cs, v, Cs2
 
 def search_c (c):
