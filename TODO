@@ -24,6 +24,7 @@ High Priority H
  - test tuning for input material
  - run alignment on complete recordings
  - silence between recordings should be digital silence
+ - trill (r) handling (naive stretching or compression sounds unnatural)
 
 improved handling for plosives
  - merge tata.py rules into phomorphdi.py
