@@ -257,8 +257,11 @@ class TempoFragmentTests(unittest.TestCase):
         phones = [line.split() for line in lines if line and not line.startswith(('meta', ';'))]
         self.assertEqual(sum(p[0] == 'l' for p in phones), expected_accents)
         self.assertEqual(sum(p[0] == 'a' for p in phones), expected_accents)
+        # This score ends on a note, so pho includes a 500 ms release rest.
         # pho rounds every duration to two decimal places.
-        self.assertAlmostEqual(sum(float(p[1]) for p in phones), expected_ms, delta=len(phones) * 0.005)
+        self.assertEqual(phones[-1][0], '_')
+        self.assertAlmostEqual(sum(float(p[1]) for p in phones), expected_ms + 500,
+                               delta=len(phones) * 0.005)
 
 
 if __name__ == '__main__':
