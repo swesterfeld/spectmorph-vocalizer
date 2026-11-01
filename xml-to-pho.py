@@ -489,13 +489,14 @@ notes = notes_melisma
 
 # staccato: FIXME: may want to collapse multiple rests into one at this point
 
-# append a rest at end of score - this ensures that last note gets printed to pho output
+# Add release space only when the score does not already end in a rest.
 def append_final_rest (notes, length):
   final_rest = Rest()
   final_rest.length = length
   notes.append (final_rest)
 
-append_final_rest (notes, 500)
+if not isinstance (notes[-1], Rest):
+  append_final_rest (notes, 500)
 
 class RestSegment:
   pass
@@ -598,38 +599,38 @@ assert (last_rest)
 append_rest (last_rest, None)
 
 def syllables_to_pho():
-  s_len = 0
   s_nr = syllables[0][0]
   s_ms = 0
   s_volume = None
   s_accent = False
   s_sfz    = False
   s_current = []
+  def flush_syllable(next_s=None):
+    print(";;; @", s_ms)
+    if s_volume:
+      volume_percent_str = volume_to_percent_str (s_volume)
+      print ("meta dynamic", s_nr, volume_percent_str)
+    if s_accent:
+      print ("meta accent", s_nr)
+    if s_sfz:
+      print ("meta sfz", s_nr)
+
+    if next_s is not None and next_s[1] != "_" and isinstance (next_s[3], Note):
+      print ("meta bar_beat %d %d" % (next_s[3].measure_number, next_s[3].beat))
+
+    for sc in s_current:
+      if sc[1] == "_":
+        print ("%s %.2f %d" % (sc[1], sc[2], sc[0]))
+      elif isinstance (sc[3], float):
+        print ("%s %.2f %.6f %s" % (sc[1], sc[2], sc[3], sc[0]))
+      else:
+        print ("%s %.2f %.6f %s" % (sc[1], sc[2], sc[3].freq, sc[0]))
+
+    print()
+
   for s in syllables:
     if s[0] != s_nr:
-      print(";;; @", s_ms)
-      if s_volume:
-        volume_percent_str = volume_to_percent_str (s_volume)
-        print ("meta dynamic", s_nr, volume_percent_str)
-      if s_accent:
-        print ("meta accent", s_nr)
-      if s_sfz:
-        print ("meta sfz", s_nr)
-      if s[1] != "_" and isinstance (s[3], Note):
-        print ("meta bar_beat %d %d" % (s[3].measure_number, s[3].beat))
-
-      s_ms_elapsed = 0
-      for sc in s_current:
-        s_ms_elapsed_2 = s_ms_elapsed + sc[2]
-        if sc[1] == "_":
-          print ("%s %.2f %d" % (sc[1], sc[2], sc[0]))
-        elif isinstance (sc[3], float):
-          print ("%s %.2f %.6f %s" % (sc[1], sc[2], sc[3], sc[0]))
-        else:
-          print ("%s %.2f %.6f %s" % (sc[1], sc[2], sc[3].freq, sc[0]))
-        s_ms_elapsed += sc[2]
-
-      print()
+      flush_syllable(s)
       s_ms = 0
       s_nr = s[0]
       s_volume = None
@@ -645,6 +646,7 @@ def syllables_to_pho():
         s_accent = s[3].has_accent
         s_sfz    = s[3].has_sfz
       s_ms += s[2]
+  flush_syllable()
 
 def print_glissandos():
   active = {}

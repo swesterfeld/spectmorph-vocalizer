@@ -488,6 +488,14 @@ print_input_pho (pho)
 
 for i in range (len (pho)):
   pho[i][-1].v_time = 0
+  if pho[i][0] == "_" and i == len (pho) - 1:
+    # Only the incoming diphone consumes half of this rest's boundary time;
+    # there is no outgoing diphone at the end of the score.
+    duration = float (pho[i][1])
+    boundary_time = min (duration, 100) if i > 0 else 0
+    pho[i][-1].v_time = duration - boundary_time / 2
+    pho[i][1] = str (boundary_time)
+    continue
   # FIXME: "_" is not really a vowel insertion, but not using insertions here
   # blurs attack/release next to the "_"
   if is_v (pho[i][0]):
