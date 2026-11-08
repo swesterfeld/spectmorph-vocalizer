@@ -35,6 +35,7 @@ struct BeatsToMeasure
 struct BeatsToSfz
 {
   Fraction beats;
+  bool sffz = false;
 };
 
 enum class SfzState
@@ -64,6 +65,7 @@ struct NoteEvent
   bool fermata = false;   // fermata?
 
   SfzState sfz = SfzState::NONE;
+  bool sffz = false;
   int note_id = -1;       // original MusicXML note, preserved when splitting
   vector<int> glissando_starts;
   vector<int> glissando_stops;
@@ -449,7 +451,7 @@ int main(int argc, char **argv)
                           static std::set<string> sfz_alternatives { "sfz", "sf", "fz", "sffz", "rfz", "fp" };
                           if (sfz_alternatives.contains (d.name()))
                             {
-                              beats_to_sfz.push_back ({current_time_beats});
+                              beats_to_sfz.push_back ({current_time_beats, string (d.name()) == "sffz"});
                             }
                           else
                             {
@@ -523,6 +525,7 @@ int main(int argc, char **argv)
           if (event.start_beats == sfz.beats)
             {
               event.sfz = SfzState::START;
+              event.sffz = sfz.sffz;
             }
         }
     }
@@ -738,6 +741,8 @@ int main(int argc, char **argv)
                 };
               print_glissando ("glissando_start", e.glissando_starts);
               print_glissando ("glissando_stop", e.glissando_stops);
+              if (e.sffz)
+                fprintf (f, " sffz: True\n");
               switch (e.sfz)
               {
                 case SfzState::NONE:     fprintf (f, " sfz: None\n");
