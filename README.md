@@ -21,6 +21,13 @@ Rendering creates `debug/<piece>.json`; plot it with:
 
 See `./plot-debug.py --help` for curves, zoom controls and export options.
 
+Hiatus transition labels
+========================
+
+Voice labels can mark a vowel transition explicitly with the concatenated
+vowel names, for example `e`, `eo`, `o` or `i`, `ia`, `a`. The transition
+starts at the `eo`/`ia` marker and ends at the following vowel's start.
+
 Sung-item forced alignment
 =========================
 `singing_align.py` is an experimental Python aligner for SAMPA transcriptions
