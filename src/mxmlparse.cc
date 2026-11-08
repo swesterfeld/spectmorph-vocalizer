@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <set>
 #include <cmath>
 #include <cstdlib>
 #include <regex>
@@ -445,7 +446,8 @@ int main(int argc, char **argv)
                       for (auto d : dynNode.children())
                         {
                           printf ("direction dynamics %s\n", d.name());
-                          if (string (d.name()) == "sfz")
+                          static std::set<string> sfz_alternatives { "sfz", "sf", "fz", "sffz", "rfz", "fp" };
+                          if (sfz_alternatives.contains (d.name()))
                             {
                               beats_to_sfz.push_back ({current_time_beats});
                             }
