@@ -131,6 +131,29 @@ class TempoFragmentTests(unittest.TestCase):
                        stdout=subprocess.DEVNULL, check=True)
         return [n for n in self.env['load_mxparse'](mxparse) if n['type'] == 'note']
 
+    def test_sffz_survives_musicxml_to_pho(self):
+        tree = ET.parse(ROOT / 'testxml/glissando-test.musicxml')
+        measure = tree.find('.//measure')
+        note = measure.find('note')
+        for marking in ('sfz', 'sffz'):
+            with self.subTest(marking=marking):
+                direction = ET.Element('direction')
+                dynamics = ET.SubElement(ET.SubElement(direction, 'direction-type'), 'dynamics')
+                ET.SubElement(dynamics, marking)
+                measure.insert(list(measure).index(note), direction)
+                xml = Path(self.tmp.name) / 'sforzando.musicxml'
+                tree.write(xml)
+                notes = self.parse_glissando(xml)
+                self.assertEqual(notes[0].get('sffz', False), marking == 'sffz')
+                result = subprocess.run(
+                    [sys.executable, str(ROOT / 'xml-to-pho.py'), 'xml',
+                     str(Path(self.tmp.name) / 'glissando-markers.mxparse')],
+                    capture_output=True, text=True, check=True)
+                markers = [line.split()[1] for line in result.stdout.splitlines()
+                           if line.startswith(('meta sfz ', 'meta sffz '))]
+                self.assertEqual(markers, [marking])
+                measure.remove(direction)
+
     def test_glissando_start_stop_and_chained_slides(self):
         notes = self.parse_glissando(ROOT / 'testxml/glissando-test.musicxml')
         self.assertEqual([(n.get('glissando_start'), n.get('glissando_stop')) for n in notes],

@@ -151,9 +151,9 @@ def load_pho (filename):
             elif x[1] == "accent":
               index = int (x[2])
               accent_dict[index] = True
-            elif x[1] == "sfz":
+            elif x[1] in {"sfz", "sffz"}:
               index = int (x[2])
-              sfz_dict[index] = True
+              sfz_dict[index] = 7.5 if x[1] == "sffz" else 5
             elif x[1] == "glissando":
               glissando_links.append ((int (x[2]), int (x[3])))
             elif x[1] == "time_map":
@@ -800,6 +800,7 @@ class SfzEnvelope:
   end_ms: float
   peak_ms: float
   decay_start_ms: float
+  peak_factor: float = 5
 
 def build_sfz_envelope() -> list[SfzEnvelope]:
   syl_list = []
@@ -834,7 +835,8 @@ def build_sfz_envelope() -> list[SfzEnvelope]:
       sfz_envelope.append (SfzEnvelope (start_ms=start_ms,
                                        end_ms=end_ms,
                                        peak_ms=peak_ms,
-                                       decay_start_ms=decay_start_ms))
+                                       decay_start_ms=decay_start_ms,
+                                       peak_factor=sfz_dict[syl_list[i][0]]))
 
   return sfz_envelope
 
@@ -915,8 +917,8 @@ def find_accent (ms):
 def find_sfz_factor (ms: float, midi_volume: float) -> float:
   def ramp (start: float, stop: float, frac: float) -> float:
     return start * (1 - frac) + stop * frac
-  sfz_factor = 5
   for sfz in sfz_envelope:
+    sfz_factor = sfz.peak_factor
     attack_ms = sfz.peak_ms - sfz.start_ms
     decay_ms = min (500, sfz.end_ms - sfz.decay_start_ms)
     if attack_ms > 0 and sfz.start_ms <= ms < sfz.peak_ms:

@@ -225,7 +225,7 @@ def load_mxparse (filepath):
           current_entry[key] = int (value)
         elif key in {"glissando_start", "glissando_stop"}:
           current_entry[key] = list (map (int, value.split()))
-        elif key in {"staccato", "fermata", "accent"}:
+        elif key in {"staccato", "fermata", "accent", "sffz"}:
           current_entry[key] = value.strip().lower() == "true"
         elif key == "sfz":
           if (value == "None"):
@@ -408,6 +408,7 @@ for element in score:
         note.has_staccato = has_staccato
         note.has_accent = has_accent
         note.has_sfz = has_sfz
+        note.has_sffz = element.get ("sffz", False)
         note.glissando_start = element.get ("glissando_start", [])
         note.glissando_stop = element.get ("glissando_stop", [])
         note.volume = element["volume_ms"]
@@ -604,6 +605,7 @@ def syllables_to_pho():
   s_volume = None
   s_accent = False
   s_sfz    = False
+  s_sffz   = False
   s_current = []
   def flush_syllable(next_s=None):
     print(";;; @", s_ms)
@@ -613,7 +615,7 @@ def syllables_to_pho():
     if s_accent:
       print ("meta accent", s_nr)
     if s_sfz:
-      print ("meta sfz", s_nr)
+      print ("meta sffz" if s_sffz else "meta sfz", s_nr)
 
     if next_s is not None and next_s[1] != "_" and isinstance (next_s[3], Note):
       print ("meta bar_beat %d %d" % (next_s[3].measure_number, next_s[3].beat))
@@ -636,6 +638,7 @@ def syllables_to_pho():
       s_volume = None
       s_accent = False
       s_sfz = False
+      s_sffz = False
       s_current = []
     if (s[1] == "_"):
       s_current.append (s)
@@ -645,6 +648,7 @@ def syllables_to_pho():
         s_volume = s[3].volume
         s_accent = s[3].has_accent
         s_sfz    = s[3].has_sfz
+        s_sffz   = s[3].has_sffz
       s_ms += s[2]
   flush_syllable()
 
