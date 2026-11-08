@@ -300,13 +300,24 @@ def find_volume_normalization (segment, lines, j):
 def lookup_diphone_entry (P1, P2, pho_entry):
   global errors
   possible_matches = []
+  explicit_matches = []
   for segment in lines_dict:
     lines = lines_dict[segment].lines
     for j in range (len (lines) - 2):
       x = lines[j:j+3]
+      if (is_v (P1) and is_v (P2) and P1 != "_" and P2 != "_"
+          and x[0][1] == P1 and x[1][1] == P1 + P2 and x[2][1] == P2
+          and j + 3 < len (lines)):
+        vnorm = find_volume_normalization (segment, lines, j)
+        # Keep the usual two-phone layout. The first phone carries the
+        # explicit transition bounds as two additional tuple fields.
+        first = (x[0][0], P1, x[1][0], x[2][0])
+        explicit_matches.append ([segment, vnorm, first, x[2], lines[j + 3]])
       if strip_syllabic_postfix (x[0][1]) == P1 and strip_syllabic_postfix (x[1][1]) == P2:
         vnorm = find_volume_normalization (segment, lines, j)
         possible_matches.append ([segment, vnorm] + x)
+  if explicit_matches:
+    return explicit_matches
   if len (possible_matches) == 0:
     #print ("line %d: missing diphone %s" % (pho[i][-1], P1 + P2))
     errors += [ "%s: missing diphone %s, bar %d, beat %d" % (args.pho, P1 + " " + P2, pho_entry.bar, pho_entry.beat) ]
@@ -314,6 +325,8 @@ def lookup_diphone_entry (P1, P2, pho_entry):
   return possible_matches
 
 def diphone_bounds (P1, P2, m):
+  if len (m[0]) == 4:
+    return m[0][2], m[0][3]
   # Limit sustained vowels and syllabic consonants near the transition.
   if phone_class (P1) == "p":
     pos1 = m[0][2]
@@ -389,6 +402,7 @@ class FrequencySpan:
 class PitchBoundary:
   time_ms: float
   plosive: bool
+  ramp_ms: float | None = None
 
 @dataclass
 class FrequencyTransition:
@@ -517,6 +531,42 @@ for i in range (len (pho)):
   #if i + 1 < len (pho):
   #  print ("XD", pho[i][0] + pho[i + 1][0], pho[i][1], pho[i + 1][1], file=sys.stderr)
 
+def is_hiatus (left, right):
+  return all (is_v (p[0]) and p[0] != "_" and not p[0].rstrip (":").endswith ("=")
+              for p in (left, right))
+
+def allocate_hiatus_time (pho, target_durations=None):
+  # Prefer annotated recording durations, with 200 ms as the fallback.
+  # Take equal amounts from adjacent sustains to preserve boundary centers
+  # and total duration. Shorter transitions return time to the sustains.
+  target_durations = target_durations or {}
+  extensions = {}
+  for i in range (len (pho) - 1):
+    left, right = pho[i], pho[i + 1]
+    if not is_hiatus (left, right):
+      continue
+    base_ms = (float (left[1]) + float (right[1])) / 2
+    extra_ms = min ((target_durations.get (i, 200) - base_ms) / 2,
+                    left[-1].v_time / 2, right[-1].v_time / 2)
+    left[-1].v_time -= extra_ms
+    right[-1].v_time -= extra_ms
+    extensions[i] = 2 * extra_ms
+  return extensions
+
+# Select once so duration allocation and synthesis use the same recording.
+hiatus_matches = {}
+hiatus_durations = {}
+for i in range (len (pho) - 1):
+  if is_hiatus (pho[i], pho[i + 1]):
+    matches = lookup_diphone_entry (pho[i][0].rstrip (":"), pho[i + 1][0].rstrip (":"), pho[i][-1])
+    if matches:
+      match = random.choice (matches)
+      hiatus_matches[i] = match
+      if len (match[2]) == 4:
+        hiatus_durations[i] = (match[2][3] - match[2][2]) * 1000
+
+hiatus_extensions = allocate_hiatus_time (pho, hiatus_durations)
+
 #for i in range (len (pho)):
 #  pho[i][1] = str (float (pho[i][1]) - pho[i][-1].v_time)
 #  print (">", pho[i][0], pho[i][1], file=sys.stderr)
@@ -623,7 +673,7 @@ for i in range (len (pho)):
     pho_entry = pho[i][-1]
     next_pho_entry = pho[i + 1][-1]
 
-    possible_matches = lookup_diphone_entry (P1, P2, pho[i][-1])
+    possible_matches = [hiatus_matches[i]] if i in hiatus_matches else lookup_diphone_entry (P1, P2, pho[i][-1])
     if possible_matches:
       m = random.choice (possible_matches)
       mseg = m[0]
@@ -634,6 +684,7 @@ for i in range (len (pho)):
       item.lyric = P1 + P2
       item.type = "D"
       item.ms = (float (pho[i][1]) + float (pho[i + 1][1])) / 2
+      item.ms += hiatus_extensions.get (i, 0)
       pos1, pos2 = diphone_bounds (P1, P2, m)
       item.pos1 = pos1
       item.pos2 = pos2
@@ -643,7 +694,8 @@ for i in range (len (pho)):
         # for plosives. Keep rest changes at their original silent midpoint.
         pitch_boundaries[next_pho_entry.freq_span_index] = PitchBoundary (
           time_ms=get_total_ms (items) + item.ms,
-          plosive=phone_class (P2) == "p")
+          plosive=phone_class (P2) == "p",
+          ramp_ms=item.ms if i in hiatus_extensions else None)
       if i + 1 in syllable_nuclei:
         # The vowel segment starts after the incoming consonant-vowel
         # diphone, not at the recording marker inside that diphone.
@@ -945,9 +997,11 @@ def build_frequency_transitions() -> list[FrequencyTransition]:
   for index, span in enumerate (m_freqs):
     if span.frequency_hz != previous_hz:
       boundary = pitch_boundaries.get (index, PitchBoundary (time_ms=elapsed, plosive=False))
-      # Diphone and melisma ramps both reach the new pitch on the note.
-      # Shorten ramps for short preceding spans; plosives change instantly.
+      # Hiatus ramps fill the vowel transition. Other boundaries retain
+      # short ramps, limited by the preceding span; plosives change instantly.
       ramp_ms = 0 if boundary.plosive else min (40, m_freqs[index - 1].duration_ms / 2)
+      if boundary.ramp_ms is not None:
+        ramp_ms = boundary.ramp_ms
       transitions.append (FrequencyTransition (
         start_ms=boundary.time_ms - ramp_ms,
         end_ms=boundary.time_ms,
@@ -1030,6 +1084,16 @@ def item_to_pos (slot, item, pos_ms, volume_factor):
     ct = item.pos1 * (1 - frac) + item.pos2 * frac
   print ("seek", slot, lines_dict[item.segment].number, time_to_pos (item.segment, ct), item.volume_factor * volume_factor)
 
+def use_direct_pitch (ms, next_ms):
+  if find_glissando_freq (ms) is not None or find_glissando_freq (next_ms) is not None:
+    return True
+  # Include blocks crossing either endpoint, which can lie between samples.
+  # The renderer must follow this timed ramp without its extra 80 ms smoother.
+  return any (boundary.ramp_ms is not None and boundary.ramp_ms > 0
+              and ms <= boundary.time_ms
+              and next_ms >= boundary.time_ms - boundary.ramp_ms
+              for boundary in pitch_boundaries.values())
+
 ms = 0
 while True:
   pos_ms, item, last_item, next_item = find_synlist_pos (ms)
@@ -1041,7 +1105,7 @@ while True:
 
   freq = find_freq (ms)
   next_ms = ms + 1 / time_stretch
-  if find_glissando_freq (ms) is not None or find_glissando_freq (next_ms) is not None:
+  if use_direct_pitch (ms, next_ms):
     # Interpolate over this 1 ms block; the normal 80 ms smoother would lag
     # behind every sample and miss the destination nucleus.
     print ("freq-glissando", find_freq (next_ms))
