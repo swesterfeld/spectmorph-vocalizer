@@ -19,9 +19,8 @@ High Priority H
  X 2d morph: vowels pitch and dynamic for insertions
  - deal with large silence between recordings
  - test tuning for input material
- - run alignment on complete recordings
- - silence between recordings should be digital silence
  - trill (r) handling (naive stretching or compression sounds unnatural)
+ - update Encoder to skip digital silence to keep memory usage and disk usage small
 
 improved handling for plosives
  - merge tata.py rules into phomorphdi.py
@@ -106,3 +105,5 @@ Done:
  - hiatus freq change before vowel change
  - hiatus preserve original transition time if possible
  - sfz can be: - sf - fz - sffz - rfz - fp - sfzp
+ - run alignment on complete recordings
+ - silence between recordings should be digital silence
