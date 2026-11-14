@@ -8,6 +8,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <regex>
+#include <cctype>
+#include <sstream>
 #include "pugixml.hpp"
 #include "fraction.hh"
 
@@ -25,6 +27,196 @@ struct BeatsToTempo
   Fraction beats;
   double   tempo;
 };
+
+enum class TempoChange
+{
+  NONE,
+  RIT,
+  ACCEL
+};
+
+static TempoChange
+parse_tempo_change (string text)
+{
+  struct Name
+  {
+    string primary;
+    vector<string> abbreviations;
+    TempoChange change;
+  };
+  static const vector<Name> names = {
+    {"ritardando", {"rit", "ritard"}, TempoChange::RIT},
+    {"rallentando", {"rall"}, TempoChange::RIT},
+    {"allargando", {"allarg"}, TempoChange::RIT},
+    {"callando", {}, TempoChange::RIT},
+    {"lentando", {"lent"}, TempoChange::RIT},
+    {"morendo", {}, TempoChange::RIT},
+    {"smorzando", {"smorz"}, TempoChange::RIT},
+    {"sostenuto", {"sost"}, TempoChange::RIT},
+    {"ritenuto", {"riten"}, TempoChange::RIT},
+    {"perdendosi", {"perd"}, TempoChange::RIT},
+    {"accelerando", {"acc", "accel"}, TempoChange::ACCEL},
+    {"precipitando", {}, TempoChange::ACCEL},
+    {"stringendo", {"string"}, TempoChange::ACCEL}
+  };
+
+  std::istringstream words (text);
+  string word;
+  while (words >> word)
+    {
+      std::transform (word.begin(), word.end(), word.begin(),
+                      [] (unsigned char c) { return std::tolower (c); });
+      if (word.back() == '.')
+        word.pop_back();
+      for (const auto& name : names)
+        if (word == name.primary ||
+            std::find (name.abbreviations.begin(), name.abbreviations.end(), word) != name.abbreviations.end())
+          return name.change;
+    }
+  return TempoChange::NONE;
+}
+
+// Numeric printed metronome marks use their own beat unit, whereas sound
+// tempos are always quarter notes per minute.
+static double
+metronome_tempo (pugi::xml_node node)
+{
+  static const std::map<string, double> units = {
+    {"maxima", 32}, {"long", 16}, {"breve", 8}, {"whole", 4},
+    {"half", 2}, {"quarter", 1}, {"eighth", 0.5},
+    {"16th", 0.25}, {"32nd", 0.125}, {"64th", 0.0625},
+    {"128th", 0.03125}, {"256th", 0.015625}
+  };
+  auto unit = units.find (node.child ("beat-unit").child_value());
+  const string text = node.child ("per-minute").child_value();
+  static const std::regex numeric (R"(^\s*[0-9]+(?:\.[0-9]+)?\s*$)");
+  if (unit == units.end() || !std::regex_match (text, numeric))
+    return 0; // Ranges and metric modulations have no unambiguous BPM.
+  double factor = 1, dot = 0.5;
+  for (auto unused : node.children ("beat-unit-dot"))
+    {
+      (void) unused;
+      factor += dot;
+      dot *= 0.5;
+    }
+  return std::stod (text) * unit->second * factor;
+}
+
+static void
+resolve_tempo_ramps (vector<BeatsToTempo>& tempos,
+                     const std::map<Fraction, double>& printed,
+                     const std::map<Fraction, TempoChange>& ramps,
+                     const std::map<Fraction, Fraction>& dash_ends,
+                     const std::set<Fraction>& equivalences,
+                     const std::set<Fraction>& tempo_returns)
+{
+  std::map<Fraction, double> exported;
+  for (auto point : tempos)
+    exported[point.beats] = point.tempo;
+  auto resolved = exported;
+  for (auto [beat, bpm] : printed)
+    resolved[beat] = bpm;
+
+  for (auto [start, change] : ramps)
+    {
+      auto target = printed.upper_bound (start);
+      // Written tempo changes and later ramp instructions bound the range.
+      auto next_ramp = ramps.upper_bound (start);
+      auto tempo_return = tempo_returns.upper_bound (start);
+      Fraction limit = target != printed.end() ? target->first : resolved.rbegin()->first;
+      if (target == printed.end())
+        if (auto dash = dash_ends.find (start); dash != dash_ends.end())
+          limit = std::max (limit, dash->second);
+      if (next_ramp != ramps.end() && next_ramp->first < limit)
+        limit = next_ramp->first;
+      if (tempo_return != tempo_returns.end())
+        limit = std::min (limit > start ? limit : *tempo_return, *tempo_return);
+      Fraction end = limit;
+      bool range_known = target != printed.end() || tempo_return != tempo_returns.end();
+      if (auto dash = dash_ends.find (start); dash != dash_ends.end())
+        {
+          end = std::min (dash->second, limit);
+          range_known = true;
+        }
+      else
+        {
+          // Dorico exports a regularly sampled monotonic tempo sequence,
+          // including its endpoint. A gap, plateau or reversal ends the run.
+          auto point = exported.upper_bound (start);
+          if (point != exported.end() && point->first <= limit && point != exported.begin())
+            {
+              double previous = std::prev (point)->second;
+              const Fraction step = point->first - start;
+              Fraction last = start;
+              for (; point != exported.end() && point->first <= limit; ++point)
+                {
+                  if (point->first - last != step ||
+                      (change == TempoChange::ACCEL ? point->second <= previous : point->second >= previous))
+                    break;
+                  last = point->first;
+                  previous = point->second;
+                }
+              if (last > start)
+                {
+                  end = last;
+                  range_known = true;
+                }
+            }
+        }
+      if (!range_known || end <= start)
+        continue;
+      auto initial = resolved.upper_bound (start);
+      if (initial == resolved.begin())
+        continue;
+      const double start_tempo = std::prev (initial)->second;
+      const auto written_end = printed.find (end);
+      double end_tempo = start_tempo * (change == TempoChange::ACCEL ? 1.25 : 0.75);
+      if (written_end != printed.end())
+        end_tempo = written_end->second;
+      else if (target != printed.end() && equivalences.contains (target->first) &&
+               (next_ramp == ramps.end() || next_ramp->first >= target->first) &&
+               (tempo_return == tempo_returns.end() || *tempo_return > target->first))
+        {
+          // An equivalence following the final ramp sample supplies the
+          // destination tempo, rather than a separate jump after the ramp.
+          end_tempo = target->second;
+        }
+      resolved[start] = start_tempo;
+      // Retain the exporter's sampling positions. If it supplied no ramp,
+      // generate sixteenth-note steps for the existing fragment pipeline.
+      const auto first_sample = resolved.upper_bound (start);
+      if (first_sample == resolved.end() || first_sample->first >= end)
+        for (Fraction beat = start + Fraction (1, 4); beat < end; beat += Fraction (1, 4))
+          resolved[beat] = start_tempo;
+      resolved[end] = end_tempo;
+      for (auto point = resolved.upper_bound (start); point != resolved.end() && point->first <= end; ++point)
+        {
+          const double fraction = ((point->first - start) / (end - start)).to_double();
+          point->second = start_tempo + fraction * (end_tempo - start_tempo);
+        }
+      // Exported values after the ramp must not restore its old endpoint.
+      Fraction hold_until = target != printed.end() ? target->first : resolved.rbegin()->first;
+      if (next_ramp != ramps.end())
+        hold_until = std::min (hold_until, next_ramp->first);
+      if (tempo_return != tempo_returns.end())
+        hold_until = std::min (hold_until, *tempo_return);
+      for (auto point = resolved.upper_bound (end); point != resolved.end() && point->first <= hold_until; ++point)
+        if (!printed.contains (point->first) && !ramps.contains (point->first) &&
+            !tempo_returns.contains (point->first))
+          point->second = end_tempo;
+      if (tempo_return != tempo_returns.end() &&
+          (next_ramp == ramps.end() || *tempo_return <= next_ramp->first) &&
+          (target == printed.end() || *tempo_return < target->first))
+        {
+          // A tempo is a return after the ramp, never its destination BPM.
+          auto playback = exported.find (*tempo_return);
+          resolved[*tempo_return] = playback != exported.end() ? playback->second : start_tempo;
+        }
+    }
+  tempos.clear();
+  for (auto [beat, bpm] : resolved)
+    tempos.push_back ({beat, bpm});
+}
 
 struct BeatsToMeasure
 {
@@ -265,6 +457,12 @@ int main(int argc, char **argv)
   vector<BeatsToVel> beats_to_velocity;
   vector<BeatsToSfz> beats_to_sfz;
   vector<BeatsToTempo> beats_to_tempo;
+  std::map<Fraction, double> printed_tempos;
+  std::set<Fraction> tempo_equivalences;
+  std::set<Fraction> tempo_returns;
+  std::map<Fraction, TempoChange> tempo_ramps;
+  std::map<Fraction, Fraction> tempo_dash_ends;
+  std::map<int, Fraction> open_tempo_dashes;
   struct DynWedge
   {
     enum { CRESCENDO, DIMINUENDO } type;
@@ -324,15 +522,19 @@ int main(int argc, char **argv)
                 divisions = atoi (divisions_node.child_value());
             }
 
-          if (nodeName == "sound")
+          if (nodeName == "sound" || nodeName == "direction")
             {
-              double tempo = atof (node.attribute ("tempo").value());
-              Fraction offset = 0;
-              if (auto offset_node = node.child ("offset"))
-                offset = atoi (offset_node.child_value());
-              offset *= Fraction (1, divisions);
-              printf ("TEMPO, position %s, tempo=%f\n", (current_time_beats + offset).to_string().c_str(), atof (node.attribute ("tempo").value()));
-              beats_to_tempo.push_back ({current_time_beats + offset, tempo});
+              auto sound = nodeName == "sound" ? node : node.child ("sound");
+              if (sound.attribute ("tempo"))
+                {
+                  double bpm = sound.attribute ("tempo").as_double();
+                  auto offset_node = sound.child ("offset");
+                  if (!offset_node && nodeName == "direction")
+                    offset_node = node.child ("offset");
+                  Fraction offset (offset_node.text().as_int(), divisions);
+                  if (bpm > 0)
+                    beats_to_tempo.push_back ({current_time_beats + offset, bpm});
+                }
             }
           if (nodeName == "note")
             {
@@ -422,8 +624,45 @@ int main(int argc, char **argv)
             }
           if (nodeName == "direction")
             {
+              Fraction direction_beat = current_time_beats + Fraction (node.child ("offset").text().as_int(), divisions);
+              // Associate dash starts with the text in this direction, not
+              // with unrelated instructions at the same musical position.
+              TempoChange direction_tempo = TempoChange::NONE;
+              for (auto dtype : node.children ("direction-type"))
+                for (auto words : dtype.children ("words"))
+                  if (auto change = parse_tempo_change (words.child_value()); change != TempoChange::NONE)
+                    direction_tempo = change;
+              if (direction_tempo != TempoChange::NONE)
+                tempo_ramps[direction_beat] = direction_tempo;
               for (auto dtype : node.children ("direction-type"))
                 {
+                  for (auto dash : dtype.children ("dashes"))
+                    {
+                      const int number = dash.attribute ("number").as_int (1);
+                      const string type = dash.attribute ("type").value();
+                      if (type == "start")
+                        {
+                          if (direction_tempo != TempoChange::NONE)
+                            open_tempo_dashes[number] = direction_beat;
+                          else
+                            open_tempo_dashes.erase (number);
+                        }
+                      else if (type == "stop")
+                        {
+                          auto start = open_tempo_dashes.find (number);
+                          if (start != open_tempo_dashes.end())
+                            {
+                              tempo_dash_ends[start->second] = direction_beat;
+                              open_tempo_dashes.erase (start);
+                            }
+                        }
+                    }
+                  auto metronome = dtype.child ("metronome");
+                  if (double bpm = metronome_tempo (metronome); bpm > 0)
+                    printed_tempos[direction_beat] = bpm;
+                  else if (metronome.child ("beat-unit").next_sibling ("beat-unit") ||
+                           metronome.child ("metronome-relation"))
+                    tempo_equivalences.insert (direction_beat);
                   // System text applies to the note at this position, even
                   // when the exporter writes it after the note using backup.
                   for (auto words : dtype.children ("words"))
@@ -431,6 +670,9 @@ int main(int argc, char **argv)
                       static const std::regex cents_pattern (R"(^\s*([+-][0-9]+(?:\.[0-9]+)?)ct\s*$)");
                       std::smatch match;
                       const std::string text = words.child_value();
+                      static const std::regex a_tempo_pattern (R"(^\s*a\s+tempo\.?\s*$)", std::regex::icase);
+                      if (std::regex_match (text, a_tempo_pattern))
+                        tempo_returns.insert (direction_beat);
                       if (std::regex_match (text, match, cents_pattern))
                         {
                           Fraction offset = 0;
@@ -529,6 +771,17 @@ int main(int argc, char **argv)
             }
         }
     }
+
+  // Equivalences (e.g. quarter = half) have no numeric per-minute value.
+  // Use their exported playback BPM at the same position. Resolve after
+  // parsing so standalone sound elements may appear before or after the mark.
+  for (auto point : beats_to_tempo)
+    if (tempo_equivalences.contains (point.beats))
+      printed_tempos[point.beats] = point.tempo;
+
+  resolve_tempo_ramps (beats_to_tempo, printed_tempos, tempo_ramps, tempo_dash_ends, tempo_equivalences, tempo_returns);
+  if (!beats_to_tempo.empty() && beats_to_tempo.front().beats == Fraction (0))
+    tempo = beats_to_tempo.front().tempo;
 
   // split notes on tempo changes (in order to have divisions map properly to ms later)
   split_events (events, beats_to_tempo);
