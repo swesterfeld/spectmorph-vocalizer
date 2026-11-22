@@ -1,24 +1,14 @@
 import random
 import os
+from voice_config import read_voice_config
+
+voice_segments = read_voice_config ("voice/" + os.getenv ("VOICE"))
 
 def list_voice_segments():
-  segments = [
-    os.path.splitext (f)[0]
-    for f in os.listdir ("voice/" + os.getenv ("VOICE"))
-    if f.endswith (".sh")
-  ]
-  enabled_segments = []
-  for segment in segments:
-    with open ("voice/" + os.getenv ("VOICE") + "/" + segment + ".sh", "r") as file:
-      disabled = False
-      for line in file:
-        line = line.split ("=")
-        if (line[0] == "VOICE_DISABLED"):
-          if (int (line[1])):
-            disabled = True
-      if not disabled:
-        enabled_segments += [ segment ]
-  return enabled_segments
+  return list (voice_segments)
+
+def voice_segment_properties (segment):
+  return voice_segments[segment].copy()
 
 def load_volumes (segment):
   volume_list = []

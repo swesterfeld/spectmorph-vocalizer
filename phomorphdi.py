@@ -13,7 +13,7 @@ import argparse
 import json
 from math import cos, log2, pi
 from dataclasses import dataclass
-from utils import time_to_volume, time_to_pos, list_voice_segments
+from utils import time_to_volume, time_to_pos, list_voice_segments, voice_segment_properties
 
 # Set up parser
 parser = argparse.ArgumentParser (description = "phomorphdi")
@@ -53,11 +53,7 @@ def is_non_released (x):
 def load_labels (segment):
   lines_raw = []
   ignore_labels = []
-  properties = {}
-  with open ("voice/" + os.getenv ("VOICE") + "/" + segment + ".sh", "r") as file:
-    for line in file:
-      key, value = line.strip().split ("=", 1)
-      properties[key] = value
+  properties = voice_segment_properties (segment)
 
   with open ("voice/" + os.getenv ("VOICE") + "/" + segment + ".txt", "r") as file:
     for line in file:
@@ -95,6 +91,9 @@ for segment in list_voice_segments():
   properties, lines = load_labels (segment)
   note = int (properties["VOICE_MIDI_NOTE"])
   lines_dict[segment] = Segment (note = note, lines = lines, properties = properties)
+
+if not lines_dict:
+  raise ValueError ("No enabled voice segments")
 
 lines = None
 
@@ -581,7 +580,8 @@ print ("============================================", file=sys.stderr)
 for i in range (len (pho)):
   if pho[i][0] == "_":
     item = Item()
-    item.segment = "voice"
+    # Rests are muted, but still need a model that was actually loaded.
+    item.segment = "voice" if "voice" in lines_dict else next (iter (lines_dict))
     item.pos1 = 0
     item.pos2 = 0.001
     item.type = "M"

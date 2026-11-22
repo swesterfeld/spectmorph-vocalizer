@@ -48,7 +48,13 @@ echo "VOICE: $VOICE"
 for VOICE_SEGMENT in $(find voice/$VOICE -iname '*.sh' | sed 's/.sh$//')
 do
   VOICE_SEGMENT=$(basename $VOICE_SEGMENT)
+  unset VOICE_SEGMENT_GLOB
   . voice/$VOICE/$VOICE_SEGMENT.sh
+
+  # Wildcard groups use pre-built local models and their sidecars.
+  if [ "${VOICE_SEGMENT_GLOB+x}" = x ]; then
+    continue
+  fi
 
   check_voice()
   {
