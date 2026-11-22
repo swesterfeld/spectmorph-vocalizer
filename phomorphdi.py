@@ -357,7 +357,7 @@ def lookup_diphone_entry_vv (P1, P2, pho_entry, note):
     lines = lines_dict[segment].lines
     for j in range (len (lines) - 1):
       x = lines[j:j+3]
-      if x[0][1] == P1 + '_' + P2:
+      if x[0][1] in (P1 + '_' + P2, P1 + '_' + P2 + '-mf'):
         voice_dynamic = lines_dict[segment].properties.get ("VOICE_DYNAMIC")
         want_dynamic = os.getenv ("DYNAMIC")
         if P1 == P2 and want_dynamic:
