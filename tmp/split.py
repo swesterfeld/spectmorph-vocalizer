@@ -35,11 +35,12 @@ def read_labels(filename):
     return labels
 
 
-def split_flac(filename="input.flac", min_silence=0.5, labels_filename=None):
+def split_flac(filename="input.flac", min_silence=0.5, labels_filename=None, prefix=""):
     """Split at exact silence, preserving point labels relative to trimmed audio.
 
     Labels default to the input's .txt sibling. All cuts and discarded labelled
     regions must be rests (_) or unused data (!); validate before writing files.
+    An optional prefix names outputs <prefix>_001_split.flac/.txt, etc.
     """
     if not math.isfinite(min_silence) or min_silence <= 0:
         raise ValueError("min_silence must be positive and finite")
@@ -122,7 +123,8 @@ def split_flac(filename="input.flac", min_silence=0.5, labels_filename=None):
             # Retain the label already in effect at the trimmed start.
             output_labels.append((0.0, labels[first - 1][1]))
         output_labels.extend((time - start_time, name) for time, name in labels[first:last])
-        output = source.parent / f"{count:03d}_split.flac"
+        output_prefix = f"{prefix}_" if prefix else ""
+        output = source.parent / f"{output_prefix}{count:03d}_split.flac"
         sf.write(output, audio[start:end], sample_rate, format="FLAC", subtype=info.subtype)
         output.with_suffix(".txt").write_text(
             "".join(f"{time:.6f}\t{time:.6f}\t{name}\n" for time, name in output_labels),
@@ -137,8 +139,9 @@ if __name__ == "__main__":
     parser.add_argument("filename", nargs="?", default="input.flac")
     parser.add_argument("labels", nargs="?", help="point labels (default: input's .txt sibling)")
     parser.add_argument("--min-silence", type=float, default=0.5, help="minimum silence in seconds")
+    parser.add_argument("--prefix", default="", help="output filename prefix (followed by an underscore)")
     args = parser.parse_args()
     try:
-        split_flac(args.filename, args.min_silence, args.labels)
+        split_flac(args.filename, args.min_silence, args.labels, prefix=args.prefix)
     except ValueError as error:
         parser.exit(1, f"Error: {error}\n")
