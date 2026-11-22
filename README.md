@@ -55,3 +55,27 @@ Sung-item forced alignment
 `singing_align.py` is an experimental Python aligner for SAMPA transcriptions
 of isolated sung items, with duration priors and Audacity label export.
 See [ALIGNMENT.md](ALIGNMENT.md) for setup, input conventions and testing.
+
+Local voice groups
+==================
+To load the split recordings in `voice/sven-test/`, use this configuration
+in `voice/sven-test/voice.sh`:
+
+```sh
+VOICE_MIDI_NOTE=50
+VOICE_SEGMENT_GLOB='*_split.sm'
+```
+
+The wildcard is relative to the voice directory. Each matching `.sm` file
+loads with its matching `.txt` labels and `.volume` data, in filename order.
+All matches inherit the settings in the `.sh` file; separate `.sh` files for
+each recording are unnecessary. A wildcard configuration replaces the usual
+segment named after that configuration (so this example does not also load
+`voice.sm`). Run with `./gen-wavs.sh -v sven-test your-score.musicxml`.
+
+These are pre-built local files: wildcard groups bypass hash-based downloads
+and do not require FLAC files for synthesis. Missing matches or sidecars are
+reported as errors. `VOICE_DISABLED=1` disables the whole group. Other `.sh`
+configurations can define additional groups or individual segments, but must
+not select the same segment twice. Configurations without `VOICE_SEGMENT_GLOB`
+continue to load the segment with the same basename as the `.sh` file.
